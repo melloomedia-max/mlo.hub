@@ -195,6 +195,18 @@ async function checkGlobalAuth() {
                 </div>
             `;
 
+            // Update Google Connection badge if disconnected
+            if (!status.googleConnected) {
+                const badge = statusDiv.querySelector('a');
+                if (badge) {
+                    badge.innerHTML = `
+                        <span style="width: 7px; height: 7px; background: #f43f5e; border-radius: 50%; box-shadow: 0 0 6px rgba(244,63,94,0.6);"></span>
+                        Google Disconnected
+                    `;
+                    badge.style.color = '#f43f5e';
+                }
+            }
+
             // ── Role-Based UI Hiding ────────────────────────────
             if (role !== 'admin') {
                 console.log('[RBAC] Pruning admin-only elements for staff user...');

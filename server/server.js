@@ -199,7 +199,8 @@ app.get('/api/auth/status', (req, res) => {
     if (req.session && req.session.isAuthenticated && req.session.user) {
         res.json({
             loggedIn: true,
-            user: req.session.user
+            user: req.session.user,
+            googleConnected: !!process.env.GOOGLE_REFRESH_TOKEN
         });
     } else {
         res.json({ loggedIn: false });
@@ -276,19 +277,12 @@ app.get('/api/email-templates', async (req, res) => {
     }
 });
 
-// Google OAuth Helpers
+// Google OAuth Configuration
 const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
+    process.env.GOOGLE_REDIRECT_URL || 'http://localhost:3000/oauth2callback'
 );
-
-app.get('/api/auth/status', (req, res) => {
-    res.json({
-        isAuthenticated: !!process.env.GOOGLE_REFRESH_TOKEN,
-        email: 'melloomedia@gmail.com'
-    });
-});
 
 app.get('/auth/google', (req, res) => {
     const url = oauth2Client.generateAuthUrl({
