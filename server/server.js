@@ -54,7 +54,7 @@ app.use(session({
 // --- Pure Server Auth Middleware ---
 app.get('/login', (req, res) => {
     const loginPath = path.join(__dirname, '../public/login.html');
-    console.log(`[AUTH] Serving login from: ${loginPath}`);
+    console.log(`[AUTH-CHECK] Serving login from: ${loginPath}`);
     res.sendFile(loginPath);
 });
 
@@ -85,6 +85,28 @@ function requireAuth(req, res, next) {
     }
     return res.redirect('/login');
 }
+
+// Explicit Root Handler
+app.get('/', requireAuth, (req, res) => {
+    const indexPath = path.join(__dirname, '../public/index.html');
+    console.log(`[AUTH-CHECK] Serving index from: ${indexPath}`);
+    res.sendFile(indexPath);
+});
+
+// Explicit Settings Handler
+app.get('/settings', requireAuth, (req, res) => {
+    const settingsPath = path.join(__dirname, '../public/settings.html');
+    console.log(`[AUTH-CHECK] Serving settings from: ${settingsPath}`);
+    res.sendFile(settingsPath);
+});
+
+// Explicit Portal Handler
+app.get('/portal', (req, res) => {
+    const portalPath = path.join(__dirname, '../public/portal.html');
+    console.log(`[AUTH-CHECK] Serving portal from: ${portalPath}`);
+    res.sendFile(portalPath);
+});
+
 
 // Authenticated Heartbeat
 app.get('/api/session/ping', requireAuth, (req, res) => {
