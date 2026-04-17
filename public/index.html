@@ -73,23 +73,22 @@
     <!-- Dashboard Section -->
     <section id="dashboard-section" class="section active">
       <div class="section-header" style="margin-bottom: 10px;">
-        <h2 style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 800; font-size: 38px;">Trove</h2>
+        <h2 style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 800; font-size: 34px;">Overview</h2>
       </div>
 
-      <!-- Mobile Sub-stats (Trove Style) -->
+      <!-- Mobile Sub-stats -->
       <div class="mobile-sub-stats">
         <span>📦 <span id="mobile-stat-clients-count">0</span> clients</span>
         <span>📡 <span id="mobile-stat-projects-count">0</span> active</span>
-        <span>📄 <span id="mobile-stat-tasks-count">0</span> unread</span>
+        <span>⚡ <span id="mobile-stat-tasks-count">0</span> pending</span>
       </div>
 
-      <!-- Mobile Pill Tabs (Trove Style) -->
+      <!-- Mobile Pill Tabs -->
       <div class="mobile-pill-tabs">
         <div class="pill-tab active" onclick="filterDashboard('all')">All</div>
-        <div class="pill-tab" onclick="filterDashboard('financials')">Financials 🔐</div>
+        <div class="pill-tab" onclick="filterDashboard('financials')">Cashflow</div>
         <div class="pill-tab" onclick="filterDashboard('ops')">Operations</div>
-        <div class="pill-tab" onclick="filterDashboard('team')">Social</div>
-        <div class="pill-tab" onclick="filterDashboard('media')">Media</div>
+        <div class="pill-tab" onclick="filterDashboard('team')">Activity</div>
       </div>
 
       <!-- Unbilled Time Banner (Feature 2) -->
@@ -1547,12 +1546,38 @@
     </div>
   </nav>
 
+  <!-- Quick Action Menu (Mobile Bottom Sheet) -->
+  <div id="quick-action-overlay" class="mobile-action-overlay" onclick="closeQuickActions()">
+    <div class="action-sheet" onclick="event.stopPropagation()">
+      <div class="handle"></div>
+      <div class="action-sheet-header">Quick Actions</div>
+      <div class="action-grid">
+        <div class="action-btn" onclick="showClientForm(); closeQuickActions();">
+          <div class="action-icon" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">👥</div>
+          <span>New Client</span>
+        </div>
+        <div class="action-btn" onclick="showTaskForm(); closeQuickActions();">
+          <div class="action-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">⚡</div>
+          <span>New Task</span>
+        </div>
+        <div class="action-btn" onclick="showInvoiceForm(); closeQuickActions();">
+          <div class="action-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">💰</div>
+          <span>New Invoice</span>
+        </div>
+        <div class="action-btn" onclick="showMeetingLink(); closeQuickActions();">
+          <div class="action-icon" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e;">📅</div>
+          <span>Meeting</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Trove Global Search Overlay (Mobile) -->
   <div id="mobile-search-overlay" class="mobile-search-overlay">
     <div class="search-overlay-header">
       <div class="search-bar-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" id="mobile-global-search-input" placeholder="Search for anything..." oninput="handleGlobalSearch(this.value)">
+        <input type="text" id="mobile-global-search-input" placeholder="Search across agency..." oninput="handleGlobalSearch(this.value)">
         <button onclick="closeGlobalSearch()" class="search-close-btn">Cancel</button>
       </div>
     </div>

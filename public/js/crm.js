@@ -14,10 +14,15 @@ window.showClientForm = showClientForm;
 window.hideClientForm = hideClientForm;
 window.toggleEditMode = toggleEditMode;
 
-async function loadClients() {
+async function loadClients(statusFilter = null) {
     try {
         const response = await fetch(`${API_BASE}/crm/clients`);
-        const clients = await response.json();
+        let clients = await response.json();
+        
+        if (statusFilter && statusFilter !== 'all') {
+            clients = clients.filter(c => c.status === statusFilter);
+        }
+        
         displayClients(clients);
     } catch (error) {
         console.error('Error loading clients:', error);

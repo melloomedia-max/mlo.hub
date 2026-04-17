@@ -178,37 +178,23 @@ async function refreshAllData() {
 }
 window.refreshAllData = refreshAllData;
 
-// Mobile Trove Helpers
-function filterDashboard(category) {
-    document.querySelectorAll('#dashboard-section .mobile-pill-tabs .pill-tab').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
-    });
-    showToast(`Filtering Dashboard by ${category}...`, 'info');
+// ── MOBILE UI HANDLERS ──────────────────────────────────────────────────
+function showQuickActions() {
+    const overlay = document.getElementById('quick-action-overlay');
+    if (overlay) overlay.style.display = 'flex';
 }
 
-function filterCRM(category) {
-    document.querySelectorAll('#crm-section .mobile-pill-tabs .pill-tab').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
-    });
-    // Triggers actual filtering if global filter function exists
-    if (window.loadClients) window.loadClients(category === 'all' ? null : category);
-}
-
-function filterInvoices(category) {
-    document.querySelectorAll('#invoices-section .mobile-pill-tabs .pill-tab').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
-    });
-    showToast(`Filtering Invoices by ${category}...`, 'info');
+function closeQuickActions() {
+    const overlay = document.getElementById('quick-action-overlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
 function openGlobalSearch() {
     const overlay = document.getElementById('mobile-search-overlay');
     if (overlay) {
         overlay.style.display = 'flex';
-        document.getElementById('mobile-global-search-input').focus();
+        const input = document.getElementById('mobile-global-search-input');
+        if (input) input.focus();
     }
 }
 
@@ -217,32 +203,103 @@ function closeGlobalSearch() {
     if (overlay) overlay.style.display = 'none';
 }
 
-function handleGlobalSearch(query) {
+async function handleGlobalSearch(query) {
     const resultsContainer = document.getElementById('mobile-search-results');
     if (!query || query.length < 2) {
         resultsContainer.innerHTML = '';
         return;
     }
 
-    // In a real app, we'd search across multiple datasets
-    resultsContainer.innerHTML = `
-        <div class="search-section-label">Results for "${query}"</div>
-        <div class="search-suggestions-list">
-            <div class="suggestion-item" onclick="showSection('crm'); closeGlobalSearch();">
-                <span class="s-icon">👥</span>
-                <span class="s-text">Finding clients matching "${query}"...</span>
-            </div>
-            <div class="suggestion-item" onclick="showSection('tasks'); closeGlobalSearch();">
-                <span class="s-icon">⚡</span>
-                <span class="s-text">Finding tasks matching "${query}"...</span>
-            </div>
-        </div>
-    `;
+    try {
+        // Fetch fresh data for search
+        const [cRes, tRes, mRes] = await Promise.all([
+            fetch(`${API_BASE}/crm/clients`),
+            fetch(`${API_BASE}/tasks`),
+            fetch(`${API_BASE}/meetings`)
+        ]);
+        const clients = await cRes.json();
+        const tasks = await tRes.json();
+        const meetings = await mRes.json();
+
+        const q = query.toLowerCase();
+        const clientMatches = clients.filter(c => c.name.toLowerCase().includes(q) || (c.company && c.company.toLowerCase().includes(q)));
+        const taskMatches = tasks.filter(t => t.title.toLowerCase().includes(q));
+        const meetingMatches = meetings.filter(m => m.client_name?.toLowerCase().includes(q));
+
+        let html = '';
+        if (clientMatches.length > 0) {
+            html += `<div class="search-section-label">Clients</div><div class="search-suggestions-list">` +
+                clientMatches.map(c => `
+                    <div class="suggestion-item" onclick="showSection('crm'); openClientProfile(${c.id}); closeGlobalSearch();">
+                        <span class="s-icon">👥</span>
+                        <div style="display:flex; flex-direction:column;">
+                            <span class="s-text">${c.name}</span>
+                            <small style="font-size:11px; color:#8e8e93;">${c.company || 'Private Client'}</small>
+                        </div>
+                    </div>
+                `).join('') + `</div>`;
+        }
+
+        if (taskMatches.length > 0) {
+            html += `<div class="search-section-label">Tasks</div><div class="search-suggestions-list">` +
+                taskMatches.map(t => `
+                    <div class="suggestion-item" onclick="showSection('tasks'); closeGlobalSearch();">
+                        <span class="s-icon">⚡</span>
+                        <span class="s-text">${t.title}</span>
+                    </div>
+                `).join('') + `</div>`;
+        }
+
+        if (html === '') {
+            html = `<div style="text-align:center; padding:40px; color:#8e8e93;">No results found for "${query}"</div>`;
+        }
+
+        resultsContainer.innerHTML = html;
+    } catch (err) {
+        console.error('Search error:', err);
+    }
 }
 
-function showGlobalQuickAction() {
-    showToast('Quick actions coming soon...', 'info');
+// ── OVERRIDE OLD STUBS ──────────────────────────────────────────────────
+window.showGlobalQuickAction = showQuickActions;
+window.openGlobalSearch = openGlobalSearch;
+window.closeGlobalSearch = closeGlobalSearch;
+window.closeQuickActions = closeQuickActions;
+window.handleGlobalSearch = handleGlobalSearch;
+
+function filterDashboard(category) {
+    document.querySelectorAll('#dashboard-section .mobile-pill-tabs .pill-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
+    });
+    // Visual feedback for now
+    showToast(`Dashboard filtered: ${category}`, 'info');
 }
+
+function filterCRM(category) {
+    document.querySelectorAll('#crm-section .mobile-pill-tabs .pill-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
+    });
+    if (typeof window.loadClients === 'function') {
+        window.loadClients(category === 'all' ? null : category);
+    }
+}
+
+function filterInvoices(category) {
+    document.querySelectorAll('#invoices-section .mobile-pill-tabs .pill-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
+    });
+    showToast(`Invoice view filtered: ${category}`, 'info');
+}
+
+// Add meeting success support for quick actions
+function showMeetingLink() {
+    showSection('meetings');
+    showToast('Redirected to meetings schedule', 'info');
+}
+
 
 
 async function checkGlobalAuth() {
