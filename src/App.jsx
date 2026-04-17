@@ -8,6 +8,7 @@ import MobileDashboard from './pages/mobile/MobileDashboard';
 import MobileClients from './pages/mobile/MobileClients';
 import MobileTasks from './pages/mobile/MobileTasks';
 import MobileMeetings from './pages/mobile/MobileMeetings';
+import QuickActions from './components/mobile/QuickActions';
 
 // Global styles
 import './styles/mobile.css';
@@ -38,17 +39,6 @@ export default function App() {
         
         if (authData.loggedIn) {
           setAuthState({ loading: false, user: authData });
-          // Fetch operational data
-          const [cRes, tRes, rRes] = await Promise.all([
-            fetch('/api/crm/clients'),
-            fetch('/api/tasks'),
-            fetch('/api/revenue/stats')
-          ]);
-          setData({
-            clients: await cRes.json(),
-            tasks: await tRes.json(),
-            ...(await rRes.json())
-          });
         } else {
           setAuthState({ loading: false, user: null });
         }
@@ -67,11 +57,14 @@ export default function App() {
     return authState.user ? children : <Navigate to="/login" replace />;
   };
 
+  const [showActions, setShowActions] = useState(false);
+
   const SmartRoute = ({ mobilePage, desktopPage }) => {
     if (isMobile) {
       return (
-        <MobileShell>
+        <MobileShell onFabPress={() => setShowActions(true)}>
           {mobilePage}
+          {showActions && <QuickActions onClose={() => setShowActions(false)} />}
         </MobileShell>
       );
     }

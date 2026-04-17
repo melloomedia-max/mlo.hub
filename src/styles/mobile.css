@@ -1,10 +1,7 @@
 /* ============================================
    MELLOO AGENCY HUB — MOBILE STYLES
-   Add this file: src/styles/mobile.css
-   Import in App.jsx: import './styles/mobile.css'
    ============================================ */
 
-/* ---- RESET & ROOT ---- */
 :root {
   --mob-bg: #080d1a;
   --mob-surface: #0f1629;
@@ -19,14 +16,21 @@
   --mob-safe: env(safe-area-inset-bottom, 0px);
 }
 
-/* ---- BODY LOCK ---- */
+/* Base styles for components that need to be hidden on desktop but exist in DOM */
+.mob-shell, .mob-nav, .mob-fab {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
   html, body {
     height: 100%;
     width: 100%;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
     overscroll-behavior: none;
     background: var(--mob-bg) !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
 
   #root {
@@ -35,24 +39,13 @@
     display: flex;
     flex-direction: column;
   }
-}
 
-/* ============================================
-   MOBILE SHELL — the outer app frame
-   ============================================ */
-.mob-shell {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  /* Hide desktop layout completely */
   .desktop-only {
     display: none !important;
   }
 
-  /* Show mobile shell */
   .mob-shell {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     height: 100dvh;
     width: 100%;
@@ -61,7 +54,6 @@
     overflow: hidden;
   }
 
-  /* Scrollable page content */
   .mob-page {
     flex: 1;
     overflow-y: auto;
@@ -71,10 +63,9 @@
     padding-bottom: calc(var(--mob-nav-h) + var(--mob-safe) + 20px);
   }
 
-  /* ============================================
-     BOTTOM NAV BAR
-     ============================================ */
+  /* BOTTOM NAV */
   .mob-nav {
+    display: flex !important;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -85,7 +76,6 @@
     border-top: 1px solid var(--mob-border);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    display: flex;
     align-items: flex-start;
     justify-content: space-around;
     padding-top: 10px;
@@ -102,558 +92,55 @@
     cursor: pointer;
     padding: 6px 16px;
     border-radius: 12px;
-    transition: background 0.15s;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-
-  .mob-nav-btn:active {
-    background: rgba(91, 94, 244, 0.12);
-  }
-
-  .mob-nav-icon {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     color: var(--mob-muted);
-    transition: color 0.15s, transform 0.15s;
+    transition: color 0.2s;
   }
 
-  .mob-nav-btn.active .mob-nav-icon {
+  .mob-nav-btn.active {
     color: var(--mob-accent);
-    transform: translateY(-1px);
   }
 
   .mob-nav-label {
     font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--mob-muted);
-    transition: color 0.15s;
   }
 
-  .mob-nav-btn.active .mob-nav-label {
-    color: var(--mob-accent);
-  }
-
-  /* Active indicator dot */
-  .mob-nav-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: calc(var(--mob-safe) + 6px);
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: var(--mob-accent);
-  }
-
-  /* ============================================
-     FAB — Floating Action Button
-     ============================================ */
+  /* FAB */
   .mob-fab {
+    display: flex !important;
     position: fixed;
     bottom: calc(var(--mob-nav-h) + var(--mob-safe) + 16px);
     right: 20px;
-    width: 54px;
-    height: 54px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--mob-accent), var(--mob-accent2));
     border: none;
     color: #fff;
-    font-size: 26px;
-    font-weight: 300;
-    display: flex;
+    font-size: 30px;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 24px rgba(91, 94, 244, 0.45);
-    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(91, 94, 244, 0.4);
     z-index: 998;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition: transform 0.2s;
   }
+  .mob-fab:active { transform: scale(0.9); }
 
-  .mob-fab:active {
-    transform: scale(0.92);
-    box-shadow: 0 4px 12px rgba(91, 94, 244, 0.35);
-  }
-
-  /* ============================================
-     DASHBOARD PAGE
-     ============================================ */
-  .mob-dashboard {
-    padding: 0 16px;
-  }
-
-  /* Header area */
-  .mob-header {
-    padding: 56px 0 24px;
-  }
-
-  .mob-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-
-  .mob-brand-orb {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #6ee7b7, #3b82f6 50%, #1e3a6e);
-    flex-shrink: 0;
-  }
-
-  .mob-brand-name {
-    font-size: 14px;
-    color: var(--mob-muted);
-    font-style: italic;
-    letter-spacing: 0.01em;
-  }
-
-  .mob-brand-name strong {
-    font-style: normal;
-    font-weight: 600;
-    color: rgba(240, 244, 255, 0.6);
-  }
-
-  .mob-page-title {
-    font-size: 36px;
-    font-weight: 800;
-    color: var(--mob-text);
-    letter-spacing: -1px;
-    line-height: 1.1;
-    margin: 0;
-  }
-
-  /* Quick stat pills */
-  .mob-pills {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-
-  .mob-pills::-webkit-scrollbar { display: none; }
-
-  .mob-pill {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--mob-pill);
-    border: 1px solid var(--mob-border);
-    border-radius: 100px;
-    padding: 7px 14px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .mob-pill-icon {
-    font-size: 14px;
-    line-height: 1;
-  }
-
-  .mob-pill-num {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--mob-text);
-  }
-
-  .mob-pill-label {
-    font-size: 13px;
-    color: var(--mob-muted);
-  }
-
-  /* Tab bar */
-  .mob-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-
-  .mob-tabs::-webkit-scrollbar { display: none; }
-
-  .mob-tab {
-    padding: 9px 20px;
-    border-radius: 100px;
-    border: 1px solid var(--mob-border);
-    background: var(--mob-pill);
-    color: var(--mob-muted);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: background 0.15s, color 0.15s;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-
-  .mob-tab.active {
-    background: var(--mob-text);
-    color: #080d1a;
-    border-color: transparent;
-    font-weight: 700;
-  }
-
-  /* Stat cards */
+  /* CARDS & UI */
   .mob-card {
     background: var(--mob-card);
     border: 1px solid var(--mob-border);
     border-radius: 20px;
     padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
     margin-bottom: 12px;
-    transition: transform 0.15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .mob-card:active {
-    transform: scale(0.985);
-  }
-
-  .mob-card-icon {
-    width: 54px;
-    height: 54px;
-    border-radius: 16px;
-    background: rgba(91, 94, 244, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    flex-shrink: 0;
+    color: inherit;
+    text-align: left;
+    width: auto;
   }
 
   .mob-card-label {
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--mob-muted);
-    margin-bottom: 6px;
-  }
-
-  .mob-card-value {
-    font-size: 30px;
-    font-weight: 800;
-    color: var(--mob-text);
-    letter-spacing: -0.5px;
-    line-height: 1;
-  }
-
-  /* ============================================
-     CLIENTS PAGE
-     ============================================ */
-  .mob-clients-page {
-    padding: 0 16px;
-  }
-
-  .mob-search-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--mob-card);
-    border: 1px solid var(--mob-border);
-    border-radius: 14px;
-    padding: 12px 16px;
-    margin-bottom: 20px;
-  }
-
-  .mob-search-bar input {
-    flex: 1;
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--mob-text);
-    font-size: 15px;
-  }
-
-  .mob-search-bar input::placeholder {
-    color: var(--mob-muted);
-  }
-
-  .mob-client-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--mob-card);
-    border: 1px solid var(--mob-border);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 10px;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .mob-client-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--mob-accent), var(--mob-accent2));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-    flex-shrink: 0;
-  }
-
-  .mob-client-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--mob-text);
-    margin-bottom: 3px;
-  }
-
-  .mob-client-meta {
-    font-size: 13px;
-    color: var(--mob-muted);
-  }
-
-  .mob-client-status {
-    margin-left: auto;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    padding: 5px 12px;
-    border-radius: 100px;
-  }
-
-  .mob-status-active {
-    background: rgba(29, 158, 117, 0.15);
-    color: #3dd68c;
-  }
-
-  .mob-status-pending {
-    background: rgba(239, 159, 39, 0.15);
-    color: #f59e0b;
-  }
-
-  /* ============================================
-     SECTION HEADER (used across pages)
-     ============================================ */
-  .mob-section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    padding-top: 8px;
-  }
-
-  .mob-section-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--mob-text);
-  }
-
-  .mob-section-action {
-    font-size: 13px;
-    color: var(--mob-accent);
-    font-weight: 600;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* ============================================
-     TASKS PAGE
-     ============================================ */
-  .mob-task-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--mob-card);
-    border: 1px solid var(--mob-border);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 10px;
-  }
-
-  .mob-task-check {
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    border: 2px solid var(--mob-muted);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-
-  .mob-task-check.done {
-    background: var(--mob-accent);
-    border-color: var(--mob-accent);
-  }
-
-  .mob-task-title {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--mob-text);
-    margin-bottom: 2px;
-  }
-
-  .mob-task-title.done {
-    text-decoration: line-through;
-    color: var(--mob-muted);
-  }
-
-  .mob-task-meta {
-    font-size: 12px;
-    color: var(--mob-muted);
-  }
-
-  .mob-task-priority {
-    margin-left: auto;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .mob-priority-high   { background: #f87171; }
-  .mob-priority-medium { background: #f59e0b; }
-  .mob-priority-low    { background: #3dd68c; }
-
-  /* ============================================
-     EMPTY STATES
-     ============================================ */
-  .mob-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 0;
-    color: var(--mob-muted);
-    text-align: center;
-  }
-
-  .mob-empty-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    opacity: 0.6;
-  }
-
-  .mob-empty-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: var(--mob-text);
-    margin-bottom: 8px;
-  }
-
-  .mob-empty-sub {
-    font-size: 14px;
-    color: var(--mob-muted);
-    max-width: 220px;
-    line-height: 1.5;
-  }
-}
-
-/* ============================================
-   DESKTOP HIDES MOBILE SHELL
-   ============================================ */
-@media (min-width: 769px) {
-  .mob-shell { display: none !important; }
-  .mob-nav   { display: none !important; }
-  .mob-fab   { display: none !important; }
-}
-
-  /* ============================================
-     SKELETON & STATES
-     ============================================ */
-  .skeleton {
-    background: linear-gradient(90deg, var(--mob-card) 25%, #1a2540 50%, var(--mob-card) 75%);
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.5s infinite;
-    border-color: transparent !important;
-  }
-
-  @keyframes skeleton-loading {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  .mob-error {
-    padding: 20px;
-    background: rgba(248, 113, 113, 0.1);
-    border: 1px solid rgba(248, 113, 113, 0.2);
-    border-radius: 12px;
-    color: #f87171;
-    font-size: 14px;
-    margin-bottom: 20px;
-  }
-}
-
-  /* ============================================
-     DETAILS OVERLAY & BUTTONS
-     ============================================ */
-  .mob-details-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(8, 13, 26, 0.9);
-    backdrop-filter: blur(10px);
-    z-index: 1000;
-    display: flex;
-    align-items: flex-end;
-  }
-
-  .mob-details-card {
-    width: 100%;
-    background: var(--mob-surface);
-    border-top: 1px solid var(--mob-border);
-    border-radius: 32px 32px 0 0;
-    padding: 32px 24px calc(32px + var(--mob-safe));
-    position: relative;
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
-    animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  @keyframes slide-up {
-    from { transform: translateY(100%); }
-    to   { transform: translateY(0); }
-  }
-
-  .mob-details-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--mob-card);
-    border: none;
-    color: var(--mob-text);
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .mob-details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-top: 24px;
-  }
-
-  .mob-details-item label {
-    display: block;
-    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     color: var(--mob-muted);
@@ -661,30 +148,65 @@
     letter-spacing: 0.05em;
   }
 
-  .mob-details-item span {
-    font-size: 14px;
+  .mob-card-value {
+    font-size: 28px;
+    font-weight: 800;
     color: var(--mob-text);
-    font-weight: 500;
-    word-break: break-all;
   }
 
-  .mob-btn-primary {
-    background: var(--mob-accent);
-    color: #fff;
-    border: none;
-    padding: 14px 20px;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
+  /* DASHBOARD SNAPSHOTS */
+  .mob-header { padding: 40px 16px 20px; }
+  .mob-page-title { font-size: 32px; font-weight: 800; color: var(--mob-text); margin: 0; }
+  
+  .mob-pills { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 20px; scrollbar-width: none; }
+  .mob-pills::-webkit-scrollbar { display: none; }
+  .mob-pill {
+    display: flex; align-items: center; gap: 6px; background: var(--mob-pill); border: 1px solid var(--mob-border);
+    border-radius: 100px; padding: 8px 16px; white-space: nowrap;
   }
 
+  .mob-section-header { display: flex; justify-content: space-between; align-items: center; margin: 24px 0 16px; padding: 0 16px; }
+  .mob-section-title { font-size: 18px; font-weight: 700; color: var(--mob-text); }
+  .mob-section-action { color: var(--mob-accent); font-size: 14px; font-weight: 600; }
+
+  /* LIST ROWS */
+  .mob-client-row, .mob-task-row {
+    display: flex; align-items: center; gap: 12px; background: var(--mob-card); border: 1px solid var(--mob-border);
+    border-radius: 16px; padding: 16px; margin: 0 16px 10px;
+  }
+  .mob-client-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--mob-pill); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .mob-client-name, .mob-task-title { font-size: 15px; font-weight: 600; color: var(--mob-text); }
+  .mob-client-meta, .mob-task-meta { font-size: 13px; color: var(--mob-muted); }
+  .mob-client-status { margin-left: auto; padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+  
+  .mob-status-active { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+  .mob-status-lead { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+  .mob-status-onboarding { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+  .mob-status-overdue { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+  .mob-status-paid { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
+  /* SKELETON */
+  .skeleton {
+    background: linear-gradient(90deg, var(--mob-card) 25%, #1d2845 50%, var(--mob-card) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+  }
+  @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* OVERLAYS */
+  .mob-details-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+    z-index: 2000; display: flex; align-items: flex-end;
+  }
+  .mob-details-card {
+    width: 100%; background: var(--mob-surface); border-radius: 32px 32px 0 0; padding: 32px 24px calc(32px + var(--mob-safe));
+    animation: slide-up 0.3s ease-out;
+  }
+  @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .mob-details-close { position: absolute; top: 20px; right: 20px; font-size: 24px; color: var(--mob-text); background: none; border: none; cursor: pointer; }
+  
   .mob-btn-secondary {
-    background: var(--mob-card);
-    color: var(--mob-text);
-    border: 1px solid var(--mob-border);
-    padding: 14px 20px;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
+    background: var(--mob-card); border: 1px solid var(--mob-border); border-radius: 12px; padding: 14px;
+    color: var(--mob-text); font-weight: 600; font-size: 15px; cursor: pointer;
   }
 }
