@@ -11,6 +11,17 @@ const { google } = require('googleapis');
 console.log("[BOOT] Initializing database connection...");
 const db = require('./database');
 console.log("[BOOT] Loading route modules...");
+// Admin Account Audit
+db.get("SELECT email, role, status FROM staff WHERE role = 'admin' LIMIT 1", (err, row) => {
+    if (err) {
+        console.error("[BOOT-AUDIT] Admin check failed:", err.message);
+    } else if (row) {
+        console.log(`[BOOT-AUDIT] Admin account verified: ${row.email} | Role: ${row.role} | Status: ${row.status}`);
+    } else {
+        console.warn("[BOOT-AUDIT] No admin account found in staff table!");
+    }
+});
+
 const tasksRoutes = require('./routes/tasks');
 const meetingsRoutes = require('./routes/meetings');
 const crmRoutes = require('./routes/crm');
@@ -68,9 +79,9 @@ app.get('/login', (req, res) => {
     db.get('SELECT id FROM staff WHERE role = "admin" LIMIT 1', (err, row) => {
         if (!row && process.env.APP_PASSWORD) {
             const hashed = hashPassword(process.env.APP_PASSWORD);
-            db.run('INSERT INTO staff (name, email, password, role) VALUES (?, ?, ?, ?)', 
-                ['Admin', 'admin@agency.com', hashed, 'admin'], (err) => {
-                    if (!err) console.log('[AUTH] Created initial admin in staff table: admin@agency.com');
+            db.run('INSERT INTO staff (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)', 
+                ['Admin', 'melloomedia@gmail.com', hashed, 'admin', 'active'], (err) => {
+                    if (!err) console.log('[AUTH] Created initial admin: melloomedia@gmail.com');
                 });
         }
     });
