@@ -118,31 +118,93 @@
         padding: 14px 16px !important;
     }
 
-    /* Fix table wrappers */
+    /* Convert Tables to Mobile Cards */
     .table-container, .invoices-list {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin: 0 -15px;
-        padding: 0 15px;
-        width: calc(100% + 30px);
+        overflow-x: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        display: block !important;
     }
     
-    table {
-        font-size: 14px;
-    }
-    
-    table th, table td {
-        padding: 10px 8px !important;
+    table, thead, tbody, th, td, tr {
+        display: block !important;
+        width: 100% !important;
     }
 
-    /* Fix modals to fit screen */
-    .modal-content, .task-modal-content {
-        width: 95% !important;
-        max-width: 100% !important;
-        margin: 10px auto !important;
-        max-height: 90vh !important;
+    /* Hide table headers visually but keep for screen readers */
+    thead tr {
+        position: absolute !important;
+        top: -9999px !important;
+        left: -9999px !important;
+    }
+
+    tr {
+        background: var(--glass-bg-strong) !important;
+        border: 1px solid var(--glass-border) !important;
+        border-radius: var(--radius-md) !important;
+        margin-bottom: 20px !important;
+        padding: 5px !important;
+        box-shadow: var(--glass-shadow);
+        page-break-inside: avoid;
+    }
+
+    td {
+        border: none !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+        position: relative !important;
+        padding: 14px 15px !important;
+        text-align: right !important;
+        font-size: 15px !important;
+        display: flex !important;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+        min-height: 50px;
+    }
+
+    td:last-child {
+        border-bottom: 0 !important;
+    }
+
+    /* Make the first column act as the Mobile Card Title */
+    td:nth-child(1) {
+        font-size: 17px !important;
+        font-weight: 700 !important;
+        text-align: left !important;
+        justify-content: flex-start;
+        color: var(--accent-2);
+        padding-top: 18px !important;
+        border-bottom: 1px solid rgba(99, 102, 241, 0.3) !important;
+    }
+    
+    /* Make action columns wrap cleanly */
+    td:has(button) {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        padding-top: 15px !important;
+        padding-bottom: 15px !important;
+    }
+
+    td button {
+        flex: 1 1 auto;
+        margin: 4px 0 !important;
+    }
+
+    /* Modals & Popups Overhaul */
+    .modal, .task-modal {
+        padding: 10px !important;
+        align-items: flex-start !important; /* Allow scrolling from top */
         overflow-y: auto !important;
-        padding: 20px !important;
+    }
+
+    .modal-content, .task-modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 20px 0 !important;
+        max-height: none !important; /* Let body scroll natively */
+        padding: 25px 20px !important;
+        border-radius: var(--radius-lg) !important;
     }
     
     /* Login Page Centering */
