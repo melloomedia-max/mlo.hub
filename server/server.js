@@ -25,16 +25,28 @@ const { startArchiveScheduler } = require('./jobs/archiveScheduler');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+if (!process.env.APP_PASSWORD || !process.env.SESSION_SECRET) {
+    console.warn("\n=======================================================");
+    console.warn("⚠️  WARNING: APP_PASSWORD or SESSION_SECRET is missing!");
+    console.warn("   Your Agency Hub login is unsecured or unstable.");
+    console.warn("   Please define both variables in your Railway env.");
+    console.warn("=======================================================\n");
+}
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
 const session = require('express-session');
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'melloo-secret',
+    secret: process.env.SESSION_SECRET || 'fallback-dev-secret',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false } // False for Railway HTTP/HTTPS proxy dev environments usually
+    rolling: true,
+    cookie: { 
+        secure: false, // Railway proxy handles SSL in front
+        maxAge: 15 * 60 * 1000 // 15 minutes of inactivity
+    }
 }));
 
 // --- Pure Server Auth Middleware ---
@@ -44,7 +56,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
     const password = req.body.password;
-    if (password === (process.env.APP_PASSWORD || 'melloo')) {
+    if (password && password === process.env.APP_PASSWORD) {
         req.session.isAuthenticated = true;
         res.redirect('/');
     } else {
@@ -67,6 +79,11 @@ function requireAuth(req, res, next) {
     }
     return res.redirect('/login');
 }
+
+// Authenticated Heartbeat
+app.get('/api/session/ping', requireAuth, (req, res) => {
+    res.json({ ok: true });
+});
 
 // Intercept specific routes
 app.use((req, res, next) => {

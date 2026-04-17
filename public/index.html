@@ -5,6 +5,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agency Hub</title>
+  
+  <script>
+    // Global 401 Fetch Interceptor
+    const originalFetch = window.fetch;
+    window.fetch = async function(...args) {
+        const response = await originalFetch.apply(this, args);
+        if (response.status === 401) {
+            window.location.href = '/login';
+        }
+        return response;
+    };
+
+    // Inactivity Session Pinger (60s)
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            fetch('/api/session/ping').catch(() => {}); // Catch silent network errors
+        }
+    }, 60000);
+  </script>
+
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/crm-styles.css">
   <link rel="stylesheet" href="css/campaign-builder.css">
