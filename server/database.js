@@ -431,6 +431,20 @@ db.serialize(() => {
   db.run("ALTER TABLE staff ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP", (err) => { });
   db.run("ALTER TABLE staff ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP", (err) => { });
 
+  // Portal Links Tracking
+  db.run(`
+    CREATE TABLE IF NOT EXISTS portal_links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL,
+      token TEXT NOT NULL,
+      url TEXT NOT NULL,
+      notification_method TEXT, -- 'email', 'sms', 'both'
+      notification_status TEXT, -- 'sent', 'failed'
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+    )
+  `);
+
   console.log("[DB] Database initialization scripts queued.");
 });
 

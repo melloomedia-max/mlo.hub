@@ -636,7 +636,15 @@
                 <div style="display:flex; align-items:center; gap:6px;">
                   <button id="mh-portal-link-btn" onclick="copyPortalLink()" title="Copy portal link"
                     style="padding:5px 10px; font-size:11px; background:rgba(45,212,191,0.12); color:#5eead4; border:1px solid rgba(45,212,191,0.2); border-radius:8px; cursor:pointer; font-weight:600; display:none;">
-                    🔗 Portal Link
+                    🔗 Copy Link
+                  </button>
+                  <button id="mh-portal-email-btn" onclick="sendPortalLink('email')" title="Send via Email"
+                    style="padding:5px 10px; font-size:11px; background:rgba(99,102,241,0.12); color:#a5b4fc; border:1px solid rgba(99,102,241,0.2); border-radius:8px; cursor:pointer; font-weight:600; display:none;">
+                    ✉️ Email Link
+                  </button>
+                  <button id="mh-portal-sms-btn" onclick="sendPortalLink('sms')" title="Send via SMS"
+                    style="padding:5px 10px; font-size:11px; background:rgba(245,158,11,0.12); color:#fbbf24; border:1px solid rgba(245,158,11,0.2); border-radius:8px; cursor:pointer; font-weight:600; display:none;">
+                    💬 SMS Link
                   </button>
                   <button onclick="showCreateFolderModal()" title="Create folder"
                     style="padding:5px 10px; font-size:11px; background:rgba(99,102,241,0.12); color:#a5b4fc; border:1px solid rgba(99,102,241,0.2); border-radius:8px; cursor:pointer; font-weight:600;">

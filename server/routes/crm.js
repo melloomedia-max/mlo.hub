@@ -6,6 +6,7 @@ const multer = require('multer');
 const fs = require('fs');
 const { getDriveClient, createInvoicesSubfolder, getInvoicesSubfolderId, createActivityDoc, appendNoteToDoc, getMeetingRecordingsSubfolderId, getOrCreateProjectFolder } = require('../utils/driveHelpers');
 const { generateClientIntelligence } = require('../utils/clientIntelligence');
+const { sendPortalLinkNotify } = require('../utils/notifications');
 const upload = multer({ dest: 'uploads/' });
 
 // Helper to create client folder
@@ -95,6 +96,89 @@ router.get('/clients/:id', (req, res) => {
         if (!row) return res.status(404).json({ error: 'Client not found' });
         res.json(row);
     });
+});
+
+// ── Portal Link Generation & Notification ────────────────────────────────────
+router.post('/clients/:id/portal-link', async (req, res) => {
+    const clientId = req.params.id;
+    const { method } = req.body; // 'email', 'sms', 'both', 'none'
+
+    console.log(`[PORTAL-LOG] portal link generation started for client check ID: ${clientId}`);
+
+    try {
+        // 1. Find Client
+        const client = await new Promise((resolve, reject) => {
+            db.get("SELECT id, name, email, phone, portal_token FROM clients WHERE id = ?", [clientId], (err, row) => {
+                if (err) reject(err); else resolve(row);
+            });
+        });
+
+        if (!client) {
+            console.error(`[PORTAL-LOG] client not found: ${clientId}`);
+            return res.status(404).json({ success: false, error: 'Client not found' });
+        }
+        console.log(`[PORTAL-LOG] client ID / CRM record found: ${client.name}`);
+
+        // 2. Ensure Portal Token exists
+        let token = client.portal_token;
+        if (!token) {
+            token = require('crypto').randomBytes(16).toString('hex');
+            await new Promise((resolve, reject) => {
+                db.run("UPDATE clients SET portal_token = ? WHERE id = ?", [token, clientId], (err) => {
+                    if (err) reject(err); else resolve();
+                });
+            });
+        }
+
+        const portalUrl = `${req.protocol}://${req.get('host')}/portal/${token}`;
+        console.log(`[PORTAL-LOG] portal link created successfully: ${portalUrl}`);
+
+        // 3. Save to portal_links table
+        const linkId = await new Promise((resolve, reject) => {
+            db.run(
+                "INSERT INTO portal_links (client_id, token, url, notification_method, notification_status) VALUES (?, ?, ?, ?, ?)",
+                [clientId, token, portalUrl, method, 'pending'],
+                function(err) { if (err) reject(err); else resolve(this.lastID); }
+            );
+        });
+        console.log(`[PORTAL-LOG] portal link saved to database with ID: ${linkId}`);
+
+        // 4. Attach to CRM activity log (client_communications)
+        await new Promise((resolve, reject) => {
+            db.run(
+                "INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)",
+                [clientId, 'note', 'system', `Generated and sent portal access link via ${method}`],
+                (err) => { if (err) reject(err); else resolve(); }
+            );
+        });
+        console.log(`[PORTAL-LOG] portal link attached to CRM/client record`);
+
+        // 5. Trigger Notification (if requested)
+        let noteStatus = { success: true };
+        if (method && method !== 'none') {
+            console.log(`[PORTAL-LOG] notification send triggered via ${method}`);
+            noteStatus = await sendPortalLinkNotify(client, portalUrl, method);
+            
+            // Update status in db
+            const combinedStatus = (noteStatus.email?.success || noteStatus.sms?.success) ? 'sent' : 'failed';
+            await new Promise((resolve) => {
+                db.run("UPDATE portal_links SET notification_status = ? WHERE id = ?", [combinedStatus, linkId], resolve);
+            });
+            console.log(`[PORTAL-LOG] notification status updated in DB: ${combinedStatus}`);
+        }
+
+        res.json({
+            success: true,
+            link_id: linkId,
+            client_id: clientId,
+            url: portalUrl,
+            notification_status: noteStatus
+        });
+
+    } catch (err) {
+        console.error(`[PORTAL-LOG] fatal error in portal link flow: ${err.message}`);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 // ── Client Businesses CRUD ───────────────────────────────────────────────

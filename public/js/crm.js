@@ -274,6 +274,15 @@ async function openClientProfile(clientId) {
                     <lottie-player src="img/loading-circles.json" background="transparent" speed="1" style="width: 100px; height: 100px;" loop autoplay></lottie-player>
                 </div>
             `;
+            
+            // Show portal buttons
+            const pBtn = document.getElementById('mh-portal-link-btn');
+            const eBtn = document.getElementById('mh-portal-email-btn');
+            const sBtn = document.getElementById('mh-portal-sms-btn');
+            if (pBtn) pBtn.style.display = 'inline-flex';
+            if (eBtn) eBtn.style.display = 'inline-flex';
+            if (sBtn) sBtn.style.display = 'inline-flex';
+            mhClientPortalToken = client.portal_token;
         } else {
             driveLink.style.display = 'none';
             createFolderBtn.style.display = 'block';
@@ -704,6 +713,44 @@ async function mhRenameItem(fileId, currentName) {
 }
 
 // ─── Portal Link ────────────────────────────────────────────
+    }
+}
+
+async function sendPortalLink(method) {
+    if (!currentProfileId) return;
+    
+    const btn = method === 'email' ? document.getElementById('mh-portal-email-btn') : document.getElementById('mh-portal-sms-btn');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = 'Sending...';
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/crm/clients/${currentProfileId}/portal-link`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ method })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            showToast(`Portal link sent via ${method}! ✓`);
+            // Refresh activity feed to show the new system note
+            if (window.crmActivityFeed) window.crmActivityFeed.loadData();
+        } else {
+            showToast(`Failed to send: ${data.error}`, 'error');
+        }
+    } catch (e) {
+        showToast(`Error: ${e.message}`, 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+}
+
 async function copyPortalLink() {
     if (!mhClientPortalToken) { showToast('No portal token', 'error'); return; }
     const url = `${window.location.origin}/portal/${mhClientPortalToken}`;
@@ -715,8 +762,6 @@ async function copyPortalLink() {
         prompt('Copy this portal link:', url);
     }
 }
-
-// Legacy compatibility wrapper
 async function uploadDriveFile(input) {
     uploadToCurrentFolder(input);
 }
