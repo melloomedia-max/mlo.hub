@@ -25,6 +25,8 @@ const { startArchiveScheduler } = require('./jobs/archiveScheduler');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.set('trust proxy', 1);
+
 if (!process.env.APP_PASSWORD || !process.env.SESSION_SECRET) {
     console.warn("\n=======================================================");
     console.warn("⚠️  WARNING: APP_PASSWORD or SESSION_SECRET is missing!");
@@ -39,14 +41,14 @@ app.use(bodyParser.json());
 
 const session = require('express-session');
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'fallback-dev-secret',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     rolling: true,
     cookie: { 
         httpOnly: true,
         sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         maxAge: 15 * 60 * 1000 // 15 minutes of inactivity
     }
 }));
@@ -74,8 +76,14 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
 
     if (matches) {
         req.session.isAuthenticated = true;
-        console.log('[AUTH-DEBUG] LOGIN SUCCESS');
-        res.redirect('/');
+        req.session.save(err => {
+            if (err) {
+                console.error('[AUTH-DEBUG] Session save error:', err);
+                return res.redirect('/login?error=session');
+            }
+            console.log('[AUTH-DEBUG] LOGIN SUCCESS');
+            res.redirect('/');
+        });
     } else {
         res.redirect('/login?error=invalid');
     }
@@ -89,7 +97,10 @@ app.get('/logout', (req, res) => {
 });
 
 function requireAuth(req, res, next) {
-    if (req.session && req.session.isAuthenticated) {
+    const isAuth = !!(req.session && req.session.isAuthenticated);
+    console.log(`[AUTH-DEBUG] Page check: ${req.path} | AUTH: ${isAuth}`);
+
+    if (isAuth) {
         return next();
     }
     

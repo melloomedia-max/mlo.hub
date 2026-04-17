@@ -135,6 +135,8 @@
           errorEl.textContent = 'Invalid password';
       } else if (error === 'notconfigured') {
           errorEl.textContent = 'Server password not configured';
+      } else if (error === 'session') {
+          errorEl.textContent = 'Session could not be established';
       } else if (error) {
           errorEl.textContent = 'Login error';
       }
