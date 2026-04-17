@@ -5,7 +5,9 @@ const dbPath = path.join(__dirname, '../agency.db');
 const db = new sqlite3.Database(dbPath);
 
 // Initialize database tables
+console.log("[DB] Starting database serialization/init...");
 db.serialize(() => {
+  console.log("[DB] Setting up tasks tables...");
   // Tasks table
   db.run(`
     CREATE TABLE IF NOT EXISTS tasks (
@@ -33,6 +35,7 @@ db.serialize(() => {
   });
   db.run("ALTER TABLE tasks ADD COLUMN assigned_to INTEGER", (err) => { });
 
+  console.log("[DB] Setting up meetings tables...");
   // Meetings table
   db.run(`
     CREATE TABLE IF NOT EXISTS meetings (
@@ -51,6 +54,7 @@ db.serialize(() => {
   db.run("ALTER TABLE meetings ADD COLUMN google_event_id TEXT", () => { });
   db.run("ALTER TABLE meetings ADD COLUMN meet_space_name TEXT", () => { });
 
+  console.log("[DB] Setting up CRM tables...");
   // CRM Clients table
   db.run(`
     CREATE TABLE IF NOT EXISTS clients (
@@ -70,9 +74,7 @@ db.serialize(() => {
     )
   `);
 
-  // Migration to add columns if they don't exist (harmless if they do?)
-  // Actually sqlite throws if column exists. We can wrap in try/catch (not easy in run callback) or check first.
-  // Simplest "hack" for this environment: Just try to add them and ignore error.
+  // Migration to add columns if they don't exist
   db.run("ALTER TABLE clients ADD COLUMN first_name TEXT", (err) => { });
   db.run("ALTER TABLE clients ADD COLUMN last_name TEXT", (err) => { });
   db.run("ALTER TABLE clients ADD COLUMN birthday TEXT", (err) => { });
@@ -136,6 +138,9 @@ db.serialize(() => {
     )
   `);
 
+  // Feature 2: Time logs billing
+  db.run("ALTER TABLE time_logs ADD COLUMN billed INTEGER DEFAULT 0", () => { });
+
   // Invoices table
   db.run(`
     CREATE TABLE IF NOT EXISTS invoices (
@@ -157,7 +162,7 @@ db.serialize(() => {
   db.run("ALTER TABLE invoices ADD COLUMN project_id INTEGER", (err) => { });
   db.run("ALTER TABLE invoices ADD COLUMN amount_paid REAL DEFAULT 0", (err) => { });
 
-  // Invoice Payments table (tracks individual partial payments)
+  // Invoice Payments table
   db.run(`
     CREATE TABLE IF NOT EXISTS invoice_payments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -183,10 +188,7 @@ db.serialize(() => {
     )
   `);
 
-  // Migration for project financials
-  db.run("ALTER TABLE projects ADD COLUMN payment_status TEXT DEFAULT 'unpaid'", (err) => { });
-
-  // Client Businesses table (multiple businesses per client)
+  // Client Businesses table
   db.run(`
     CREATE TABLE IF NOT EXISTS client_businesses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -200,43 +202,16 @@ db.serialize(() => {
     )
   `);
 
-  // ==========================================
-  // NEW MASSIVE FEATURES (Features 2-7) 
-  // ==========================================
-
-  // Feature 2: Time logs billing
-  db.run("ALTER TABLE time_logs ADD COLUMN billed INTEGER DEFAULT 0", () => { });
-
-  // Feature 3: AI Client Intelligence
-  db.run("ALTER TABLE clients ADD COLUMN ai_health_report TEXT", () => { });
-
-  // Feature 4: Proposals table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS proposals (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      client_id INTEGER,
-      project_id INTEGER,
-      drive_file_id TEXT,
-      drive_link TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Feature 5: Client Portal
-  db.run("ALTER TABLE clients ADD COLUMN portal_token TEXT", () => {
-      // Auto-generate tokens for existing clients once column is added
-      db.run("UPDATE clients SET portal_token = hex(randomblob(24)) WHERE portal_token IS NULL");
-  });
-
+  console.log("[DB] Setting up campaign and automation tables...");
   // Feature 6: Drip Campaign Sequencer
   db.run(`
     CREATE TABLE IF NOT EXISTS campaigns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,
       description TEXT,
-      trigger TEXT, -- e.g. 'invoice_sent', 'client_onboarded'
-      steps TEXT, -- Legacy: to be replaced by flow_data eventually
-      flow_data TEXT, -- JSON representation of the visual nodes/edges
+      trigger TEXT, 
+      steps TEXT, 
+      flow_data TEXT, 
       status TEXT DEFAULT 'draft',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -255,11 +230,11 @@ db.serialize(() => {
       campaign_id INTEGER,
       enrolled_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       current_step INTEGER DEFAULT 0,
-      current_node_id TEXT, -- For flow-based campaigns
+      current_node_id TEXT, 
       last_action_at DATETIME,
       next_action_at DATETIME,
-      status TEXT DEFAULT 'active', -- active, completed, paused, cancelled
-      metadata TEXT, -- JSON for tracking variables/state
+      status TEXT DEFAULT 'active', 
+      metadata TEXT, 
       FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
       FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
     )
@@ -269,9 +244,6 @@ db.serialize(() => {
   db.run("ALTER TABLE campaign_enrollments ADD COLUMN last_action_at DATETIME", () => { });
   db.run("ALTER TABLE campaign_enrollments ADD COLUMN next_action_at DATETIME", () => { });
   db.run("ALTER TABLE campaign_enrollments ADD COLUMN metadata TEXT", () => { });
-
-  // Feature 7: Meeting Intelligence
-  db.run("ALTER TABLE meetings ADD COLUMN ai_summary TEXT", () => { });
 
   // Feature 8: CRM Subscriptions (Recurring Billing)
   db.run(`
@@ -452,6 +424,14 @@ db.serialize(() => {
     )
   `);
 
+  console.log("[DB] Setting up staff and auth tables...");
+  // Staff table enhancement (authentication)
+  db.run("ALTER TABLE staff ADD COLUMN password TEXT", (err) => { });
+  db.run("ALTER TABLE staff ADD COLUMN status TEXT DEFAULT 'active'", (err) => { });
+  db.run("ALTER TABLE staff ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP", (err) => { });
+  db.run("ALTER TABLE staff ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP", (err) => { });
+
+  console.log("[DB] Database initialization scripts queued.");
 });
 
 module.exports = db;

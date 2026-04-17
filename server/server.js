@@ -1,12 +1,16 @@
+console.log("[BOOT] Server boot process started...");
 const express = require('express');
 const fs = require('fs');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+console.log("[BOOT] Loading environment variables...");
 require('dotenv').config();
 const { google } = require('googleapis');
 
+console.log("[BOOT] Initializing database connection...");
 const db = require('./database');
+console.log("[BOOT] Loading route modules...");
 const tasksRoutes = require('./routes/tasks');
 const meetingsRoutes = require('./routes/meetings');
 const crmRoutes = require('./routes/crm');
@@ -20,9 +24,12 @@ const subscriptionsRoutes = require('./routes/subscriptions');
 const staffRoutes = require('./routes/staff');
 const archivesRoutes = require('./routes/archives');
 const settingsRoutes = require('./routes/settings');
+const { verifyPassword, hashPassword } = require('./utils/auth');
 const { startArchiveScheduler } = require('./jobs/archiveScheduler');
 
+console.log("[BOOT] Creating Express app instance...");
 const app = express();
+console.log("[BOOT] Configuring middleware...");
 const PORT = process.env.PORT || 3000;
 
 app.set('trust proxy', 1);
@@ -39,6 +46,7 @@ if (!process.env.APP_PASSWORD || !process.env.SESSION_SECRET) {
 app.use(cors());
 app.use(bodyParser.json());
 
+console.log("[BOOT] Setting up session middleware...");
 const session = require('express-session');
 app.use(session({
     secret: process.env.SESSION_SECRET,
@@ -52,41 +60,51 @@ app.use(session({
         maxAge: 15 * 60 * 1000 // 15 minutes of inactivity
     }
 }));
+console.log("[BOOT] Registering authentication routes...");
 
 // --- Pure Server Auth Middleware ---
 app.get('/login', (req, res) => {
+    // Migration: Create initial admin if none exists
+    db.get('SELECT id FROM staff WHERE role = "admin" LIMIT 1', (err, row) => {
+        if (!row && process.env.APP_PASSWORD) {
+            const hashed = hashPassword(process.env.APP_PASSWORD);
+            db.run('INSERT INTO staff (name, email, password, role) VALUES (?, ?, ?, ?)', 
+                ['Admin', 'admin@agency.com', hashed, 'admin'], (err) => {
+                    if (!err) console.log('[AUTH] Created initial admin in staff table: admin@agency.com');
+                });
+        }
+    });
+
     const loginPath = path.join(__dirname, '../public/login.html');
-    console.log(`[AUTH-CHECK] Serving login from: ${loginPath}`);
     res.sendFile(loginPath);
 });
 
 app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
-    const password = req.body.password;
+    const { email, password } = req.body;
     const adminPass = process.env.APP_PASSWORD;
-    
-    console.log(`[AUTH-DEBUG] APP_PASSWORD present: ${adminPass ? 'yes' : 'no'}`);
-    
-    if (!adminPass) {
-        console.log('[AUTH-DEBUG] Password match: no (Not Configured)');
-        return res.redirect('/login?error=notconfigured');
-    }
 
-    const matches = (password === adminPass);
-    console.log(`[AUTH-DEBUG] Password match: ${matches ? 'yes' : 'no'}`);
+    // Check staff accounts in DB
+    db.get('SELECT * FROM staff WHERE email = ? AND status = "active"', [email], (err, user) => {
+        if (err) return res.redirect('/login?error=db');
 
-    if (matches) {
-        req.session.isAuthenticated = true;
-        req.session.save(err => {
-            if (err) {
-                console.error('[AUTH-DEBUG] Session save error:', err);
-                return res.redirect('/login?error=session');
-            }
-            console.log('[AUTH-DEBUG] LOGIN SUCCESS');
-            res.redirect('/');
-        });
-    } else {
+        if (user && verifyPassword(password, user.password)) {
+            console.log(`[AUTH] Login success for user: ${email}`);
+            req.session.isAuthenticated = true;
+            req.session.user = { id: user.id, name: user.name, role: user.role };
+            return req.session.save(() => res.redirect('/'));
+        }
+
+        // Legacy Fallback (only if email matches adminPass or APP_PASSWORD exactly)
+        if (!email && password === adminPass) {
+            console.log('[AUTH] Legacy password login success');
+            req.session.isAuthenticated = true;
+            req.session.user = { id: 0, name: 'Legacy Admin', role: 'admin' };
+            return req.session.save(() => res.redirect('/'));
+        }
+
+        console.log(`[AUTH] Login failed for: ${email}`);
         res.redirect('/login?error=invalid');
-    }
+    });
 });
 
 app.get('/logout', (req, res) => {
@@ -172,6 +190,8 @@ app.use((req, res, next) => {
     console.log(`[DEBUG] ${req.method} ${req.url}`);
     next();
 });
+
+console.log("[BOOT] Registering API routes...");
 
 // Routes
 app.use('/api/tasks', tasksRoutes);
@@ -281,20 +301,34 @@ app.get('/oauth2callback', async (req, res) => {
     }
 });
 
+console.log("[BOOT] Attempting to listen on port", PORT, "...");
 // Start server
-const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Agency Hub running on port ${PORT}`);
-    
-    // Start Drip Campaign Engine
-    const { runDueSends } = require('./utils/campaignRunner');
-    runDueSends();
-    setInterval(runDueSends, 60 * 1000); // Check every minute instead of every hour
+try {
+    const server = app.listen(PORT, '0.0.0.0', () => {
+        console.log(`[BOOT] Agency Hub running on port ${PORT}`);
+        console.log("SERVER STARTUP COMPLETE");
+        
+        try {
+            // Start Drip Campaign Engine
+            const { runDueSends } = require('./utils/campaignRunner');
+            runDueSends();
+            setInterval(runDueSends, 60 * 1000); // Check every minute instead of every hour
 
-    // Start Recurring Billing Engine
-    const { processSubscriptions } = require('./utils/subscriptionEngine');
-    processSubscriptions();
-    setInterval(processSubscriptions, 12 * 60 * 60 * 1000); // Every 12 hours
+            // Start Recurring Billing Engine
+            const { processSubscriptions } = require('./utils/subscriptionEngine');
+            processSubscriptions();
+            setInterval(processSubscriptions, 12 * 60 * 60 * 1000); // Every 12 hours
 
-    // Start Archive Scheduler
-    startArchiveScheduler();
-});
+            // Start Archive Scheduler
+            startArchiveScheduler();
+        } catch (jobErr) {
+            console.error("[BOOT-ERROR] Failed to initialize background jobs:", jobErr);
+        }
+    });
+
+    server.on('error', (e) => {
+        console.error("[BOOT-FATAL] Server socket error:", e);
+    });
+} catch (listenErr) {
+    console.error("[BOOT-FATAL] Failed to start server listening:", listenErr);
+}
