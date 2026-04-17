@@ -23,7 +23,7 @@ const settingsRoutes = require('./routes/settings');
 const { startArchiveScheduler } = require('./jobs/archiveScheduler');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -146,8 +146,7 @@ app.get('/oauth2callback', async (req, res) => {
 
 // Start server
 const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Agency Hub running at http://0.0.0.0:${PORT}`);
-    console.log(`To access from another device, use http://<YOUR_IP_ADDRESS>:${PORT}`);
+    console.log(`Agency Hub running on port ${PORT}`);
     
     // Start Drip Campaign Engine
     const { runDueSends } = require('./utils/campaignRunner');
