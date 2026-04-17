@@ -61,7 +61,17 @@
     .mobile-menu-toggle {
         position: absolute;
         right: 15px;
-        top: 25px;
+        top: 15px;
+        padding: 5px;
+    }
+
+    header .brand lottie-player {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    header .brand h1 {
+        font-size: 20px !important;
     }
 
     nav {
@@ -102,14 +112,90 @@
 
     /* Stack Dashboard Cards (1 Column) */
     div[style*="grid-template-columns: repeat(6, 1fr)"],
-    div[style*="grid-template-columns: repeat(2, 1fr)"] {
+    div[style*="grid-template-columns: repeat(2, 1fr)"],
+    div[style*="grid-template-columns: repeat(5, 1fr)"] {
         grid-template-columns: 1fr !important;
+        gap: 16px !important;
     }
     
-    .stat-card[style*="grid-column: span 2"],
-    .stat-card[style*="grid-column: span 3"],
-    .stat-card[style*="grid-column: span 4"] {
+    .stat-card, 
+    .widget,
+    div[style*="grid-column: span 6"],
+    div[style*="grid-column: span 3"],
+    div[style*="grid-column: span 4"],
+    div[style*="grid-column: span 2"] {
         grid-column: span 1 !important;
+        width: 100% !important;
+    }
+
+    /* Refined Stat Cards */
+    .stat-card {
+        padding: 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 20px !important;
+        border-radius: var(--radius-lg) !important;
+    }
+
+    .stat-icon {
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 20px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .stat-info h3 {
+        font-size: 13px !important;
+        opacity: 0.7;
+        margin-bottom: 2px !important;
+    }
+
+    .stat-value {
+        font-size: 24px !important;
+    }
+
+    /* AI & Charts Sections */
+    #ai-smart-panel {
+        padding: 16px !important;
+    }
+
+    #ai-smart-panel h3 {
+        font-size: 16px !important;
+    }
+
+    .widget h3 {
+        font-size: 16px !important;
+        margin-bottom: 15px !important;
+    }
+
+    /* Chart Responsibility */
+    canvas {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 250px !important;
+    }
+
+    /* Section Header and Date Fix */
+    .section-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .section-header h2 {
+        font-size: 22px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .date-display {
+        display: inline-block !important;
+        margin-top: 5px !important;
+        margin-left: 0 !important;
+    }
+
+    .section-subtitle {
+        font-size: 14px !important;
     }
 
     /* Make Forms & Buttons touch friendly */
