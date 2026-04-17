@@ -175,16 +175,34 @@ async function checkGlobalAuth() {
 
     try {
         const response = await fetch('/api/auth/status');
-        const status = await response.json();
+        const status = await response.json(); // { loggedIn: bool, user: { name, email, role } }
 
-        if (status.isAuthenticated) {
+        if (status.loggedIn && status.user) {
+            const role = status.user.role || 'staff';
+            window.userRole = role; // Global role for other scripts
+            
+            // ── Update Global Status Pill ────────────────────────────
             statusDiv.innerHTML = `
-                <a href="/auth/google" target="_blank" title="Click to refresh connection" style="color: #6ee7b7; display: flex; align-items: center; gap: 4px; text-decoration: none; font-size:12px; font-weight:600;">
-                    <span style="width: 7px; height: 7px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px rgba(16,185,129,0.6);"></span>
-                    Google Connected
-                </a>
-                <span style="color: rgba(255,255,255,0.4); font-size: 11px;">(${status.email || 'melloomedia@gmail.com'})</span>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+                    <a href="/auth/google" target="_blank" title="Click to refresh connection" style="color: #6ee7b7; display: flex; align-items: center; gap: 4px; text-decoration: none; font-size:12px; font-weight:600;">
+                        <span style="width: 7px; height: 7px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px rgba(16,185,129,0.6);"></span>
+                        Google Connected
+                    </a>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: rgba(255,255,255,0.4); font-size: 11px;">${status.user.email}</span>
+                        <span class="badge" style="background: rgba(var(--brand-rgb, 99, 102, 241), 0.15); color: var(--brand-color); font-size: 9px; padding: 2px 6px; border-radius: 6px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">${role}</span>
+                    </div>
+                </div>
             `;
+
+            // ── Role-Based UI Hiding ────────────────────────────
+            if (role !== 'admin') {
+                console.log('[RBAC] Pruning admin-only elements for staff user...');
+                document.querySelectorAll('[data-role="admin"]').forEach(el => {
+                    el.style.display = 'none';
+                    el.remove(); // Force removal for security/cleanliness
+                });
+            }
         } else {
             statusDiv.innerHTML = `
                 <a href="/auth/google" target="_blank" style="color: #a5b4fc; text-decoration: none; font-weight: 600; font-size:12px; display: flex; align-items: center; gap: 4px;">

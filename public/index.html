@@ -60,9 +60,9 @@
         <button onclick="showSection('meetings')">Meetings</button>
         <button onclick="showSection('crm')">CRM</button>
         <button onclick="showSection('invoices')">Invoices</button>
-        <button onclick="showSection('subscriptions')">Subs</button>
-        <button onclick="showSection('campaigns')">Campaigns</button>
-        <button onclick="window.location.href='settings.html'">⚙️ Settings</button>
+        <button onclick="showSection('subscriptions')" data-role="admin">Subs</button>
+        <button onclick="showSection('campaigns')" data-role="admin">Campaigns</button>
+        <button data-role="admin" onclick="window.location.href='settings.html'">⚙️ Settings</button>
       </nav>
       <div id="global-auth-status"
         style="margin-left: 20px; font-size: 12px; display: flex; align-items: center; gap: 8px;">
@@ -95,21 +95,21 @@
       <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 24px; margin-bottom: 30px;">
         
         <!-- Row 1: Financial Core (3 Columns) -->
-        <div class="stat-card" style="grid-column: span 2; border-left: 4px solid #10b981; cursor: pointer;" onclick="showSection('invoices')">
+        <div class="stat-card" data-role="admin" style="grid-column: span 2; border-left: 4px solid #10b981; cursor: pointer;" onclick="showSection('invoices')">
           <div class="stat-icon">💰</div>
           <div class="stat-info">
             <h3>Total Revenue</h3>
             <p class="stat-value" id="stat-revenue">$0</p>
           </div>
         </div>
-        <div class="stat-card" style="grid-column: span 2; border-left: 4px solid #f59e0b; cursor: pointer;" onclick="showSection('invoices')">
+        <div class="stat-card" data-role="admin" style="grid-column: span 2; border-left: 4px solid #f59e0b; cursor: pointer;" onclick="showSection('invoices')">
           <div class="stat-icon">⏳</div>
           <div class="stat-info">
             <h3>Pending Invoices</h3>
             <p class="stat-value" id="stat-pending-invoices">$0</p>
           </div>
         </div>
-        <div class="stat-card" style="grid-column: span 2; border-left: 4px solid #3b82f6; cursor: pointer;" onclick="showSection('invoices')">
+        <div class="stat-card" data-role="admin" style="grid-column: span 2; border-left: 4px solid #3b82f6; cursor: pointer;" onclick="showSection('invoices')">
           <div class="stat-icon">📈</div>
           <div class="stat-info">
             <h3>Projected</h3>
@@ -147,7 +147,7 @@
               <p class="stat-value" id="stat-meetings">0</p>
             </div>
           </div>
-          <div class="stat-card" style="cursor: pointer;" onclick="showSection('subscriptions')">
+          <div class="stat-card" data-role="admin" style="cursor: pointer;" onclick="showSection('subscriptions')">
             <div class="stat-icon">🔄</div>
             <div class="stat-info">
               <h3>Active Subs</h3>

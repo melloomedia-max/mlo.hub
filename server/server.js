@@ -140,7 +140,7 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
             if (user.status === 'active' && match) {
                 console.log(`[AUTH] Login success for user: ${email}`);
                 req.session.isAuthenticated = true;
-                req.session.user = { id: user.id, name: user.name, role: user.role };
+                req.session.user = { id: user.id, name: user.name, role: user.role, email: user.email };
                 return req.session.save(() => res.redirect('/'));
             }
         }
@@ -149,7 +149,7 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
         if (!email && password === adminPass) {
             console.log('[AUTH] Legacy password login success');
             req.session.isAuthenticated = true;
-            req.session.user = { id: 0, name: 'Legacy Admin', role: 'admin' };
+            req.session.user = { id: 0, name: 'Legacy Admin', role: 'admin', email: 'legacy@agency.com' };
             return req.session.save(() => res.redirect('/'));
         }
 
@@ -174,8 +174,8 @@ app.get('/', requireAuth, (req, res) => {
     res.sendFile(indexPath);
 });
 
-// Explicit Settings Handler
-app.get('/settings', requireAuth, (req, res) => {
+// Explicit Settings Handler (ADMIN ONLY)
+app.get('/settings', requireAdmin, (req, res) => {
     const settingsPath = path.join(__dirname, '../public/settings.html');
     console.log(`[AUTH-CHECK] Serving settings from: ${settingsPath}`);
     res.sendFile(settingsPath);
@@ -194,6 +194,18 @@ app.get('/api/session/ping', requireAuth, (req, res) => {
     res.json({ ok: true });
 });
 
+// Auth Status for Frontend
+app.get('/api/auth/status', (req, res) => {
+    if (req.session && req.session.isAuthenticated && req.session.user) {
+        res.json({
+            loggedIn: true,
+            user: req.session.user
+        });
+    } else {
+        res.json({ loggedIn: false });
+    }
+});
+
 // Intercept specific routes
 app.use((req, res, next) => {
     const route = req.path;
@@ -206,6 +218,11 @@ app.use((req, res, next) => {
 
     // Catch exactly the specified frontend routes or API logic
     if (protectedRoutes.includes(route) || route.startsWith('/api/')) {
+        // Special Case: Settings page and specific APIs are Admin Only
+        const adminOnlyRoutes = ['/settings', '/settings.html', '/api/staff', '/api/billing', '/api/revenue', '/api/archives'];
+        if (adminOnlyRoutes.some(r => route === r || route.startsWith(r + '/'))) {
+            return requireAdmin(req, res, next);
+        }
         return requireAuth(req, res, next);
     }
     
