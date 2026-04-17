@@ -1,0 +1,571 @@
+/* ============================================
+   MELLOO AGENCY HUB — MOBILE STYLES
+   Add this file: src/styles/mobile.css
+   Import in App.jsx: import './styles/mobile.css'
+   ============================================ */
+
+/* ---- RESET & ROOT ---- */
+:root {
+  --mob-bg: #080d1a;
+  --mob-surface: #0f1629;
+  --mob-card: #131d35;
+  --mob-border: rgba(255, 255, 255, 0.07);
+  --mob-accent: #5b5ef4;
+  --mob-accent2: #7c3aed;
+  --mob-text: #f0f4ff;
+  --mob-muted: #6b7a99;
+  --mob-pill: #1a2340;
+  --mob-nav-h: 68px;
+  --mob-safe: env(safe-area-inset-bottom, 0px);
+}
+
+/* ---- BODY LOCK ---- */
+@media (max-width: 768px) {
+  html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    background: var(--mob-bg) !important;
+  }
+
+  #root {
+    height: 100%;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* ============================================
+   MOBILE SHELL — the outer app frame
+   ============================================ */
+.mob-shell {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Hide desktop layout completely */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Show mobile shell */
+  .mob-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    width: 100%;
+    background: var(--mob-bg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Scrollable page content */
+  .mob-page {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    padding-bottom: calc(var(--mob-nav-h) + var(--mob-safe) + 20px);
+  }
+
+  /* ============================================
+     BOTTOM NAV BAR
+     ============================================ */
+  .mob-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--mob-nav-h) + var(--mob-safe));
+    padding-bottom: var(--mob-safe);
+    background: rgba(8, 13, 26, 0.96);
+    border-top: 1px solid var(--mob-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    padding-top: 10px;
+    z-index: 999;
+  }
+
+  .mob-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 16px;
+    border-radius: 12px;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .mob-nav-btn:active {
+    background: rgba(91, 94, 244, 0.12);
+  }
+
+  .mob-nav-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mob-muted);
+    transition: color 0.15s, transform 0.15s;
+  }
+
+  .mob-nav-btn.active .mob-nav-icon {
+    color: var(--mob-accent);
+    transform: translateY(-1px);
+  }
+
+  .mob-nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mob-muted);
+    transition: color 0.15s;
+  }
+
+  .mob-nav-btn.active .mob-nav-label {
+    color: var(--mob-accent);
+  }
+
+  /* Active indicator dot */
+  .mob-nav-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: calc(var(--mob-safe) + 6px);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--mob-accent);
+  }
+
+  /* ============================================
+     FAB — Floating Action Button
+     ============================================ */
+  .mob-fab {
+    position: fixed;
+    bottom: calc(var(--mob-nav-h) + var(--mob-safe) + 16px);
+    right: 20px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--mob-accent), var(--mob-accent2));
+    border: none;
+    color: #fff;
+    font-size: 26px;
+    font-weight: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(91, 94, 244, 0.45);
+    cursor: pointer;
+    z-index: 998;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .mob-fab:active {
+    transform: scale(0.92);
+    box-shadow: 0 4px 12px rgba(91, 94, 244, 0.35);
+  }
+
+  /* ============================================
+     DASHBOARD PAGE
+     ============================================ */
+  .mob-dashboard {
+    padding: 0 16px;
+  }
+
+  /* Header area */
+  .mob-header {
+    padding: 56px 0 24px;
+  }
+
+  .mob-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .mob-brand-orb {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #6ee7b7, #3b82f6 50%, #1e3a6e);
+    flex-shrink: 0;
+  }
+
+  .mob-brand-name {
+    font-size: 14px;
+    color: var(--mob-muted);
+    font-style: italic;
+    letter-spacing: 0.01em;
+  }
+
+  .mob-brand-name strong {
+    font-style: normal;
+    font-weight: 600;
+    color: rgba(240, 244, 255, 0.6);
+  }
+
+  .mob-page-title {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--mob-text);
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin: 0;
+  }
+
+  /* Quick stat pills */
+  .mob-pills {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .mob-pills::-webkit-scrollbar { display: none; }
+
+  .mob-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--mob-pill);
+    border: 1px solid var(--mob-border);
+    border-radius: 100px;
+    padding: 7px 14px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .mob-pill-icon {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .mob-pill-num {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--mob-text);
+  }
+
+  .mob-pill-label {
+    font-size: 13px;
+    color: var(--mob-muted);
+  }
+
+  /* Tab bar */
+  .mob-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .mob-tabs::-webkit-scrollbar { display: none; }
+
+  .mob-tab {
+    padding: 9px 20px;
+    border-radius: 100px;
+    border: 1px solid var(--mob-border);
+    background: var(--mob-pill);
+    color: var(--mob-muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .mob-tab.active {
+    background: var(--mob-text);
+    color: #080d1a;
+    border-color: transparent;
+    font-weight: 700;
+  }
+
+  /* Stat cards */
+  .mob-card {
+    background: var(--mob-card);
+    border: 1px solid var(--mob-border);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+    transition: transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mob-card:active {
+    transform: scale(0.985);
+  }
+
+  .mob-card-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    background: rgba(91, 94, 244, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+
+  .mob-card-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mob-muted);
+    margin-bottom: 6px;
+  }
+
+  .mob-card-value {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--mob-text);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  /* ============================================
+     CLIENTS PAGE
+     ============================================ */
+  .mob-clients-page {
+    padding: 0 16px;
+  }
+
+  .mob-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--mob-card);
+    border: 1px solid var(--mob-border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+  }
+
+  .mob-search-bar input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--mob-text);
+    font-size: 15px;
+  }
+
+  .mob-search-bar input::placeholder {
+    color: var(--mob-muted);
+  }
+
+  .mob-client-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--mob-card);
+    border: 1px solid var(--mob-border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 10px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mob-client-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--mob-accent), var(--mob-accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .mob-client-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--mob-text);
+    margin-bottom: 3px;
+  }
+
+  .mob-client-meta {
+    font-size: 13px;
+    color: var(--mob-muted);
+  }
+
+  .mob-client-status {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 5px 12px;
+    border-radius: 100px;
+  }
+
+  .mob-status-active {
+    background: rgba(29, 158, 117, 0.15);
+    color: #3dd68c;
+  }
+
+  .mob-status-pending {
+    background: rgba(239, 159, 39, 0.15);
+    color: #f59e0b;
+  }
+
+  /* ============================================
+     SECTION HEADER (used across pages)
+     ============================================ */
+  .mob-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-top: 8px;
+  }
+
+  .mob-section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--mob-text);
+  }
+
+  .mob-section-action {
+    font-size: 13px;
+    color: var(--mob-accent);
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ============================================
+     TASKS PAGE
+     ============================================ */
+  .mob-task-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--mob-card);
+    border: 1px solid var(--mob-border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+
+  .mob-task-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--mob-muted);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .mob-task-check.done {
+    background: var(--mob-accent);
+    border-color: var(--mob-accent);
+  }
+
+  .mob-task-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--mob-text);
+    margin-bottom: 2px;
+  }
+
+  .mob-task-title.done {
+    text-decoration: line-through;
+    color: var(--mob-muted);
+  }
+
+  .mob-task-meta {
+    font-size: 12px;
+    color: var(--mob-muted);
+  }
+
+  .mob-task-priority {
+    margin-left: auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .mob-priority-high   { background: #f87171; }
+  .mob-priority-medium { background: #f59e0b; }
+  .mob-priority-low    { background: #3dd68c; }
+
+  /* ============================================
+     EMPTY STATES
+     ============================================ */
+  .mob-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+    color: var(--mob-muted);
+    text-align: center;
+  }
+
+  .mob-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+  }
+
+  .mob-empty-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--mob-text);
+    margin-bottom: 8px;
+  }
+
+  .mob-empty-sub {
+    font-size: 14px;
+    color: var(--mob-muted);
+    max-width: 220px;
+    line-height: 1.5;
+  }
+}
+
+/* ============================================
+   DESKTOP HIDES MOBILE SHELL
+   ============================================ */
+@media (min-width: 769px) {
+  .mob-shell { display: none !important; }
+  .mob-nav   { display: none !important; }
+  .mob-fab   { display: none !important; }
+}
