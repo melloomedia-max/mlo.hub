@@ -1,0 +1,153 @@
+/* 
+===================================================
+   📱 AGENCY HUB MOBILE RESPONSIVE STYLES
+=================================================== 
+*/
+
+/* Mobile Menu Toggle Defaults */
+.mobile-menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 8px;
+    margin-left: auto;
+}
+
+/* ─── Tablet Breakpoint (max-width: 1024px) ─── */
+@media (max-width: 1024px) {
+    /* Collapse Master Dashboard Grid */
+    div[style*="grid-template-columns: repeat(6, 1fr)"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .stat-card[style*="grid-column: span 2"] {
+        grid-column: span 1 !important;
+    }
+
+    /* Make Tables Scrollable */
+    table {
+        display: block !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* ─── Mobile Breakpoint (max-width: 768px) ─── */
+@media (max-width: 768px) {
+    
+    /* Show Hamburger, Hide Nav by Default */
+    .mobile-menu-toggle {
+        display: block;
+    }
+
+    header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        padding: 15px !important;
+        position: relative;
+    }
+
+    .brand {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    /* Re-position mobile toggle to right side of brand */
+    .mobile-menu-toggle {
+        position: absolute;
+        right: 15px;
+        top: 25px;
+    }
+
+    nav {
+        display: none !important;
+        flex-direction: column;
+        width: 100%;
+        margin-top: 20px;
+        background: var(--glass-bg);
+        border-radius: var(--radius-md);
+        padding: 10px;
+    }
+
+    nav.mobile-active {
+        display: flex !important;
+    }
+
+    nav button {
+        width: 100%;
+        text-align: left;
+        padding: 12px 20px !important;
+        margin: 5px 0 !important;
+        font-size: 16px !important;
+    }
+
+    /* Stack Container and Sections */
+    .container {
+        padding: 10px !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .section {
+        padding: 15px !important;
+        border-radius: var(--radius-md) !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* Stack Dashboard Cards (1 Column) */
+    div[style*="grid-template-columns: repeat(6, 1fr)"],
+    div[style*="grid-template-columns: repeat(2, 1fr)"] {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .stat-card[style*="grid-column: span 2"],
+    .stat-card[style*="grid-column: span 3"],
+    .stat-card[style*="grid-column: span 4"] {
+        grid-column: span 1 !important;
+    }
+
+    /* Make Forms & Buttons touch friendly */
+    button, input, select, textarea {
+        font-size: 16px !important; /* Prevents iOS auto-zoom */
+        padding: 14px 16px !important;
+    }
+
+    /* Fix table wrappers */
+    .table-container, .invoices-list {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -15px;
+        padding: 0 15px;
+        width: calc(100% + 30px);
+    }
+    
+    table {
+        font-size: 14px;
+    }
+    
+    table th, table td {
+        padding: 10px 8px !important;
+    }
+
+    /* Fix modals to fit screen */
+    .modal-content, .task-modal-content {
+        width: 95% !important;
+        max-width: 100% !important;
+        margin: 10px auto !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+        padding: 20px !important;
+    }
+    
+    /* Login Page Centering */
+    .login-container {
+        margin: 20px !important;
+        padding: 30px 20px !important;
+    }
+}
