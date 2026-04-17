@@ -29,59 +29,60 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// --- Simple Cookie Auth ---
-app.post('/api/login', (req, res) => {
-    const { password } = req.body;
-    // Default password 'melloo' if ADMIN_PASSWORD is not set in Railway
-    const adminPass = process.env.ADMIN_PASSWORD || 'melloo';
-    
-    if (password === adminPass) {
-        res.setHeader('Set-Cookie', 'agency_auth=authenticated; Path=/; HttpOnly; Max-Age=2592000'); // 30 days
-        res.json({ success: true, token: 'authenticated' });
+const session = require('express-session');
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'melloo-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false } // False for Railway HTTP/HTTPS proxy dev environments usually
+}));
+
+// --- Pure Server Auth Middleware ---
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/login.html'));
+});
+
+app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
+    const password = req.body.password;
+    if (password === (process.env.APP_PASSWORD || 'melloo')) {
+        req.session.isAuthenticated = true;
+        res.redirect('/');
     } else {
-        res.status(401).json({ error: 'Incorrect password' });
+        res.redirect('/login?error=true');
     }
 });
 
-app.get('/api/check-auth', (req, res) => {
-    const cookieHeader = req.headers.cookie || '';
-    if (cookieHeader.includes('agency_auth=authenticated')) {
-        res.json({ authenticated: true });
-    } else {
-        res.json({ authenticated: false });
-    }
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/login');
 });
 
-// Protect all routes except public assets and portal
-app.use((req, res, next) => {
-    const path = req.path;
-    const isPublic = path === '/login.html' || 
-                     path.startsWith('/css/') || 
-                     path.startsWith('/img/') || 
-                     path.startsWith('/js/components/') || // allow public components logic if needed
-                     path.startsWith('/portal') ||
-                     path === '/oauth2callback' || 
-                     path.startsWith('/auth/google') ||
-                     path === '/api/login' || 
-                     path === '/api/check-auth';
-
-    // Portal API routes match /api/TOKEN/...
-    const isPortalApi = path.match(/^\/api\/[A-Z0-9]{30,}/i);
-
-    if (isPublic || isPortalApi) {
+function requireAuth(req, res, next) {
+    if (req.session && req.session.isAuthenticated) {
         return next();
     }
-
-    const cookieHeader = req.headers.cookie || '';
-    if (!cookieHeader.includes('agency_auth=authenticated')) {
-        // Redirect browser navigation to login, return 401 for fetch
-        if (req.accepts('html', 'json') === 'html') {
-            return res.redirect('/login.html');
-        } else {
-            return res.status(401).json({ error: 'Unauthorized. Please log in.' });
-        }
+    
+    if (req.path.startsWith('/api/')) {
+        return res.status(401).json({ error: 'Unauthorized' });
     }
+    return res.redirect('/login');
+}
 
+// Intercept specific routes
+app.use((req, res, next) => {
+    const route = req.path;
+    const protectedRoutes = ['/', '/dashboard', '/clients', '/invoices', '/meetings', '/campaigns', '/settings', '/index.html', '/settings.html'];
+    
+    // Always skip these completely
+    if (route === '/oauth2callback' || route.startsWith('/auth/google') || route === '/login' || route === '/logout') return next();
+    if (route.startsWith('/portal') || route.match(/^\/api\/[A-Z0-9]{30,}/i)) return next();
+    if (route.startsWith('/css/') || route.startsWith('/img/') || route.startsWith('/js/components/')) return next();
+
+    // Catch exactly the specified frontend routes or API logic
+    if (protectedRoutes.includes(route) || route.startsWith('/api/')) {
+        return requireAuth(req, res, next);
+    }
+    
     next();
 });
 // -------------------------

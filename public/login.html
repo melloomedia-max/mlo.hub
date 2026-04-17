@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agency Hub - Login</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
@@ -111,59 +111,26 @@
 
   <div class="login-container">
     <div class="brand-header">
-      <lottie-player src="img/Siri.json" background="transparent" speed="1" style="width: 50px; height: 50px;" loop autoplay></lottie-player>
+      <lottie-player src="/img/Siri.json" background="transparent" speed="1" style="width: 50px; height: 50px;" loop autoplay></lottie-player>
       <h1><span>melloo</span> Agency Hub</h1>
     </div>
     
     <p style="color: rgba(255,255,255,0.6); margin-bottom: 30px; font-size: 15px;">Enter your admin password to continue.</p>
     
-    <form id="login-form">
-      <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password" autofocus>
-      <button type="submit" id="login-btn">Secure Login</button>
+    <form action="/login" method="POST">
+      <input type="password" name="password" id="password" placeholder="••••••••" required autocomplete="current-password" autofocus>
+      <button type="submit">Secure Login</button>
       <div id="error-msg" class="error-msg"></div>
     </form>
   </div>
 
   <script>
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const pw = document.getElementById('password').value;
-      const btn = document.getElementById('login-btn');
-      const err = document.getElementById('error-msg');
-      
-      btn.textContent = 'Verifying...';
-      err.textContent = '';
-      
-      try {
-        const res = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: pw })
-        });
-        
-        const data = await res.json();
-        if (data.success) {
-          localStorage.setItem('agency_admin_token', data.token);
-          window.location.href = '/';
-        } else {
-          err.textContent = data.error || 'Authentication failed';
-          btn.textContent = 'Secure Login';
-          document.getElementById('password').value = '';
-        }
-      } catch (error) {
-        err.textContent = 'Network error. Please try again.';
-        btn.textContent = 'Secure Login';
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('error')) {
+          document.getElementById('error-msg').textContent = 'Invalid password';
       }
-    });
-
-    // Auto-redirect if already logged in locally
-    if (localStorage.getItem('agency_admin_token')) {
-        fetch('/api/check-auth', {
-            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('agency_admin_token') }
-        }).then(res => res.json()).then(data => {
-            if (data.authenticated) window.location.href = '/';
-        });
-    }
+      // clear any legacy localStorage token
+      localStorage.removeItem('agency_admin_token');
   </script>
 
 </body>

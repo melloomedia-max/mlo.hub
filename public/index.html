@@ -5,16 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agency Hub</title>
-  <script>
-    // Bulletproof Client-Side Gate
-    if (window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
-        const hasToken = localStorage.getItem('agency_admin_token');
-        const cookies = document.cookie;
-        if (!hasToken || !cookies.includes('agency_auth=authenticated')) {
-            window.location.replace('/login.html');
-        }
-    }
-  </script>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/crm-styles.css">
   <link rel="stylesheet" href="css/campaign-builder.css">
