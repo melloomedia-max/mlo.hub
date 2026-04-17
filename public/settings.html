@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Hub - Settings & Admin</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/crm-styles.css">
+  <link rel="stylesheet" href="css/invoices.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  <style>
+    /* ─── Settings Page Specific Styles ──────────────────────────── */
+    .settings-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 32px;
+      min-height: calc(100vh - 160px);
+    }
+    
+    header {
+      position: relative;
+      z-index: 10000;
+    }
+
+    /* Sidebar Navigation */
+    .settings-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: sticky;
+      top: 100px;
+      align-self: start;
+    }
+
+    .settings-sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.25s var(--ease);
+      border: 1px solid transparent;
+      background: transparent;
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .settings-sidebar-item:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--text-primary);
+    }
+
+    .settings-sidebar-item.active {
+      background: rgba(99,102,241,0.12);
+      color: #a5b4fc;
+      border-color: rgba(99,102,241,0.25);
+      font-weight: 600;
+    }
+
+    .settings-sidebar-item .sidebar-icon {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .settings-sidebar-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin: 12px 8px;
+    }
+
+    /* Content Panels */
+    .settings-panel {
+      display: none;
+      animation: fadeUp 0.3s var(--ease) both;
+    }
+
+    .settings-panel.active {
+      display: block;
+    }
+
+    .settings-panel-header {
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .settings-panel-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .settings-panel-header p {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* Settings Cards */
+    .settings-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 20px;
+      transition: all 0.3s var(--ease);
+    }
+
+    .settings-card:hover {
+      border-color: var(--glass-border-hi);
+    }
+
+    .settings-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .settings-card-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 18px;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      gap: 16px;
+    }
+
+    .settings-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .settings-row:first-child {
+      padding-top: 0;
+    }
+
+    .settings-row-label {
+      flex: 1;
+    }
+
+    .settings-row-label h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .settings-row-label p {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .settings-row-control {
+      flex-shrink: 0;
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+      cursor: pointer;
+      vertical-align: middle;
+      margin: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.06);
+      border-radius: 99px;
+      border: 1px solid rgba(255,255,255,0.25);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+      transition: all 0.3s var(--ease);
+      box-sizing: border-box;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      left: 3px;
+      top: 3px;
+      transition: all 0.3s var(--spring);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
+      border-color: rgba(255,255,255,0.4);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.1), 0 0 12px rgba(99,102,241,0.3);
+    }
+
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(22px);
+    }
+
+    /* Settings Inputs */
+    .settings-input {
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.25s var(--ease);
+      width: 100%;
+    }
+
+    .settings-input:focus {
+      border-color: rgba(99,102,241,0.6);
+      background: rgba(99,102,241,0.06);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+
+    .settings-input-sm {
+      width: 200px;
+    }
+
+    .settings-select {
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      min-width: 160px;
+    }
+
+    .settings-select option {
+      background: #1a1a2e;
+      color: var(--text-primary);
+    }
+
+    /* Buttons */
+    .settings-btn {
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: all 0.25s var(--spring);
+    }
+
+    .settings-btn-primary {
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
+      color: white;
+      box-shadow: 0 4px 14px rgba(99,102,241,0.25);
+    }
+
+    .settings-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99,102,241,0.35);
+    }
+
+    .settings-btn-secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text-secondary);
+      border: 1px solid var(--glass-border);
+    }
+
+    .settings-btn-secondary:hover {
+      background: rgba(255,255,255,0.14);
+      color: var(--text-primary);
+    }
+
+    .settings-btn-danger {
+      background: rgba(244,63,94,0.12);
+      color: #fda4af;
+      border: 1px solid rgba(244,63,94,0.25);
+    }
+
+    .settings-btn-danger:hover {
+      background: rgba(244,63,94,0.22);
+      border-color: rgba(244,63,94,0.4);
+    }
+
+    .settings-btn-success {
+      background: rgba(16,185,129,0.15);
+      color: #6ee7b7;
+      border: 1px solid rgba(16,185,129,0.25);
+    }
+
+    .settings-btn-success:hover {
+      background: rgba(16,185,129,0.25);
+    }
+
+    /* Color Swatches */
+    .color-palette {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .color-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s var(--ease);
+      position: relative;
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.15);
+    }
+
+    .color-swatch.selected {
+      border-color: white;
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.5);
+    }
+
+    .color-swatch.selected::after {
+      content: '✓';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    /* Portal Link Row */
+    .portal-link-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      transition: background 0.2s;
+    }
+
+    .portal-link-row:hover {
+      background: rgba(255,255,255,0.06);
+    }
+
+    .portal-client-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .portal-client-company {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-left: 6px;
+      font-weight: 400;
+    }
+
+    .portal-link-url {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .portal-link-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .portal-action-btn {
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.05);
+      color: var(--text-secondary);
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .portal-action-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: var(--text-primary);
+    }
+
+    /* Status Indicator */
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .status-dot.green {
+      background: #10b981;
+      box-shadow: 0 0 6px rgba(16,185,129,0.5);
+    }
+
+    .status-dot.red {
+      background: #f43f5e;
+      box-shadow: 0 0 6px rgba(244,63,94,0.5);
+    }
+
+    .status-dot.amber {
+      background: #f59e0b;
+      box-shadow: 0 0 6px rgba(245,158,11,0.5);
+    }
+
+    /* Badge */
+    .settings-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-pro {
+      background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(167,139,250,0.2));
+      color: #a5b4fc;
+    }
+
+    .badge-active {
+      background: rgba(16,185,129,0.15);
+      color: #6ee7b7;
+    }
+
+    .badge-inactive {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-tertiary);
+    }
+
+    /* Danger Zone */
+    .danger-zone {
+      border-color: rgba(244,63,94,0.2) !important;
+      background: rgba(244,63,94,0.03) !important;
+    }
+
+    .danger-zone .settings-card-title {
+      color: #fda4af;
+    }
+
+    /* Admin lock overlay */
+    .admin-lock-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(10,10,18,0.95);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .admin-lock-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: var(--glass-shadow-lg);
+    }
+
+    .admin-lock-card h2 {
+      margin-bottom: 8px;
+      font-size: 20px;
+    }
+
+    .admin-lock-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .pin-input-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .pin-digit {
+      width: 48px;
+      height: 56px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      color: var(--text-primary);
+      outline: none;
+      font-family: inherit;
+      transition: all 0.2s;
+      -webkit-text-security: disc;
+    }
+
+    .pin-digit:focus {
+      border-color: rgba(99,102,241,0.6);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    }
+
+    /* Audit log */
+    .audit-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 13px;
+    }
+
+    .audit-row:last-child {
+      border-bottom: none;
+    }
+
+    .audit-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .audit-info {
+      flex: 1;
+    }
+
+    .audit-info strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .audit-info p {
+      color: var(--text-tertiary);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .audit-time {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .settings-layout {
+        grid-template-columns: 1fr;
+      }
+      .settings-sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        position: static;
+        gap: 2px;
+        padding-bottom: 8px;
+      }
+      .settings-sidebar-item {
+        white-space: nowrap;
+        padding: 10px 14px;
+      }
+      .settings-sidebar-divider {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Admin PIN Lock Overlay -->
+  <div id="admin-lock-overlay" class="admin-lock-overlay">
+    <div class="admin-lock-card">
+      <div style="font-size: 48px; margin-bottom: 16px;">🔐</div>
+      <h2>Admin Access Required</h2>
+      <p>Enter your 4-digit admin PIN to access settings.</p>
+      <div class="pin-input-group">
+        <input type="text" class="pin-digit" maxlength="1" data-pin="0" inputmode="numeric" autofocus>
+        <input type="text" class="pin-digit" maxlength="1" data-pin="1" inputmode="numeric">
+        <input type="text" class="pin-digit" maxlength="1" data-pin="2" inputmode="numeric">
+        <input type="text" class="pin-digit" maxlength="1" data-pin="3" inputmode="numeric">
+      </div>
+      <div id="pin-error" style="color: #fda4af; font-size: 12px; margin-bottom: 16px; display: none;">Incorrect PIN. Try again.</div>
+      <button onclick="verifyAdminPIN()" class="settings-btn settings-btn-primary" style="width: 100%; padding: 14px;">Unlock Settings</button>
+      <a href="index.html" style="display: block; margin-top: 16px; font-size: 12px; color: var(--text-tertiary); text-decoration: none;">← Back to Dashboard</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="brand" style="display: flex; align-items: center; gap: 10px;">
+        <a href="/" title="Refresh & Home" style="text-decoration: none; display: flex; align-items: center;">
+          <lottie-player src="img/Siri.json" background="transparent" speed="1" style="width: 50px; height: 50px;" loop
+            autoplay></lottie-player>
+        </a>
+        <h1><span
+            style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 700; font-style: italic; text-transform: lowercase;">melloo</span>
+          Agency Hub</h1>
+      </div>
+      <nav>
+        <button onclick="window.location.href='index.html?section=dashboard'">Dashboard</button>
+        <button onclick="window.location.href='index.html?section=tasks'">Tasks</button>
+        <button onclick="window.location.href='index.html?section=schedule'">Schedule</button>
+        <button onclick="window.location.href='index.html?section=meetings'">Meetings</button>
+        <button onclick="window.location.href='index.html?section=crm'">CRM</button>
+        <button onclick="window.location.href='index.html?section=invoices'">Invoices</button>
+        <button onclick="window.location.href='index.html?section=subscriptions'">Subs</button>
+        <button onclick="window.location.href='index.html?section=campaigns'">Campaigns</button>
+        <button class="active">⚙️ Settings</button>
+      </nav>
+      <div id="global-auth-status"
+        style="margin-left: 20px; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+        <!-- Populated by JS -->
+      </div>
+    </header>
+
+    <!-- Settings Section -->
+    <section id="settings-section" class="section active">
+      <div class="section-header" style="margin-bottom: 28px;">
+        <div>
+          <h2>Settings & Admin ⚙️</h2>
+          <p class="section-subtitle" style="margin-top: 5px;">Manage agency configuration, portal access, integrations, and data compliance.</p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span class="settings-badge badge-pro">✦ ADMIN</span>
+          <button onclick="lockSettings()" class="settings-btn settings-btn-secondary" style="font-size: 12px; padding: 7px 14px;">🔒 Lock</button>
+        </div>
+      </div>
+
+      <div class="settings-layout">
+        <!-- Sidebar -->
+        <div class="settings-sidebar">
+          <button class="settings-sidebar-item active" onclick="showSettingsPanel('branding')">
+            <span class="sidebar-icon">🎨</span> Agency Branding
+          </button>
+          <button class="settings-sidebar-item" onclick="showSettingsPanel('security')">
+            <span class="sidebar-icon">🔐</span> Security
+          </button>
+          <button class="settings-sidebar-item" onclick="showSettingsPanel('portal')">
+            <span class="sidebar-icon">🌐</span> Client Portal
+          </button>
+          <div class="settings-sidebar-divider"></div>
+          <button class="settings-sidebar-item" onclick="showSettingsPanel('invoicing')">
+            <span class="sidebar-icon">💳</span> Invoice Defaults
+          </button>
+          <button class="settings-sidebar-item" onclick="showSettingsPanel('integrations')">
+            <span class="sidebar-icon">🔗</span> Integrations
+          </button>
+          <button class="settings-sidebar-item" onclick="showSettingsPanel('notifications')">
+            <span class="sidebar-icon">🔔</span> Notifications
+          </button>
+          <div class="settings-sidebar-divider"></div>
+          <button class="settings-sidebar-item" onclick="showSettingsPanel('data')">
+            <span class="sidebar-icon">📦</span> Data & Archives
+          </button>
+          <button class="settings-sidebar-item" onclick="showSettingsPanel('audit')">
+            <span class="sidebar-icon">📋</span> Audit Log
+          </button>
+          <button class="settings-sidebar-item" onclick="showSettingsPanel('danger')">
+            <span class="sidebar-icon">⚠️</span> Danger Zone
+          </button>
+        </div>
+
+        <!-- Content Panels -->
+        <div class="settings-content">
+
+          <!-- ═══ AGENCY BRANDING ═══ -->
+          <div id="panel-branding" class="settings-panel active">
+            <div class="settings-panel-header">
+              <h2>🎨 Agency Branding</h2>
+              <p>Customize the appearance of your client portal and exported invoices.</p>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Agency Identity</div>
+              <div class="settings-card-desc">This information appears on invoices, the client portal, and all external-facing documents.</div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Agency Name</label>
+                  <input type="text" class="settings-input" id="setting-agency-name" value="Melloo Media" placeholder="Your agency name">
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Tagline</label>
+                  <input type="text" class="settings-input" id="setting-agency-tagline" value="Creative Solutions for Modern Brands" placeholder="A short tagline">
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Contact Email</label>
+                  <input type="email" class="settings-input" id="setting-agency-email" value="melloomedia@gmail.com">
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Contact Phone</label>
+                  <input type="tel" class="settings-input" id="setting-agency-phone" value="(626) 238-3434">
+                </div>
+                <div style="grid-column: span 2;">
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Business Address</label>
+                  <input type="text" class="settings-input" id="setting-agency-address" placeholder="123 Main St, City, State ZIP">
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Website URL</label>
+                  <input type="url" class="settings-input" id="setting-agency-website" placeholder="https://melloomedia.com">
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Instagram Handle</label>
+                  <input type="text" class="settings-input" id="setting-agency-instagram" placeholder="@melloomedia">
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Portal Theme Colors</div>
+              <div class="settings-card-desc">Choose primary accent color used across the client portal and branding.</div>
+              <div class="color-palette" id="portal-color-palette">
+                <div class="color-swatch selected" style="background: linear-gradient(135deg, #6366f1, #a78bfa);" data-color="#6366f1" onclick="selectPortalColor(this)"></div>
+                <div class="color-swatch" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);" data-color="#3b82f6" onclick="selectPortalColor(this)"></div>
+                <div class="color-swatch" style="background: linear-gradient(135deg, #06b6d4, #67e8f9);" data-color="#06b6d4" onclick="selectPortalColor(this)"></div>
+                <div class="color-swatch" style="background: linear-gradient(135deg, #10b981, #6ee7b7);" data-color="#10b981" onclick="selectPortalColor(this)"></div>
+                <div class="color-swatch" style="background: linear-gradient(135deg, #f59e0b, #fcd34d);" data-color="#f59e0b" onclick="selectPortalColor(this)"></div>
+                <div class="color-swatch" style="background: linear-gradient(135deg, #f43f5e, #fda4af);" data-color="#f43f5e" onclick="selectPortalColor(this)"></div>
+                <div class="color-swatch" style="background: linear-gradient(135deg, #ec4899, #f9a8d4);" data-color="#ec4899" onclick="selectPortalColor(this)"></div>
+                <div class="color-swatch" style="background: linear-gradient(135deg, #8b5cf6, #c4b5fd);" data-color="#8b5cf6" onclick="selectPortalColor(this)"></div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Logo Upload</div>
+              <div class="settings-card-desc">Recommended size: 400×100px. PNG or SVG with transparent background.</div>
+              <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="width: 120px; height: 60px; background: rgba(255,255,255,0.04); border: 2px dashed rgba(255,255,255,0.12); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--text-tertiary); cursor: pointer;" onclick="document.getElementById('logo-upload').click()">
+                  <span id="logo-preview-text">📎 Upload</span>
+                </div>
+                <input type="file" id="logo-upload" accept="image/*" style="display: none;">
+                <div>
+                  <p style="font-size: 12px; color: var(--text-tertiary);">Used on invoices, portal header, and email templates.</p>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+              <button class="settings-btn settings-btn-primary" onclick="saveBrandingSettings()">💾 Save Branding</button>
+            </div>
+          </div>
+
+          <!-- ═══ SECURITY ═══ -->
+          <div id="panel-security" class="settings-panel">
+            <div class="settings-panel-header">
+              <h2>🔐 Security & Access</h2>
+              <p>Manage admin authentication, session rules, and access control.</p>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Admin PIN</div>
+              <div class="settings-card-desc">Change the 4-digit PIN used to access settings. Default is 0000.</div>
+              <div style="display: flex; gap: 12px; align-items: flex-end;">
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Current PIN</label>
+                  <input type="password" class="settings-input settings-input-sm" id="current-pin" maxlength="4" placeholder="••••" style="width: 120px; letter-spacing: 6px; text-align: center;">
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">New PIN</label>
+                  <input type="password" class="settings-input settings-input-sm" id="new-pin" maxlength="4" placeholder="••••" style="width: 120px; letter-spacing: 6px; text-align: center;">
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Confirm PIN</label>
+                  <input type="password" class="settings-input settings-input-sm" id="confirm-pin" maxlength="4" placeholder="••••" style="width: 120px; letter-spacing: 6px; text-align: center;">
+                </div>
+                <button class="settings-btn settings-btn-primary" onclick="changeAdminPIN()">Update PIN</button>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Session & Lockout</div>
+              <div class="settings-card-desc">Configure security behavior for the admin dashboard.</div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Auto-lock after inactivity</h4>
+                  <p>Require PIN after extended idle time.</p>
+                </div>
+                <div class="settings-row-control">
+                  <select class="settings-select" id="auto-lock-timeout">
+                    <option value="0">Disabled</option>
+                    <option value="15">15 minutes</option>
+                    <option value="30" selected>30 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="120">2 hours</option>
+                  </select>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Require PIN on every visit</h4>
+                  <p>Always prompt for PIN when accessing settings page.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="always-require-pin" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>IP Allowlist</h4>
+                  <p>Restrict admin access to specific IP addresses (comma-separated).</p>
+                </div>
+                <div class="settings-row-control">
+                  <input type="text" class="settings-input" id="ip-allowlist" placeholder="e.g. 192.168.1.100, 10.0.0.1" style="width: 240px;">
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+              <button class="settings-btn settings-btn-primary" onclick="saveSecuritySettings()">💾 Save Security Settings</button>
+            </div>
+          </div>
+
+          <!-- ═══ CLIENT PORTAL ═══ -->
+          <div id="panel-portal" class="settings-panel">
+            <div class="settings-panel-header">
+              <h2>🌐 Client Portal Management</h2>
+              <p>Configure what clients see when they access their brand portal. Each client gets a unique, shareable link.</p>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Portal Configuration</div>
+              <div class="settings-card-desc">Control what data is exposed to clients through the portal.</div>
+              
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Enable Client Portal</h4>
+                  <p>When enabled, clients can view their projects, files, and invoices via a unique link.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="portal-enabled" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Show Project Status & Timelines</h4>
+                  <p>Let clients view real-time project status, deadlines, and milestones.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="portal-show-projects" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Show Invoice History</h4>
+                  <p>Allow clients to view all past and outstanding invoices.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="portal-show-invoices" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Show Brand Assets / Drive Files</h4>
+                  <p>Let clients browse and download their brand assets from Google Drive.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="portal-show-files" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Allow Client Requests / Messages</h4>
+                  <p>Clients can submit requests or messages from the portal.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="portal-allow-requests" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Custom Portal Welcome Message</h4>
+                  <p>Shown at the top of every client's portal page.</p>
+                </div>
+                <div class="settings-row-control" style="flex: 1; max-width: 360px;">
+                  <input type="text" class="settings-input" id="portal-welcome-msg" placeholder="Welcome to your Melloo Media dashboard!" value="Welcome to your Melloo Media dashboard!">
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Active Portal Links</div>
+              <div class="settings-card-desc">Manage unique access links for each client. Share these so clients can view their assets.</div>
+              
+              <div id="portal-links-list" style="max-height: 400px; overflow-y: auto;">
+                <div style="text-align: center; padding: 30px; color: var(--text-tertiary); font-size: 13px;">
+                  <span class="loader-small"></span> Loading client portal links...
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06);">
+                <span style="font-size: 12px; color: var(--text-tertiary);">Portal base URL: <code style="color: #a5b4fc;">/portal/{token}</code></span>
+                <button class="settings-btn settings-btn-secondary" onclick="regenerateAllTokens()" style="font-size: 12px;">🔄 Regenerate All Tokens</button>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+              <button class="settings-btn settings-btn-primary" onclick="savePortalSettings()">💾 Save Portal Settings</button>
+            </div>
+          </div>
+
+          <!-- ═══ INVOICE DEFAULTS ═══ -->
+          <div id="panel-invoicing" class="settings-panel">
+            <div class="settings-panel-header">
+              <h2>💳 Invoice Defaults</h2>
+              <p>Set default values that auto-populate when creating new invoices.</p>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Financial Defaults</div>
+              <div class="settings-card-desc">These values pre-fill when you create a new invoice. You can always override per invoice.</div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Default Currency</label>
+                  <select class="settings-select" id="default-currency" style="width: 100%;">
+                    <option value="USD" selected>USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="CAD">CAD (C$)</option>
+                    <option value="MXN">MXN ($)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Default Tax Rate (%)</label>
+                  <input type="number" class="settings-input" id="default-tax-rate" value="0" min="0" max="30" step="0.5">
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Payment Terms (Days)</label>
+                  <select class="settings-select" id="default-payment-terms" style="width: 100%;">
+                    <option value="7">Net 7</option>
+                    <option value="15" selected>Net 15</option>
+                    <option value="30">Net 30</option>
+                    <option value="45">Net 45</option>
+                    <option value="60">Net 60</option>
+                    <option value="0">Due on Receipt</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 6px;">Hourly Rate ($)</label>
+                  <input type="number" class="settings-input" id="default-hourly-rate" value="150" min="0" step="5">
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Late Payment Policy</div>
+              <div class="settings-card-desc">Automatically apply fees or send reminders for overdue invoices.</div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Auto-mark overdue</h4>
+                  <p>Invoices past due date automatically change status to "overdue".</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="auto-overdue" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Late fee percentage</h4>
+                  <p>Auto-apply a late fee after grace period expires.</p>
+                </div>
+                <div class="settings-row-control">
+                  <input type="number" class="settings-input" id="late-fee-pct" value="0" min="0" max="20" step="0.5" style="width: 80px; text-align: center;">
+                  <span style="font-size: 12px; color: var(--text-tertiary); margin-left: 6px;">%</span>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Grace period (days after due date)</h4>
+                  <p>Wait this many days before applying late fees.</p>
+                </div>
+                <div class="settings-row-control">
+                  <input type="number" class="settings-input" id="grace-period" value="5" min="0" max="30" step="1" style="width: 80px; text-align: center;">
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Default Payment Instructions</div>
+              <div class="settings-card-desc">Pre-filled on all new invoices. Clients see this when they receive their invoice.</div>
+              <textarea class="settings-input" id="default-payment-instructions" rows="4" style="resize: vertical;" placeholder="e.g. Zelle payment to (626) 238-3434 | Venmo @melloomedia | Please include invoice number in memo">Zelle payment to (626) 238-3434 | Please include invoice number in memo.</textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+              <button class="settings-btn settings-btn-primary" onclick="saveInvoiceSettings()">💾 Save Invoice Defaults</button>
+            </div>
+          </div>
+
+          <!-- ═══ INTEGRATIONS ═══ -->
+          <div id="panel-integrations" class="settings-panel">
+            <div class="settings-panel-header">
+              <h2>🔗 Integrations</h2>
+              <p>Manage Google Workspace, email, and third-party service connections.</p>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Google Workspace</div>
+              <div class="settings-card-desc">Manages OAuth for Drive, Calendar, Meet, and Gmail access.</div>
+              
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4><span class="status-dot green" id="google-status-dot"></span> Google Account</h4>
+                  <p id="google-connected-email">melloomedia@gmail.com</p>
+                </div>
+                <div class="settings-row-control" style="display: flex; gap: 8px;">
+                  <button class="settings-btn settings-btn-success" onclick="window.open('/auth/google', '_blank')">🔄 Re-authorize</button>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Google Drive — Client Folders</h4>
+                  <p>Automatically create Drive folders for new clients.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="auto-create-drive-folders" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Google Calendar Sync</h4>
+                  <p>Sync meetings and deadlines to Google Calendar.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="google-calendar-sync" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Email (SMTP via Gmail)</div>
+              <div class="settings-card-desc">Used for sending invoices, campaign emails, and automated notifications.</div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4><span class="status-dot green"></span> Email Delivery</h4>
+                  <p>Connected via Gmail App Password.</p>
+                </div>
+                <div class="settings-row-control">
+                  <span class="settings-badge badge-active">ACTIVE</span>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Default "From" Name</h4>
+                  <p>Name that appears in client email inboxes.</p>
+                </div>
+                <div class="settings-row-control">
+                  <input type="text" class="settings-input" id="email-from-name" value="Melloo Media" style="width: 200px;">
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Default "Reply-To" Address</h4>
+                  <p>Where client replies are directed.</p>
+                </div>
+                <div class="settings-row-control">
+                  <input type="email" class="settings-input" id="email-reply-to" value="melloomedia@gmail.com" style="width: 240px;">
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">AI (Gemini)</div>
+              <div class="settings-card-desc">Powers client intelligence reports, meeting summaries, and smart suggestions.</div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4><span class="status-dot green" id="ai-status-dot"></span> Gemini API</h4>
+                  <p>API key configured and active.</p>
+                </div>
+                <div class="settings-row-control">
+                  <span class="settings-badge badge-active">CONNECTED</span>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Enable AI features</h4>
+                  <p>Client health reports, meeting summaries, and insights.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="ai-features-enabled" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+              <button class="settings-btn settings-btn-primary" onclick="saveIntegrationSettings()">💾 Save Integrations</button>
+            </div>
+          </div>
+
+          <!-- ═══ NOTIFICATIONS ═══ -->
+          <div id="panel-notifications" class="settings-panel">
+            <div class="settings-panel-header">
+              <h2>🔔 Notifications & Automations</h2>
+              <p>Control when and how the system sends emails and alerts.</p>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Invoice Notifications</div>
+              <div class="settings-card-desc">Automated emails sent to clients about their invoices.</div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Send invoice email on creation</h4>
+                  <p>Automatically email the client when an invoice is marked as "sent".</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notify-invoice-sent" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Payment confirmation emails</h4>
+                  <p>Send receipt + PDF when an invoice is marked "paid".</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notify-invoice-paid" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Overdue reminders</h4>
+                  <p>Automatically remind clients about overdue invoices.</p>
+                </div>
+                <div class="settings-row-control">
+                  <select class="settings-select" id="overdue-reminder-freq">
+                    <option value="off">Off</option>
+                    <option value="3" selected>Every 3 days</option>
+                    <option value="7">Weekly</option>
+                    <option value="14">Every 2 weeks</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Campaign & CRM Notifications</div>
+              <div class="settings-card-desc">Internal alerts for you as the admin.</div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Campaign send failure alerts</h4>
+                  <p>Get notified when a campaign email or SMS fails to send.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notify-campaign-fail" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Portal client request notifications</h4>
+                  <p>Email you when a client submits a request via the portal.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notify-portal-request" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Weekly digest email</h4>
+                  <p>Get a summary of revenue, new clients, tasks, and activity every Monday.</p>
+                </div>
+                <div class="settings-row-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="notify-weekly-digest">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+              <button class="settings-btn settings-btn-primary" onclick="saveNotificationSettings()">💾 Save Notifications</button>
+            </div>
+          </div>
+
+          <!-- ═══ DATA & ARCHIVES ═══ -->
+          <div id="panel-data" class="settings-panel">
+            <div class="settings-panel-header">
+              <h2>📦 Data & Archives</h2>
+              <p>Manage your database, archives, and data retention policies.</p>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Archive Engine</div>
+              <div class="settings-card-desc">Automatically moves old campaign sends and analytics data to Google Drive to keep the database fast.</div>
+              
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+                <div style="background: rgba(99,102,241,0.08); border-radius: 14px; padding: 18px; text-align: center; border: 1px solid rgba(99,102,241,0.15);">
+                  <div style="font-size: 24px; font-weight: 700; color: var(--text-primary);" id="total-archives">0</div>
+                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Total Archives</div>
+                </div>
+                <div style="background: rgba(16,185,129,0.08); border-radius: 14px; padding: 18px; text-align: center; border: 1px solid rgba(16,185,129,0.15);">
+                  <div style="font-size: 24px; font-weight: 700; color: var(--text-primary);" id="total-records">0</div>
+                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Records Archived</div>
+                </div>
+                <div style="background: rgba(245,158,11,0.08); border-radius: 14px; padding: 18px; text-align: center; border: 1px solid rgba(245,158,11,0.15);">
+                  <div style="font-size: 24px; font-weight: 700; color: var(--text-primary);" id="total-size">0 MB</div>
+                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Drive Storage Used</div>
+                </div>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Auto-archive schedule</h4>
+                  <p>How often the archive engine sweeps old data to Drive.</p>
+                </div>
+                <div class="settings-row-control">
+                  <select class="settings-select" id="archive-schedule">
+                    <option value="daily">Daily</option>
+                    <option value="weekly" selected>Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Campaign sends retention</h4>
+                  <p>Archive sends older than this threshold.</p>
+                </div>
+                <div class="settings-row-control">
+                  <select class="settings-select" id="retention-sends">
+                    <option value="1">1 month</option>
+                    <option value="3" selected>3 months</option>
+                    <option value="6">6 months</option>
+                    <option value="12">12 months</option>
+                  </select>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <h4>Analytics retention</h4>
+                  <p>Archive analytics data older than this threshold.</p>
+                </div>
+                <div class="settings-row-control">
+                  <select class="settings-select" id="retention-analytics">
+                    <option value="6">6 months</option>
+                    <option value="12" selected>12 months</option>
+                    <option value="24">24 months</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06);">
+                <button onclick="runArchiveNow(event)" class="settings-btn settings-btn-primary">📦 Run Archive Now</button>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Archive History</div>
+              <div class="settings-card-desc">Recent archive operations and Drive file references.</div>
+              <div id="archive-history" style="max-height: 300px; overflow-y: auto;">
+                <div style="text-align: center; padding: 20px; color: var(--text-tertiary); font-size: 13px;">Loading...</div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Database Maintenance</div>
+              <div class="settings-card-desc">Tools for database health and optimization.</div>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="settings-btn settings-btn-secondary" onclick="optimizeDatabase()">🧹 Optimize DB</button>
+                <button class="settings-btn settings-btn-secondary" onclick="exportDatabase()">📥 Export Full Backup</button>
+                <button class="settings-btn settings-btn-secondary" onclick="getDatabaseStats()">📊 DB Statistics</button>
+              </div>
+              <div id="db-stats-output" style="margin-top: 14px; display: none;"></div>
+            </div>
+          </div>
+
+          <!-- ═══ AUDIT LOG ═══ -->
+          <div id="panel-audit" class="settings-panel">
+            <div class="settings-panel-header">
+              <h2>📋 Audit Log</h2>
+              <p>Track administrative actions and important system events.</p>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Recent Activity</div>
+              <div class="settings-card-desc">Last 50 actions performed in the system.</div>
+              <div id="audit-log-list">
+                <div class="audit-row">
+                  <div class="audit-icon" style="background: rgba(99,102,241,0.12);">⚙️</div>
+                  <div class="audit-info">
+                    <strong>Settings page accessed</strong>
+                    <p>Admin authenticated via PIN</p>
+                  </div>
+                  <div class="audit-time">Just now</div>
+                </div>
+                <div class="audit-row">
+                  <div class="audit-icon" style="background: rgba(16,185,129,0.12);">💰</div>
+                  <div class="audit-info">
+                    <strong>Invoice #1032 marked as Paid</strong>
+                    <p>$2,500.00 — Client: Woodfire Pies</p>
+                  </div>
+                  <div class="audit-time">2 hours ago</div>
+                </div>
+                <div class="audit-row">
+                  <div class="audit-icon" style="background: rgba(45,212,191,0.12);">📧</div>
+                  <div class="audit-info">
+                    <strong>Campaign "Post-Project Follow Up" executed</strong>
+                    <p>3 emails sent, 0 failed</p>
+                  </div>
+                  <div class="audit-time">5 hours ago</div>
+                </div>
+                <div class="audit-row">
+                  <div class="audit-icon" style="background: rgba(245,158,11,0.12);">👤</div>
+                  <div class="audit-info">
+                    <strong>New client added: Sarah Chen</strong>
+                    <p>Status: Lead — Company: Bloom Studio</p>
+                  </div>
+                  <div class="audit-time">Yesterday</div>
+                </div>
+                <div class="audit-row">
+                  <div class="audit-icon" style="background: rgba(99,102,241,0.12);">📦</div>
+                  <div class="audit-info">
+                    <strong>Auto-archive completed</strong>
+                    <p>142 campaign sends archived to Google Drive</p>
+                  </div>
+                  <div class="audit-time">2 days ago</div>
+                </div>
+                <div class="audit-row">
+                  <div class="audit-icon" style="background: rgba(244,63,94,0.12);">🌐</div>
+                  <div class="audit-info">
+                    <strong>Portal request from client</strong>
+                    <p>"Need updated logo files" — Woodfire Pies</p>
+                  </div>
+                  <div class="audit-time">3 days ago</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ DANGER ZONE ═══ -->
+          <div id="panel-danger" class="settings-panel">
+            <div class="settings-panel-header">
+              <h2>⚠️ Danger Zone</h2>
+              <p>Destructive actions that cannot be undone. Proceed with extreme caution.</p>
+            </div>
+
+            <div class="settings-card danger-zone">
+              <div class="settings-card-title">⚠️ Purge Archived Data</div>
+              <div class="settings-card-desc">Permanently delete all archived records from the local database archive tables. Drive copies remain.</div>
+              <button class="settings-btn settings-btn-danger" onclick="confirmDangerAction('purge-archives', 'Purge All Local Archives')">Purge Local Archives</button>
+            </div>
+
+            <div class="settings-card danger-zone">
+              <div class="settings-card-title">⚠️ Reset All Portal Tokens</div>
+              <div class="settings-card-desc">Invalidate all existing client portal links and generate new ones. Clients will need new links to access their portal.</div>
+              <button class="settings-btn settings-btn-danger" onclick="confirmDangerAction('reset-tokens', 'Reset All Portal Tokens')">Reset All Tokens</button>
+            </div>
+
+            <div class="settings-card danger-zone">
+              <div class="settings-card-title">⚠️ Clear Campaign History</div>
+              <div class="settings-card-desc">Delete all campaign send records, enrollments, and analytics data. Campaign templates are preserved.</div>
+              <button class="settings-btn settings-btn-danger" onclick="confirmDangerAction('clear-campaigns', 'Clear All Campaign Data')">Clear Campaign Data</button>
+            </div>
+
+            <div class="settings-card danger-zone">
+              <div class="settings-card-title">⚠️ Factory Reset</div>
+              <div class="settings-card-desc">Delete ALL data and reset the application to its initial state. This is irreversible. All clients, invoices, tasks, campaigns, and settings will be permanently destroyed.</div>
+              <button class="settings-btn settings-btn-danger" onclick="confirmDangerAction('factory-reset', 'Factory Reset — DELETE EVERYTHING')" style="background: rgba(244,63,94,0.25);">☠️ Factory Reset</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 420px; padding: 32px; text-align: center;">
+        <div style="font-size: 40px; margin-bottom: 12px;">⚠️</div>
+        <h3 id="confirm-modal-title" style="margin-bottom: 8px;">Confirm Action</h3>
+        <p id="confirm-modal-message" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 24px;">Are you sure?</p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button class="settings-btn settings-btn-secondary" onclick="document.getElementById('confirm-modal').style.display='none'">Cancel</button>
+          <button class="settings-btn settings-btn-danger" id="confirm-modal-btn" onclick="">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/archives.js"></script>
+
+  <script>
+    // ═══════════════════════════════════════════════════════
+    // SETTINGS PAGE LOGIC
+    // ═══════════════════════════════════════════════════════
+
+    const SETTINGS_STORAGE_KEY = 'agency_hub_settings';
+    const PIN_STORAGE_KEY = 'agency_hub_admin_pin';
+    const SESSION_KEY = 'agency_hub_admin_session';
+
+    // ─── Admin PIN ───────────────────────────────────────
+    function getStoredPIN() {
+      return localStorage.getItem(PIN_STORAGE_KEY) || '0000';
+    }
+
+    function verifyAdminPIN() {
+      const digits = document.querySelectorAll('.pin-digit');
+      const pin = Array.from(digits).map(d => d.value).join('');
+      
+      if (pin === getStoredPIN()) {
+        document.getElementById('admin-lock-overlay').style.display = 'none';
+        sessionStorage.setItem(SESSION_KEY, Date.now().toString());
+        document.getElementById('pin-error').style.display = 'none';
+        initSettingsPage();
+      } else {
+        document.getElementById('pin-error').style.display = 'block';
+        digits.forEach(d => { d.value = ''; });
+        digits[0].focus();
+      }
+    }
+
+    function lockSettings() {
+      sessionStorage.removeItem(SESSION_KEY);
+      document.getElementById('admin-lock-overlay').style.display = 'flex';
+      const digits = document.querySelectorAll('.pin-digit');
+      digits.forEach(d => { d.value = ''; });
+      digits[0].focus();
+    }
+
+    function changeAdminPIN() {
+      const current = document.getElementById('current-pin').value;
+      const newPin = document.getElementById('new-pin').value;
+      const confirm = document.getElementById('confirm-pin').value;
+
+      if (current !== getStoredPIN()) {
+        showToast('Current PIN is incorrect', 'error');
+        return;
+      }
+      if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+        showToast('New PIN must be exactly 4 digits', 'error');
+        return;
+      }
+      if (newPin !== confirm) {
+        showToast('New PINs do not match', 'error');
+        return;
+      }
+
+      localStorage.setItem(PIN_STORAGE_KEY, newPin);
+      showToast('Admin PIN updated successfully! ✅');
+      document.getElementById('current-pin').value = '';
+      document.getElementById('new-pin').value = '';
+      document.getElementById('confirm-pin').value = '';
+    }
+
+    // PIN digit auto-advance
+    document.querySelectorAll('.pin-digit').forEach((input, idx, all) => {
+      input.addEventListener('input', () => {
+        if (input.value.length === 1 && idx < all.length - 1) {
+          all[idx + 1].focus();
+        }
+        if (idx === all.length - 1 && input.value.length === 1) {
+          verifyAdminPIN();
+        }
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !input.value && idx > 0) {
+          all[idx - 1].focus();
+        }
+        if (e.key === 'Enter') {
+          verifyAdminPIN();
+        }
+      });
+    });
+
+    // ─── Check Session ───────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+      const session = sessionStorage.getItem(SESSION_KEY);
+      const settings = getSettings();
+      
+      if (!settings.alwaysRequirePIN && session) {
+        document.getElementById('admin-lock-overlay').style.display = 'none';
+        initSettingsPage();
+      } else if (session) {
+        const elapsed = Date.now() - parseInt(session);
+        const timeout = (settings.autoLockTimeout || 30) * 60 * 1000;
+        if (timeout === 0 || elapsed < timeout) {
+          document.getElementById('admin-lock-overlay').style.display = 'none';
+          initSettingsPage();
+        }
+      }
+
+      checkGlobalAuth();
+    });
+
+    // ─── Settings Persistence ────────────────────────────
+    function getSettings() {
+      try {
+        return JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || '{}');
+      } catch { return {}; }
+    }
+
+    function saveSettings(updates) {
+      const current = getSettings();
+      const merged = { ...current, ...updates };
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+      return merged;
+    }
+
+    // ─── Panel Navigation ────────────────────────────────
+    function showSettingsPanel(panelName) {
+      document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.settings-sidebar-item').forEach(b => b.classList.remove('active'));
+
+      const panel = document.getElementById(`panel-${panelName}`);
+      if (panel) panel.classList.add('active');
+
+      const btn = event?.target?.closest?.('.settings-sidebar-item');
+      if (btn) btn.classList.add('active');
+    }
+
+    // ─── Init ────────────────────────────────────────────
+    function initSettingsPage() {
+      loadSettingsValues();
+      loadPortalLinks();
+      if (window.initArchives) window.initArchives();
+    }
+
+    function loadSettingsValues() {
+      const s = getSettings();
+      
+      // Branding
+      if (s.agencyName) document.getElementById('setting-agency-name').value = s.agencyName;
+      if (s.agencyTagline) document.getElementById('setting-agency-tagline').value = s.agencyTagline;
+      if (s.agencyEmail) document.getElementById('setting-agency-email').value = s.agencyEmail;
+      if (s.agencyPhone) document.getElementById('setting-agency-phone').value = s.agencyPhone;
+      if (s.agencyAddress) document.getElementById('setting-agency-address').value = s.agencyAddress;
+      if (s.agencyWebsite) document.getElementById('setting-agency-website').value = s.agencyWebsite;
+      if (s.agencyInstagram) document.getElementById('setting-agency-instagram').value = s.agencyInstagram;
+
+      // Portal color
+      if (s.portalColor) {
+        document.querySelectorAll('.color-swatch').forEach(sw => {
+          sw.classList.toggle('selected', sw.dataset.color === s.portalColor);
+        });
+      }
+
+      // Security
+      if (s.autoLockTimeout !== undefined) document.getElementById('auto-lock-timeout').value = s.autoLockTimeout;
+      if (s.alwaysRequirePIN !== undefined) document.getElementById('always-require-pin').checked = s.alwaysRequirePIN;
+
+      // Invoice
+      if (s.defaultCurrency) document.getElementById('default-currency').value = s.defaultCurrency;
+      if (s.defaultTaxRate !== undefined) document.getElementById('default-tax-rate').value = s.defaultTaxRate;
+      if (s.defaultPaymentTerms) document.getElementById('default-payment-terms').value = s.defaultPaymentTerms;
+      if (s.defaultHourlyRate !== undefined) document.getElementById('default-hourly-rate').value = s.defaultHourlyRate;
+      if (s.defaultPaymentInstructions) document.getElementById('default-payment-instructions').value = s.defaultPaymentInstructions;
+      if (s.lateFeePct !== undefined) document.getElementById('late-fee-pct').value = s.lateFeePct;
+      if (s.gracePeriod !== undefined) document.getElementById('grace-period').value = s.gracePeriod;
+
+      // Email
+      if (s.emailFromName) document.getElementById('email-from-name').value = s.emailFromName;
+      if (s.emailReplyTo) document.getElementById('email-reply-to').value = s.emailReplyTo;
+    }
+
+    // ─── Save Handlers ───────────────────────────────────
+    function saveBrandingSettings() {
+      saveSettings({
+        agencyName: document.getElementById('setting-agency-name').value,
+        agencyTagline: document.getElementById('setting-agency-tagline').value,
+        agencyEmail: document.getElementById('setting-agency-email').value,
+        agencyPhone: document.getElementById('setting-agency-phone').value,
+        agencyAddress: document.getElementById('setting-agency-address').value,
+        agencyWebsite: document.getElementById('setting-agency-website').value,
+        agencyInstagram: document.getElementById('setting-agency-instagram').value,
+        portalColor: document.querySelector('.color-swatch.selected')?.dataset.color || '#6366f1'
+      });
+      showToast('Branding settings saved! ✅');
+    }
+
+    function saveSecuritySettings() {
+      saveSettings({
+        autoLockTimeout: parseInt(document.getElementById('auto-lock-timeout').value),
+        alwaysRequirePIN: document.getElementById('always-require-pin').checked,
+        ipAllowlist: document.getElementById('ip-allowlist').value
+      });
+      showToast('Security settings saved! ✅');
+    }
+
+    function savePortalSettings() {
+      saveSettings({
+        portalEnabled: document.getElementById('portal-enabled').checked,
+        portalShowProjects: document.getElementById('portal-show-projects').checked,
+        portalShowInvoices: document.getElementById('portal-show-invoices').checked,
+        portalShowFiles: document.getElementById('portal-show-files').checked,
+        portalAllowRequests: document.getElementById('portal-allow-requests').checked,
+        portalWelcomeMsg: document.getElementById('portal-welcome-msg').value
+      });
+      showToast('Portal settings saved! ✅');
+    }
+
+    function saveInvoiceSettings() {
+      saveSettings({
+        defaultCurrency: document.getElementById('default-currency').value,
+        defaultTaxRate: parseFloat(document.getElementById('default-tax-rate').value),
+        defaultPaymentTerms: document.getElementById('default-payment-terms').value,
+        defaultHourlyRate: parseFloat(document.getElementById('default-hourly-rate').value),
+        defaultPaymentInstructions: document.getElementById('default-payment-instructions').value,
+        autoOverdue: document.getElementById('auto-overdue').checked,
+        lateFeePct: parseFloat(document.getElementById('late-fee-pct').value),
+        gracePeriod: parseInt(document.getElementById('grace-period').value)
+      });
+      showToast('Invoice defaults saved! ✅');
+    }
+
+    function saveIntegrationSettings() {
+      saveSettings({
+        autoCreateDriveFolders: document.getElementById('auto-create-drive-folders').checked,
+        googleCalendarSync: document.getElementById('google-calendar-sync').checked,
+        aiFeaturesEnabled: document.getElementById('ai-features-enabled').checked,
+        emailFromName: document.getElementById('email-from-name').value,
+        emailReplyTo: document.getElementById('email-reply-to').value
+      });
+      showToast('Integration settings saved! ✅');
+    }
+
+    function saveNotificationSettings() {
+      saveSettings({
+        notifyInvoiceSent: document.getElementById('notify-invoice-sent').checked,
+        notifyInvoicePaid: document.getElementById('notify-invoice-paid').checked,
+        overdueReminderFreq: document.getElementById('overdue-reminder-freq').value,
+        notifyCampaignFail: document.getElementById('notify-campaign-fail').checked,
+        notifyPortalRequest: document.getElementById('notify-portal-request').checked,
+        notifyWeeklyDigest: document.getElementById('notify-weekly-digest').checked
+      });
+      showToast('Notification settings saved! ✅');
+    }
+
+    // ─── Portal Links ────────────────────────────────────
+    async function loadPortalLinks() {
+      try {
+        const res = await fetch('/api/crm/clients');
+        const clients = await res.json();
+        const container = document.getElementById('portal-links-list');
+        
+        if (!clients.length) {
+          container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-tertiary); font-size:13px;">No clients found. Add clients first to generate portal links.</div>';
+          return;
+        }
+
+        const baseUrl = window.location.origin;
+        container.innerHTML = clients.map(c => {
+          const name = `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name || 'Unnamed';
+          const token = c.portal_token || 'N/A';
+          const link = `${baseUrl}/portal/${token}`;
+          return `
+            <div class="portal-link-row">
+              <div style="width:32px; height:32px; border-radius:10px; background:linear-gradient(135deg, rgba(99,102,241,0.2), rgba(167,139,250,0.15)); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#a5b4fc; flex-shrink:0;">
+                ${(name[0] || '?').toUpperCase()}
+              </div>
+              <div class="portal-client-name">
+                ${name}
+                <span class="portal-client-company">${c.company || ''}</span>
+              </div>
+              <div class="portal-link-url" title="${link}">${link}</div>
+              <div class="portal-link-actions">
+                <button class="portal-action-btn" onclick="copyPortalLink('${link}')" title="Copy Link">📋 Copy</button>
+                <button class="portal-action-btn" onclick="window.open('${link}', '_blank')" title="Preview">👁 Preview</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Failed to load portal links:', err);
+      }
+    }
+
+    function copyPortalLink(link) {
+      navigator.clipboard.writeText(link).then(() => {
+        showToast('Portal link copied to clipboard! 📋');
+      });
+    }
+
+    async function regenerateAllTokens() {
+      if (!confirm('Regenerate ALL client portal tokens? Existing links will stop working.')) return;
+      try {
+        const res = await fetch('/api/settings/regenerate-tokens', { method: 'POST' });
+        const result = await res.json();
+        if (result.success) {
+          showToast(`Regenerated ${result.count} portal tokens! ✅`);
+          loadPortalLinks();
+        }
+      } catch (err) {
+        showToast('Failed to regenerate tokens: ' + err.message, 'error');
+      }
+    }
+
+    // ─── Color Picker ────────────────────────────────────
+    function selectPortalColor(el) {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    // ─── Database Tools ──────────────────────────────────
+    async function optimizeDatabase() {
+      try {
+        const res = await fetch('/api/settings/optimize-db', { method: 'POST' });
+        const result = await res.json();
+        showToast(result.message || 'Database optimized! ✅');
+      } catch (err) {
+        showToast('Optimization failed: ' + err.message, 'error');
+      }
+    }
+
+    async function exportDatabase() {
+      try {
+        showToast('Starting database export...', 'info');
+        const res = await fetch('/api/settings/export-db');
+        const result = await res.json();
+        showToast(result.message || 'Backup saved! ✅');
+      } catch (err) {
+        showToast('Export failed: ' + err.message, 'error');
+      }
+    }
+
+    async function getDatabaseStats() {
+      try {
+        const res = await fetch('/api/settings/db-stats');
+        const stats = await res.json();
+        const output = document.getElementById('db-stats-output');
+        output.style.display = 'block';
+        output.innerHTML = `
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;">
+            ${Object.entries(stats).map(([table, count]) => `
+              <div style="background: rgba(255,255,255,0.04); border-radius: 10px; padding: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-size: 18px; font-weight: 700; color: var(--text-primary);">${count}</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">${table}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (err) {
+        showToast('Failed to load stats', 'error');
+      }
+    }
+
+    // ─── Danger Zone ─────────────────────────────────────
+    function confirmDangerAction(action, title) {
+      const modal = document.getElementById('confirm-modal');
+      document.getElementById('confirm-modal-title').textContent = title;
+      document.getElementById('confirm-modal-message').textContent = `This action is irreversible. Type "CONFIRM" in the console to proceed, or click Confirm below.`;
+      document.getElementById('confirm-modal-btn').onclick = () => executeDangerAction(action);
+      modal.style.display = 'flex';
+    }
+
+    async function executeDangerAction(action) {
+      document.getElementById('confirm-modal').style.display = 'none';
+      try {
+        const res = await fetch(`/api/settings/danger/${action}`, { method: 'POST' });
+        const result = await res.json();
+        if (result.success) {
+          showToast(result.message || 'Action completed.', 'info');
+        } else {
+          showToast('Action failed: ' + (result.error || 'Unknown error'), 'error');
+        }
+      } catch (err) {
+        showToast('Action failed: ' + err.message, 'error');
+      }
+    }
+
+    // ─── Auth Check (copied from app.js) ─────────────────
+    async function checkGlobalAuth() {
+      const statusDiv = document.getElementById('global-auth-status');
+      if (!statusDiv) return;
+      try {
+        const response = await fetch('/api/auth/status');
+        const status = await response.json();
+        if (status.isAuthenticated) {
+          statusDiv.innerHTML = `
+            <a href="/auth/google" target="_blank" title="Click to refresh connection" style="color: #6ee7b7; display: flex; align-items: center; gap: 4px; text-decoration: none; font-size:12px; font-weight:600;">
+              <span style="width: 7px; height: 7px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px rgba(16,185,129,0.6);"></span>
+              Google Connected
+            </a>
+            <span style="color: rgba(255,255,255,0.4); font-size: 11px;">(${status.email || 'melloomedia@gmail.com'})</span>
+          `;
+          const dot = document.getElementById('google-status-dot');
+          if (dot) { dot.className = 'status-dot green'; }
+        } else {
+          statusDiv.innerHTML = `
+            <a href="/auth/google" target="_blank" style="color: #a5b4fc; text-decoration: none; font-weight: 600; font-size:12px; display: flex; align-items: center; gap: 4px;">
+              <span style="width: 7px; height: 7px; background: #f43f5e; border-radius: 50%; box-shadow: 0 0 6px rgba(244,63,94,0.6);"></span>
+              Connect Google
+            </a>
+          `;
+          const dot = document.getElementById('google-status-dot');
+          if (dot) { dot.className = 'status-dot red'; }
+        }
+      } catch (e) {
+        console.error('Auth check fail', e);
+      }
+    }
+  </script>
+
+</body>
+</html>

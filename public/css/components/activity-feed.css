@@ -1,0 +1,177 @@
+/* ── Reusable Activity Feed Component ───────────────────────────────── */
+
+.activity-feed-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+}
+
+/* ── Notes Section ─── */
+.activity-feed-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.activity-feed-note-area {
+    width: 100%;
+    min-height: 110px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.05); /* slightly lighter than drawer bg */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.activity-feed-note-area::placeholder {
+    color: var(--text-tertiary);
+}
+
+.activity-feed-note-area:focus {
+    outline: none;
+    border-color: rgba(99, 102, 241, 0.45);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08); /* accent glow */
+}
+
+.activity-feed-btn {
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s var(--ease);
+    border: none;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.activity-feed-btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6); /* purple gradient */
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+
+.activity-feed-btn-primary:hover {
+    box-shadow: 0 6px 24px rgba(99, 102, 241, 0.45);
+    transform: translateY(-1px);
+}
+
+/* ── Activity Log ─── */
+.activity-feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.activity-feed-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    animation: fadeInUp 0.3s var(--ease);
+}
+
+.activity-feed-item:last-child {
+    border-bottom: none;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.activity-feed-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.activity-feed-section-title svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+    opacity: 0.8;
+}
+
+.activity-feed-icon.note {
+    background: rgba(16, 185, 129, 0.15); /* Greenish for notes/manual user input */
+    color: #34d399; 
+}
+
+.activity-feed-icon.system {
+    background: rgba(99, 102, 241, 0.15); /* Indigo for system changes */
+    color: #818cf8;
+}
+
+.activity-feed-icon.meeting {
+    background: rgba(245, 158, 11, 0.15); /* Amber for calendar/meeting */
+    color: #fbbf24;
+}
+
+.activity-feed-icon.invoice {
+    background: rgba(14, 165, 233, 0.15); /* Sky blue for money/invoices */
+    color: #38bdf8;
+}
+
+/* Default SVGs inside */
+.activity-feed-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.5;
+}
+
+
+.activity-feed-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-feed-text {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.activity-feed-time {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.activity-feed-empty {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    text-align: center;
+    padding: 30px 0;
+    background: rgba(255,255,255,0.02);
+    border-radius: var(--radius-md);
+    border: 1px dashed rgba(255,255,255,0.1);
+}

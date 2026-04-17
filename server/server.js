@@ -1,0 +1,164 @@
+const express = require('express');
+const fs = require('fs');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const path = require('path');
+require('dotenv').config();
+const { google } = require('googleapis');
+
+const db = require('./database');
+const tasksRoutes = require('./routes/tasks');
+const meetingsRoutes = require('./routes/meetings');
+const crmRoutes = require('./routes/crm');
+const timeRoutes = require('./routes/time');
+const invoicesRoutes = require('./routes/invoices');
+const revenueRoutes = require('./routes/revenue');
+const billingRoutes = require('./routes/billing');
+const portalRoutes = require('./routes/portal');
+const campaignsRoutes = require('./routes/campaigns');
+const subscriptionsRoutes = require('./routes/subscriptions');
+const staffRoutes = require('./routes/staff');
+const archivesRoutes = require('./routes/archives');
+const settingsRoutes = require('./routes/settings');
+const { startArchiveScheduler } = require('./jobs/archiveScheduler');
+
+const app = express();
+const PORT = 3000;
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Debug logger
+app.use((req, res, next) => {
+    console.log(`[DEBUG] ${req.method} ${req.url}`);
+    next();
+});
+
+// Routes
+app.use('/api/tasks', tasksRoutes);
+app.use('/api/meetings', meetingsRoutes);
+app.use('/api/crm', crmRoutes);
+app.use('/api/time', timeRoutes);
+app.use('/api/invoices', invoicesRoutes);
+app.use('/api/revenue', revenueRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/portal', portalRoutes);
+app.use('/api/campaigns', campaignsRoutes);
+app.use('/api/subscriptions', subscriptionsRoutes);
+app.use('/api/staff', staffRoutes);
+app.use('/api/archives', archivesRoutes);
+app.use('/api/settings', settingsRoutes);
+
+// Alias for testing
+app.get('/api/email-templates', async (req, res) => {
+    try {
+        db.all('SELECT * FROM email_templates ORDER BY name ASC', [], (err, rows) => {
+            if (err) throw err;
+            res.json(rows);
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Google OAuth Helpers
+const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+);
+
+app.get('/api/auth/status', (req, res) => {
+    res.json({
+        isAuthenticated: !!process.env.GOOGLE_REFRESH_TOKEN,
+        email: 'melloomedia@gmail.com'
+    });
+});
+
+app.get('/auth/google', (req, res) => {
+    const url = oauth2Client.generateAuthUrl({
+        access_type: 'offline',
+        prompt: 'consent', // Force consent to ensure we get a refresh token
+        scope: [
+            'https://www.googleapis.com/auth/calendar.events',
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/drive',
+            'https://www.googleapis.com/auth/meetings.space.created',
+            'https://www.googleapis.com/auth/meetings.space.readonly',
+            'https://www.googleapis.com/auth/meetings.conference.media.readonly',
+            'https://www.googleapis.com/auth/tasks.readonly',
+            'https://www.googleapis.com/auth/documents'
+        ]
+    });
+    res.redirect(url);
+});
+
+app.get('/oauth2callback', async (req, res) => {
+    const { code } = req.query;
+    try {
+        const { tokens } = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(tokens);
+
+        // Verify the email address
+        const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+        const userInfo = await oauth2.userinfo.get();
+        const userEmail = userInfo.data.email;
+
+        if (userEmail !== 'melloomedia@gmail.com') {
+            return res.status(403).send(`
+                <h1>Authentication Failed</h1>
+                <p>You signed in as <strong>${userEmail}</strong>.</p>
+                <p>Please sign in with <strong>melloomedia@gmail.com</strong> to be the host.</p>
+                <a href="/auth/google">Try Again</a>
+            `);
+        }
+
+        // Only update if we actually got a refresh token
+        if (tokens.refresh_token) {
+            // Update .env file automatically
+            const envPath = path.join(__dirname, '../.env');
+            let envContent = fs.readFileSync(envPath, 'utf8');
+
+            if (envContent.includes('GOOGLE_REFRESH_TOKEN=')) {
+                envContent = envContent.replace(/GOOGLE_REFRESH_TOKEN=.*/, `GOOGLE_REFRESH_TOKEN=${tokens.refresh_token}`);
+            } else {
+                envContent += `\nGOOGLE_REFRESH_TOKEN=${tokens.refresh_token}`;
+            }
+
+            fs.writeFileSync(envPath, envContent);
+
+            // Update the environment variable in memory immediately
+            process.env.GOOGLE_REFRESH_TOKEN = tokens.refresh_token;
+        }
+
+        res.send(`
+            <h1>Authentication Successful</h1>
+            <p><strong>${userEmail}</strong> is now set as the meeting host.</p>
+            <p>The system is ready to create meetings.</p>
+            <script>setTimeout(() => window.close(), 3000);</script>
+        `);
+    } catch (error) {
+        res.status(500).send('Error retrieving access token: ' + error.message);
+    }
+});
+
+// Start server
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Agency Hub running at http://0.0.0.0:${PORT}`);
+    console.log(`To access from another device, use http://<YOUR_IP_ADDRESS>:${PORT}`);
+    
+    // Start Drip Campaign Engine
+    const { runDueSends } = require('./utils/campaignRunner');
+    runDueSends();
+    setInterval(runDueSends, 60 * 1000); // Check every minute instead of every hour
+
+    // Start Recurring Billing Engine
+    const { processSubscriptions } = require('./utils/subscriptionEngine');
+    processSubscriptions();
+    setInterval(processSubscriptions, 12 * 60 * 60 * 1000); // Every 12 hours
+
+    // Start Archive Scheduler
+    startArchiveScheduler();
+});

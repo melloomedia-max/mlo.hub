@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Hub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/crm-styles.css">
+  <link rel="stylesheet" href="css/campaign-builder.css">
+  <link rel="stylesheet" href="css/invoices.css">
+  <link rel="stylesheet" href="css/schedule.css">
+  <link rel="stylesheet" href="css/context-menu.css">
+  <link rel="stylesheet" href="css/components/activity-feed.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="brand" style="display: flex; align-items: center; gap: 10px;">
+        <a href="/" title="Refresh & Home" style="text-decoration: none; display: flex; align-items: center;">
+          <lottie-player src="img/Siri.json" background="transparent" speed="1" style="width: 50px; height: 50px;" loop
+            autoplay></lottie-player>
+        </a>
+        <h1><span
+            style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 700; font-style: italic; text-transform: lowercase;">melloo</span>
+          Agency Hub</h1>
+      </div>
+      <nav>
+        <button onclick="showSection('dashboard')" class="active">Dashboard</button>
+        <button onclick="showSection('tasks')">Tasks</button>
+        <button onclick="showSection('schedule')">Schedule</button>
+        <button onclick="showSection('meetings')">Meetings</button>
+        <button onclick="showSection('crm')">CRM</button>
+        <button onclick="showSection('invoices')">Invoices</button>
+        <button onclick="showSection('subscriptions')">Subs</button>
+        <button onclick="showSection('campaigns')">Campaigns</button>
+        <button onclick="window.location.href='settings.html'">⚙️ Settings</button>
+      </nav>
+      <div id="global-auth-status"
+        style="margin-left: 20px; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+        <!-- Populated by JS -->
+      </div>
+    </header>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard-section" class="section active">
+      <div class="section-header" style="align-items: flex-end; margin-bottom: 25px;">
+        <div>
+          <h2 style="display: flex; align-items: center; gap: 10px;">Welcome back 👋 <span class="date-display" id="current-date" style="font-size: 14px; font-weight: 500; color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px;"></span></h2>
+          <p class="section-subtitle" style="margin-top: 5px;">Here's an overview of your agency today.</p>
+        </div>
+      </div>
+
+      <!-- Unbilled Time Banner (Feature 2) -->
+      <div id="unbilled-banner" style="display: none; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #fcd34d; padding: 12px 20px; border-radius: var(--radius-md); margin-bottom: 20px; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 20px;">💰</span>
+          <div>
+            <strong>Unbilled Time Detected!</strong>
+            <span id="unbilled-banner-text" style="display: block; font-size: 13px; color: var(--text-secondary); margin-top: 3px;">You have clients with unbilled hours. Generate invoices to claim revenue.</span>
+          </div>
+        </div>
+        <button onclick="showSection('invoices')" style="background: #f59e0b; color: #fff; padding: 6px 14px; font-size: 13px; border-radius: var(--radius-pill); border: none; font-weight: 600; cursor: pointer;">Go to Billing</button>
+      </div>
+
+      <!-- Master Dashboard Layout (Robust CSS Grid) -->
+      <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 24px; margin-bottom: 30px;">
+        
+        <!-- Row 1: Financial Core (3 Columns) -->
+        <div class="stat-card" style="grid-column: span 2; border-left: 4px solid #10b981; cursor: pointer;" onclick="showSection('invoices')">
+          <div class="stat-icon">💰</div>
+          <div class="stat-info">
+            <h3>Total Revenue</h3>
+            <p class="stat-value" id="stat-revenue">$0</p>
+          </div>
+        </div>
+        <div class="stat-card" style="grid-column: span 2; border-left: 4px solid #f59e0b; cursor: pointer;" onclick="showSection('invoices')">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-info">
+            <h3>Pending Invoices</h3>
+            <p class="stat-value" id="stat-pending-invoices">$0</p>
+          </div>
+        </div>
+        <div class="stat-card" style="grid-column: span 2; border-left: 4px solid #3b82f6; cursor: pointer;" onclick="showSection('invoices')">
+          <div class="stat-icon">📈</div>
+          <div class="stat-info">
+            <h3>Projected</h3>
+            <p class="stat-value" id="stat-projected">$0</p>
+          </div>
+        </div>
+
+        <!-- Row 2: Operations Tracker (5 Columns via Subgrid) -->
+        <div style="grid-column: span 6; display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px;">
+          <div class="stat-card" style="cursor: pointer;" onclick="showSection('crm')">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+              <h3>Total Clients</h3>
+              <p class="stat-value" id="stat-clients">0</p>
+            </div>
+          </div>
+          <div class="stat-card" style="cursor: pointer;" onclick="showSection('crm')">
+            <div class="stat-icon">🚀</div>
+            <div class="stat-info">
+              <h3>Active Projects</h3>
+              <p class="stat-value" id="stat-projects">0</p>
+            </div>
+          </div>
+          <div class="stat-card" style="cursor: pointer;" onclick="showSection('tasks')">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-info">
+              <h3>Pending Tasks</h3>
+              <p class="stat-value" id="stat-tasks">0</p>
+            </div>
+          </div>
+          <div class="stat-card" style="cursor: pointer;" onclick="showSection('meetings')">
+            <div class="stat-icon">📅</div>
+            <div class="stat-info">
+              <h3>Meetings Today</h3>
+              <p class="stat-value" id="stat-meetings">0</p>
+            </div>
+          </div>
+          <div class="stat-card" style="cursor: pointer;" onclick="showSection('subscriptions')">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-info">
+              <h3>Active Subs</h3>
+              <p class="stat-value" id="stat-subscriptions">0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: Live Intelligent Assistant -->
+        <div class="widget" id="ai-smart-panel" style="grid-column: span 6; border: 1px solid var(--accent-glow); box-shadow: 0 8px 32px var(--accent-glow);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border);">
+            <h3 style="margin-bottom: 0; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">✨</span> AI Client Intelligence
+            </h3>
+            <button onclick="generateAIInsights()" style="background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; padding: 6px 16px; font-size: 13px; font-weight: 600; border-radius: var(--radius-pill); cursor: pointer; border: none; transition: transform 0.2s;">Generate Insights</button>
+          </div>
+          <div id="ai-insights-content" style="min-height: 80px;">
+            <p style="font-style: italic; color: var(--text-secondary); margin: 0; padding: 20px 0; text-align: center; font-size: 14px;">Click "Generate Insights" to analyze all clients (via invoices, tasks, notes) and surface health scores and critical action items.</p>
+          </div>
+        </div>
+
+        <!-- Row 4: Chart Forecasts -->
+        <div class="widget" style="grid-column: span 2; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);">
+          <h3>Outstanding Buckets</h3>
+          <canvas id="outstanding-chart" height="200"></canvas>
+        </div>
+        
+        <div class="widget" style="grid-column: span 4; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);">
+          <div style="display: flex; justify-content: space-between;">
+            <h3>Monthly Revenue Trend</h3>
+            <div id="avg-payment-cycle-badge" style="background: rgba(45, 212, 191, 0.2); color: #2dd4bf; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">Avg Cycle: -- days</div>
+          </div>
+          <canvas id="monthly-trend-chart" height="200"></canvas>
+        </div>
+
+        <!-- Row 5: Action & Agenda -->
+        <div class="widget" style="grid-column: span 3;">
+          <h3>Recent Activity</h3>
+          <ul id="activity-feed" class="activity-list">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+        
+        <div class="widget" style="grid-column: span 3;">
+          <h3>Upcoming Deadlines</h3>
+          <ul id="deadline-list" class="deadline-list">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Tasks Section -->
+    <section id="tasks-section" class="section">
+      <div class="section-header">
+        <h2>Tasks</h2>
+        <button onclick="syncGoogleTasks()"
+          style="background: white; color: #374151; border: 1px solid #d1d5db; margin-right: 8px;">🔄 Sync
+          Google</button>
+        <button onclick="showCreationForm('task')">+ New Task</button>
+      </div>
+
+      <div id="task-form" class="form-container" style="display: none;">
+        <h3>Create Task</h3>
+        <form onsubmit="createTask(event)">
+          <input type="text" id="task-title" placeholder="Task title" required>
+          <textarea id="task-description" placeholder="Description"></textarea>
+          <select id="task-status">
+            <option value="todo">To Do</option>
+            <option value="in-progress">In Progress</option>
+            <option value="done">Done</option>
+          </select>
+          <select id="task-priority">
+            <option value="low">Low Priority</option>
+            <option value="medium" selected>Medium Priority</option>
+            <option value="high">High Priority</option>
+          </select>
+          <select id="task-client-select">
+            <option value="">Select Client (Optional)</option>
+            <!-- Populated by JS -->
+          </select>
+          <select id="task-staff-select">
+            <option value="">Assign To (Optional)</option>
+            <!-- Populated by JS -->
+          </select>
+          <input type="date" id="task-due-date">
+          <div class="form-actions">
+            <button type="submit">Create Task</button>
+            <button type="button" onclick="hideTaskForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="kanban-board">
+        <div class="kanban-column" id="column-todo" ondrop="drop(event, 'todo')" ondragover="allowDrop(event)">
+          <div class="column-header">
+            <h3>To Do</h3>
+            <span class="count-badge" id="count-todo">0</span>
+          </div>
+          <div id="list-todo" class="task-list"></div>
+        </div>
+
+        <div class="kanban-column" id="column-in-progress" ondrop="drop(event, 'in-progress')"
+          ondragover="allowDrop(event)">
+          <div class="column-header">
+            <h3>In Progress</h3>
+            <span class="count-badge" id="count-in-progress">0</span>
+          </div>
+          <div id="list-in-progress" class="task-list"></div>
+        </div>
+
+        <div class="kanban-column" id="column-done" ondrop="drop(event, 'done')" ondragover="allowDrop(event)">
+          <div class="column-header">
+            <h3>Done</h3>
+            <span class="count-badge" id="count-done">0</span>
+          </div>
+          <div id="list-done" class="task-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Schedule Section -->
+    <section id="schedule-section" class="section">
+      <div class="section-header">
+        <h2>📅 Schedule</h2>
+      </div>
+      <div id="schedule-content" class="schedule-page">
+        <!-- Three columns: Overdue | Upcoming | This Week -->
+        <div class="schedule-columns">
+          <div class="schedule-col">
+            <div class="schedule-col-header overdue">⚠️ Overdue</div>
+            <div id="sched-overdue" class="schedule-col-body"></div>
+          </div>
+          <div class="schedule-col">
+            <div class="schedule-col-header today">📌 Today &amp; Tomorrow</div>
+            <div id="sched-soon" class="schedule-col-body"></div>
+          </div>
+          <div class="schedule-col">
+            <div class="schedule-col-header upcoming">🗓 Next 30 Days</div>
+            <div id="sched-upcoming" class="schedule-col-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Meetings Section -->
+    <section id="meetings-section" class="section">
+      <div class="section-header">
+        <h2>Meetings</h2>
+        <button onclick="showCreationForm('meeting')">+ New Meeting</button>
+      </div>
+
+      <div id="meetings-list" class="list-container"></div>
+    </section>
+
+
+
+    <!-- Invoices Section -->
+    <section id="invoices-section" class="section">
+      <div class="section-header">
+        <h2>Invoices</h2>
+        <button onclick="showInvoiceForm()">+ New Invoice</button>
+      </div>
+
+      <div id="invoice-form-container" class="form-container" style="display: none;">
+        <h3>Create Invoice</h3>
+        <form id="create-invoice-form" onsubmit="createInvoice(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Client</label>
+              <select id="invoice-client-select" required onchange="loadClientProjectsForInvoice(this.value)">
+                <option value="">Select Client</option>
+                <!-- Populated by JS -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Project</label>
+              <select id="invoice-project-select">
+                <option value="">Select Project...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Issue Date</label>
+              <input type="date" id="invoice-issue-date" required>
+            </div>
+            <div class="form-group">
+              <label>Due Date</label>
+              <input type="date" id="invoice-due-date" required>
+            </div>
+          </div>
+
+          <!-- Simple Line Items -->
+          <div id="invoice-lines-container">
+            <h4>Items</h4>
+            <div class="invoice-line-header"
+              style="display: grid; grid-template-columns: 2fr 100px 100px 80px 100px 30px; gap: 10px;">
+              <span>Description</span>
+              <span>Qty</span>
+              <span>Rate</span>
+              <span>Disc (%)</span>
+              <span>Total</span>
+              <span></span>
+            </div>
+            <div id="invoice-line-items">
+              <!-- Line Item Rows -->
+            </div>
+            <button type="button" class="add-line-btn" onclick="addInvoiceLine()">+ Add Item</button>
+          </div>
+
+          <!-- Advanced Fields -->
+          <div class="form-grid financials">
+            <div class="form-group">
+              <label>Currency</label>
+              <select id="invoice-currency" oninput="calculateInvoiceTotal()">
+                <option value="USD" selected>USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Discount</label>
+              <div style="display:flex; gap: 5px;">
+                <input type="number" id="invoice-discount-val" placeholder="0" min="0" step="0.01"
+                  oninput="calculateInvoiceTotal()">
+                <select id="invoice-discount-type" style="width: 80px;" oninput="calculateInvoiceTotal()">
+                  <option value="fixed">Fixed</option>
+                  <option value="percent">%</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tax Rate (%)</label>
+              <input type="number" id="invoice-tax" placeholder="0" min="0" step="0.1"
+                oninput="calculateInvoiceTotal()">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:10px;">
+            <label>Notes / Terms</label>
+            <textarea id="invoice-notes" rows="3" placeholder="Payment due within 15 days..."></textarea>
+          </div>
+
+          <!-- Payment Instructions -->
+          <div class="form-group" style="margin-top:10px;">
+            <label>Payment Instructions</label>
+            <div style="display:flex; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
+              <button type="button" class="payment-preset-btn" onclick="applyPaymentPreset('zelle')">
+                💸 Zelle
+              </button>
+              <button type="button" class="payment-preset-btn" onclick="applyPaymentPreset('venmo')">
+                💜 Venmo
+              </button>
+              <button type="button" class="payment-preset-btn" onclick="applyPaymentPreset('cashapp')">
+                💚 Cash App
+              </button>
+              <button type="button" class="payment-preset-btn" onclick="applyPaymentPreset('bank')">
+                🏦 Bank Transfer
+              </button>
+              <button type="button" class="payment-preset-btn" onclick="applyPaymentPreset('clear')"
+                style="opacity:0.6;">
+                ✕ Clear
+              </button>
+            </div>
+            <textarea id="invoice-payment-instructions" rows="3"
+              placeholder="e.g. Zelle payment to (626) 238-3434 | Please include invoice number in memo..."></textarea>
+          </div>
+
+          <div class="invoice-total-area">
+            <span>Total: $</span><span id="invoice-total-display">0.00</span>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit">Create Invoice</button>
+            <button type="button" onclick="hideInvoiceForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="invoices-list" class="invoices-grid">
+        <!-- Invoices List -->
+      </div>
+    </section>
+
+    <!-- Invoice View (Printable) Modal-ish -->
+    <section id="invoice-detail-section" class="section">
+      <div class="section-header">
+        <button onclick="showSection('invoices')" class="back-link">← Back to Invoices</button>
+        <div class="header-actions" id="invoice-actions">
+          <!-- Buttons injected by JS based on status -->
+        </div>
+      </div>
+
+      <div class="invoice-paper" id="invoice-paper">
+        <!-- Rendered Invoice -->
+      </div>
+    </section>
+
+    <!-- CRM Section -->
+    <section id="crm-section" class="section">
+      <div class="section-header">
+        <h2>Clients</h2>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div id="client-search-wrap" class="client-search-wrap">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="client-search-input" placeholder="Search clients, businesses..." autocomplete="off">
+            <kbd class="search-kbd" id="search-kbd-hint">⌘K</kbd>
+            <div id="client-search-results" class="client-search-results"></div>
+          </div>
+          <button onclick="showClientForm()">+ New Client</button>
+        </div>
+      </div>
+
+      <div id="client-form" class="form-container" style="display: none;">
+        <h3>Add Client</h3>
+        <form onsubmit="createClient(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <input type="text" id="client-first-name" placeholder="First Name" required>
+            </div>
+            <div class="form-group">
+              <input type="text" id="client-last-name" placeholder="Last Name" required>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:10px">
+            <label style="font-size:12px; color:#666">Birthday</label>
+            <input type="date" id="client-birthday">
+          </div>
+          <input type="email" id="client-email" placeholder="Email">
+          <input type="tel" id="client-phone" placeholder="Phone">
+          <input type="text" id="client-company" placeholder="Company (Primary)">
+          <select id="client-status">
+            <option value="lead">Lead</option>
+            <option value="active">Active Client</option>
+            <option value="past">Past Client</option>
+          </select>
+          <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <input type="text" id="client-instagram" placeholder="Instagram (username)">
+            <input type="text" id="client-linkedin" placeholder="LinkedIn (URL)">
+            <input type="text" id="client-twitter" placeholder="X / Twitter (username)">
+            <input type="text" id="client-facebook" placeholder="Facebook (URL)">
+          </div>
+
+          <!-- Linked Businesses Panel (Create Form) -->
+          <div class="biz-panel" id="create-biz-panel">
+            <div class="biz-panel-header">
+              <span class="biz-panel-title">🏢 Linked Businesses</span>
+              <button type="button" onclick="toggleCreateBizRow()" class="biz-panel-add-btn">+ Add Business</button>
+            </div>
+            <div id="create-biz-row" style="display:none;" class="biz-panel-form">
+              <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:8px; margin-bottom:6px;">
+                <div class="form-group">
+                  <label>Business Name *</label>
+                  <input type="text" id="create-biz-name" placeholder="e.g. Woodfire Pies">
+                </div>
+                <div class="form-group">
+                  <label>Role</label>
+                  <input type="text" id="create-biz-role" placeholder="e.g. Owner, Manager">
+                </div>
+              </div>
+              <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:8px; margin-bottom:6px;">
+                <div class="form-group">
+                  <label>Industry</label>
+                  <input type="text" id="create-biz-industry" placeholder="e.g. Food, Tech, Retail">
+                </div>
+                <div class="form-group">
+                  <label>Website</label>
+                  <input type="text" id="create-biz-website" placeholder="e.g. woodfirepies.com">
+                </div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button type="button" onclick="addCreateBizTag()" class="biz-panel-confirm-btn">Add Business</button>
+                <button type="button" onclick="toggleCreateBizRow()" class="biz-panel-cancel-btn">Cancel</button>
+              </div>
+            </div>
+            <div id="create-biz-list" class="biz-panel-list">
+              <p class="biz-panel-empty">No businesses linked yet. Click "+ Add Business" above.</p>
+            </div>
+          </div>
+
+          <textarea id="client-notes" placeholder="Notes"></textarea>
+          <div class="form-actions">
+            <button type="submit">Add Client</button>
+            <button type="button" onclick="hideClientForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="clients-list"></div>
+    </section>
+
+    <!-- Client Detail Page (Hidden Section) -->
+    <section id="client-detail-section" class="section">
+      <div class="section-header">
+        <button onclick="showSection('crm')" class="back-link">← Back to Clients</button>
+        <div class="header-actions">
+          <button id="toggle-edit-btn" onclick="toggleEditMode()">EDIT PROFILE</button>
+        </div>
+      </div>
+
+      <div class="profile-layout">
+        <!-- View Mode -->
+        <div id="profile-view-mode" class="profile-content">
+          <!-- LEFT: Client Info Sidebar -->
+          <div class="profile-sidebar-large">
+            <div class="large-avatar" id="detail-avatar">AB</div>
+            <h1 id="detail-name">Client Name</h1>
+            <p id="detail-company" class="detail-company">Company</p>
+            <span id="detail-status" class="status-badge">Status</span>
+
+            <div class="detail-contact">
+              <div class="contact-item">
+                <span class="label">Email</span>
+                <a class="value contact-link" id="detail-email" href="#" target="_blank"
+                  title="Compose in Gmail">email@example.com</a>
+              </div>
+              <div class="contact-item">
+                <span class="label">Phone</span>
+                <span class="value contact-phone-wrap">
+                  <a class="contact-link" id="detail-phone" href="#" title="Call via Google Voice">555-0123</a>
+                  <span class="phone-actions" id="phone-actions" style="display:none;">
+                    <a id="phone-call-link" href="#" target="_blank" class="phone-action-btn call"
+                      title="Call via Google Voice">📞 Call</a>
+                    <a id="phone-sms-link" href="#" target="_blank" class="phone-action-btn sms"
+                      title="SMS via Google Voice">💬 SMS</a>
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            <div class="detail-socials" id="detail-socials">
+              <!-- Social links will be injected here -->
+            </div>
+
+            <!-- Businesses Section -->
+            <div class="detail-businesses" id="detail-businesses-section"
+              style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.07);">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                <span class="label" style="margin-bottom:0;">Businesses</span>
+                <button id="add-business-toggle-btn" onclick="toggleAddBusinessForm()"
+                  style="padding:3px 10px; font-size:11px; background:rgba(99,102,241,0.15); color:#a5b4fc; border:1px solid rgba(99,102,241,0.3); border-radius:8px; cursor:pointer;">+
+                  Add</button>
+              </div>
+              <div id="businesses-list" class="businesses-list">
+                <!-- Populated by JS -->
+              </div>
+              <div id="add-business-form" style="display:none; margin-top:10px;" class="add-business-form">
+                <input type="text" id="biz-name-input" placeholder="Business name" class="biz-input">
+                <input type="text" id="biz-role-input" placeholder="Role (e.g. Owner)" class="biz-input">
+                <input type="text" id="biz-industry-input" placeholder="Industry" class="biz-input">
+                <input type="text" id="biz-website-input" placeholder="Website (optional)" class="biz-input">
+                <div style="display:flex; gap:6px; margin-top:6px;">
+                  <button type="button" onclick="saveBusiness()"
+                    style="flex:1; padding:6px; font-size:11px; background:rgba(99,102,241,0.25); color:#a5b4fc; border:1px solid rgba(99,102,241,0.4); border-radius:8px; cursor:pointer;">Save</button>
+                  <button type="button" onclick="toggleAddBusinessForm()"
+                    style="flex:1; padding:6px; font-size:11px; background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1); border-radius:8px; cursor:pointer;">Cancel</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-drive"
+              style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.07);">
+              <div class="contact-item">
+                <span class="label">Google Drive</span>
+                <a id="detail-drive-link" href="#" target="_blank" class="value"
+                  style="color: #a5b4fc; text-decoration: underline; word-break: break-all;">Open Folder</a>
+                <button id="create-folder-btn" onclick="createDriveFolderForClient()"
+                  style="display: none; padding: 6px 12px; font-size: 12px; margin-top: 8px; background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); border-radius: 8px; cursor: pointer;">+
+                  Create Folder</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CENTER: Media + Activity Log -->
+          <div class="profile-main-content">
+            <div id="media-preview-section" style="margin-bottom: 28px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <h3 style="display:flex; align-items:center; gap:8px;">
+                  🎨 Media Hub
+                  <span id="mh-file-count" style="font-size:11px; font-weight:600; background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:99px; color:rgba(255,255,255,0.4);"></span>
+                </h3>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <button id="mh-portal-link-btn" onclick="copyPortalLink()" title="Copy portal link"
+                    style="padding:5px 10px; font-size:11px; background:rgba(45,212,191,0.12); color:#5eead4; border:1px solid rgba(45,212,191,0.2); border-radius:8px; cursor:pointer; font-weight:600; display:none;">
+                    🔗 Portal Link
+                  </button>
+                  <button onclick="showCreateFolderModal()" title="Create folder"
+                    style="padding:5px 10px; font-size:11px; background:rgba(99,102,241,0.12); color:#a5b4fc; border:1px solid rgba(99,102,241,0.2); border-radius:8px; cursor:pointer; font-weight:600;">
+                    📁 New Folder
+                  </button>
+                  <label title="Upload files" style="padding:5px 10px; font-size:11px; background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.2); border-radius:8px; cursor:pointer; font-weight:600;">
+                    ⬆️ Upload
+                    <input type="file" id="mh-upload-input" style="display:none;" onchange="uploadToCurrentFolder(this)" multiple>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Breadcrumb -->
+              <div id="mh-breadcrumb" style="display:none; font-size:12px; margin-bottom:12px; padding:0; display:flex; align-items:center; gap:5px; flex-wrap:wrap;"></div>
+
+              <!-- File Grid -->
+              <div id="media-grid" class="media-grid">
+                <p class="empty-state" style="font-size: 13px;">No media files found in Drive folder.</p>
+              </div>
+            </div>
+
+            <!-- Create Folder Modal (CRM inline) -->
+            <div id="mh-folder-modal" style="display:none; position:fixed; inset:0; z-index:5000; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center;">
+              <div style="background:rgba(20,20,40,0.95); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:28px 32px; max-width:380px; width:90%;">
+                <h3 style="margin-bottom:16px; font-size:16px;">📁 Create New Folder</h3>
+                <input type="text" id="mh-new-folder-name" placeholder="Folder name (e.g. Logos, Social Media)"
+                  style="width:100%; padding:10px 14px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px; font-size:14px; font-family:inherit; color:rgba(255,255,255,0.9); outline:none; margin-bottom:14px;">
+                <div style="display:flex; gap:8px;">
+                  <button onclick="createSubfolder()" id="mh-create-folder-btn"
+                    style="flex:1; padding:10px; background:linear-gradient(135deg,#6366f1,#a78bfa); border:none; border-radius:10px; color:white; font-weight:700; font-family:inherit; font-size:13px; cursor:pointer;">
+                    Create
+                  </button>
+                  <button onclick="hideCreateFolderModal()"
+                    style="flex:1; padding:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:rgba(255,255,255,0.6); font-weight:600; font-family:inherit; font-size:13px; cursor:pointer;">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Activity Doc Hidden Link for CRM JS compatibility -->
+            <a id="activity-doc-link" style="display:none;" href="#" target="_blank"></a>
+
+            <!-- Reusable Activity Feed mounts here -->
+            <div id="crm-profile-activity-feed" style="margin-top: 20px;"></div>
+          </div>
+
+          <!-- RIGHT: Project Tracker -->
+          <div class="profile-projects-panel">
+            <div class="projects-panel-header">
+              <h3>🚀 Projects</h3>
+              <button class="proj-add-btn" onclick="showAddProjectForm()" id="proj-add-toggle">+ Add</button>
+            </div>
+
+            <!-- Add Project Form (hidden by default) -->
+            <div id="proj-add-form" style="display:none;" class="proj-form-card">
+              <div class="proj-form-section-title" id="proj-form-title">New Project</div>
+              <div class="proj-form-fields">
+                <div class="proj-form-field">
+                  <label class="proj-edit-label">Project Name</label>
+                  <input type="text" id="proj-name-input" placeholder="Project name..." class="proj-input">
+                </div>
+                <div class="proj-form-row" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                  <div class="proj-form-field">
+                    <label class="proj-edit-label">Status</label>
+                    <select id="proj-status-input" class="proj-input">
+                      <option value="active">🟢 Active</option>
+                      <option value="in-progress">🔵 In Progress</option>
+                      <option value="revision">🟡 Revision</option>
+                      <option value="delivered">✅ Delivered</option>
+                      <option value="on-hold">⏸ On Hold</option>
+                      <option value="cancelled">🔴 Cancelled</option>
+                    </select>
+                  </div>
+                  <div class="proj-form-field">
+                    <label class="proj-edit-label">Payment</label>
+                    <select id="proj-payment-input" class="proj-input">
+                      <option value="unpaid">❌ Unpaid</option>
+                      <option value="invoice-sent">✉️ Inv Sent</option>
+                      <option value="partial">🌗 Partial</option>
+                      <option value="paid">✅ Paid</option>
+                    </select>
+                  </div>
+                  <div class="proj-form-field">
+                    <label class="proj-edit-label">Budget ($)</label>
+                    <input type="number" id="proj-budget-input" placeholder="0.00" class="proj-input" min="0"
+                      step="0.01">
+                  </div>
+                </div>
+                <div class="proj-form-field">
+                  <label class="proj-edit-label">Deadline</label>
+                  <input type="date" id="proj-deadline-input" class="proj-input">
+                </div>
+                <div class="proj-form-field">
+                  <label class="proj-edit-label">Notes</label>
+                  <textarea id="proj-notes-input" placeholder="Project notes..." class="proj-input" rows="3"
+                    style="resize:vertical;"></textarea>
+                </div>
+                <div class="proj-form-actions">
+                  <button onclick="saveProject()" class="proj-save-btn">Confirm</button>
+                  <button onclick="cancelProjectForm()" class="proj-cancel-btn">Cancel</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Projects List -->
+            <div id="proj-list" style="margin-bottom: 30px;">
+              <p class="empty-state" style="font-size:13px; padding:20px 0;">No projects yet.</p>
+            </div>
+
+            <!-- Recurring Subscriptions -->
+            <div class="detail-section-header" style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.07); padding-top: 30px;">
+              <h2 style="font-size: 16px; font-weight: 700; color: #fff; margin: 0;">Recurring Subscriptions</h2>
+              <p style="color: rgba(255,255,255,0.4); font-size: 12px; margin: 4px 0 15px;">Automated billing cycles linked to this client.</p>
+            </div>
+            <div id="client-subs-list" class="invoices-grid" style="grid-template-columns: 1fr; gap: 12px;">
+              <p class="empty-state" style="font-size:13px; padding:20px 0;">No active subscriptions.</p>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Edit Mode (Form) -->
+        <div id="profile-edit-mode" class="profile-content" style="display: none;">
+          <form id="edit-client-form" onsubmit="saveClientProfile(event)">
+            <div class="form-group">
+              <label>Avatar Initials</label>
+              <div class="large-avatar" id="edit-avatar-preview" style="margin-bottom: 20px;">AB</div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label>First Name</label>
+                <input type="text" id="edit-first-name" required>
+              </div>
+              <div class="form-group">
+                <label>Last Name</label>
+                <input type="text" id="edit-last-name" required>
+              </div>
+              <div class="form-group">
+                <label>Birthday</label>
+                <input type="date" id="edit-birthday">
+              </div>
+              <div class="form-group">
+                <label>Company</label>
+                <input type="text" id="edit-company">
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="edit-email">
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <input type="text" id="edit-phone">
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <select id="edit-status">
+                  <option value="lead">Lead</option>
+                  <option value="active">Active Client</option>
+                  <option value="past">Past Client</option>
+                </select>
+              </div>
+              <div class="form-group" style="grid-column: span 2;">
+                <label>Google Drive Folder (ID or URL)</label>
+                <input type="text" id="edit-google-drive-folder"
+                  placeholder="https://drive.google.com/drive/folders/...">
+              </div>
+
+              <div class="form-group">
+                <label>Instagram</label>
+                <input type="text" id="edit-instagram" placeholder="Username">
+              </div>
+              <div class="form-group">
+                <label>LinkedIn</label>
+                <input type="text" id="edit-linkedin" placeholder="Full URL">
+              </div>
+              <div class="form-group">
+                <label>X / Twitter</label>
+                <input type="text" id="edit-twitter" placeholder="Username">
+              </div>
+              <div class="form-group">
+                <label>Facebook</label>
+                <input type="text" id="edit-facebook" placeholder="Full URL">
+              </div>
+            </div>
+
+            <!-- Linked Businesses Panel (Edit Form) -->
+            <div class="biz-panel" id="edit-biz-panel" style="margin-top:16px;">
+              <div class="biz-panel-header">
+                <span class="biz-panel-title">🏢 Linked Businesses</span>
+                <button type="button" onclick="toggleEditBizRow()" class="biz-panel-add-btn">+ Add Business</button>
+              </div>
+              <div id="edit-biz-row" style="display:none;" class="biz-panel-form">
+                <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:8px; margin-bottom:6px;">
+                  <div class="form-group">
+                    <label>Business Name *</label>
+                    <input type="text" id="edit-biz-name" placeholder="e.g. Woodfire Pies">
+                  </div>
+                  <div class="form-group">
+                    <label>Role</label>
+                    <input type="text" id="edit-biz-role" placeholder="e.g. Owner, Manager">
+                  </div>
+                </div>
+                <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:8px; margin-bottom:6px;">
+                  <div class="form-group">
+                    <label>Industry</label>
+                    <input type="text" id="edit-biz-industry" placeholder="e.g. Food, Tech, Retail">
+                  </div>
+                  <div class="form-group">
+                    <label>Website</label>
+                    <input type="text" id="edit-biz-website" placeholder="e.g. woodfirepies.com">
+                  </div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <button type="button" onclick="saveEditBusiness()" class="biz-panel-confirm-btn">Add Business</button>
+                  <button type="button" onclick="toggleEditBizRow()" class="biz-panel-cancel-btn">Cancel</button>
+                </div>
+              </div>
+              <div id="edit-biz-list" class="biz-panel-list">
+                <p class="biz-panel-empty">Loading...</p>
+              </div>
+            </div>
+
+            <div class="form-actions" style="justify-content: space-between;">
+              <button type="button" class="delete-btn" onclick="deleteClientFromProfile()"
+                style="background-color: transparent; color: #dc2626; border: 1px solid #dc2626;">Delete
+                Profile</button>
+              <div style="display: flex; gap: 10px;">
+                <button type="button" class="cancel-btn" onclick="toggleEditMode()">Cancel</button>
+                <button type="submit" class="save-btn">Save Changes</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Project Detail Modal -->
+    <div id="proj-detail-modal"
+      style="display:none; position:fixed; inset:0; z-index:8000; background:rgba(0,0,0,0.7); backdrop-filter:blur(12px); align-items:center; justify-content:center;">
+      <div class="proj-modal-card">
+
+        <!-- ── VIEW PANEL ── -->
+        <div id="proj-modal-view">
+          <div class="proj-modal-header">
+            <div style="flex:1; min-width:0;">
+              <div id="proj-modal-name" class="proj-modal-title"></div>
+              <div style="display:flex; align-items:center; gap:10px; margin-top:6px; flex-wrap:wrap;">
+                <span id="proj-modal-status-chip" class="proj-status-chip" style="cursor:pointer;"></span>
+                <span id="proj-modal-payment-chip" class="proj-status-chip"
+                  style="cursor:default; background:#374151; color:#9ca3af;"></span>
+                <span id="proj-modal-budget" class="proj-meta-pill" style="display:none;"></span>
+                <span id="proj-modal-deadline" class="proj-meta-pill" style="display:none;"></span>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+              <button id="proj-modal-edit-btn" class="proj-modal-action-btn edit">✏️ Edit</button>
+              <button id="proj-modal-delete-btn" class="proj-modal-action-btn delete">🗑</button>
+              <button onclick="closeProjectModal()" class="proj-modal-close">✕</button>
+            </div>
+          </div>
+          <div id="proj-modal-notes" class="proj-modal-notes"></div>
+          <div id="proj-modal-invoices" style="margin-top:12px;"></div>
+          <div class="proj-modal-attachments-header">
+            <span style="font-size:13px; font-weight:700; color:rgba(255,255,255,0.7);">📎 Attachments</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <a id="proj-modal-folder-link" href="#" target="_blank" class="proj-folder-link" style="display:none;">📁
+                Open Folder</a>
+              <label class="proj-attach-upload-btn">
+                <input type="file" id="proj-attach-file-input" style="display:none;" multiple
+                  onchange="uploadProjectAttachments(this)">
+                + Upload
+              </label>
+            </div>
+          </div>
+          <div class="proj-carousel-wrap" id="proj-carousel-wrap">
+            <button class="proj-carousel-arrow left" id="proj-carousel-prev" onclick="carouselNav(-1)">‹</button>
+            <div class="proj-carousel" id="proj-carousel">
+              <p class="empty-state" style="font-size:13px; padding:30px 0; text-align:center; width:100%;">No
+                attachments yet.</p>
+            </div>
+            <button class="proj-carousel-arrow right" id="proj-carousel-next" onclick="carouselNav(1)">›</button>
+          </div>
+          <div class="proj-carousel-dots" id="proj-carousel-dots"></div>
+        </div>
+
+        <!-- ── EDIT PANEL (hidden by default) ── -->
+        <div id="proj-modal-edit" style="display:none;">
+          <div class="proj-modal-header">
+            <div class="proj-modal-title" style="font-size:17px;">Edit Project</div>
+            <button onclick="closeModalEdit()" class="proj-modal-close">✕</button>
+          </div>
+          <div class="proj-form-fields">
+            <div class="proj-form-field">
+              <label class="proj-edit-label">Project Name</label>
+              <input type="text" id="proj-edit-name" class="proj-input" placeholder="Project name...">
+            </div>
+            <div class="proj-form-row" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+              <div class="proj-form-field">
+                <label class="proj-edit-label">Status</label>
+                <select id="proj-edit-status" class="proj-input">
+                  <option value="active">🟢 Active</option>
+                  <option value="in-progress">🔵 In Progress</option>
+                  <option value="revision">🟡 Revision</option>
+                  <option value="delivered">✅ Delivered</option>
+                  <option value="on-hold">⏸ On Hold</option>
+                  <option value="cancelled">🔴 Cancelled</option>
+                </select>
+              </div>
+              <div class="proj-form-field">
+                <label class="proj-edit-label">Payment</label>
+                <select id="proj-edit-payment" class="proj-input">
+                  <option value="unpaid">❌ Unpaid</option>
+                  <option value="invoice-sent">✉️ Inv Sent</option>
+                  <option value="partial">🌗 Partial</option>
+                  <option value="paid">✅ Paid</option>
+                </select>
+              </div>
+              <div class="proj-form-field">
+                <label class="proj-edit-label">Budget ($)</label>
+                <input type="number" id="proj-edit-budget" class="proj-input" placeholder="0.00" min="0" step="0.01">
+              </div>
+            </div>
+            <div class="proj-form-field">
+              <label class="proj-edit-label">Deadline</label>
+              <input type="date" id="proj-edit-deadline" class="proj-input">
+            </div>
+            <div class="proj-form-field">
+              <label class="proj-edit-label">Notes</label>
+              <textarea id="proj-edit-notes" class="proj-input" rows="4" placeholder="Project notes..."
+                style="resize:vertical;"></textarea>
+            </div>
+            <div class="proj-form-actions">
+              <button onclick="saveModalEdit()" class="proj-save-btn">Confirm</button>
+              <button onclick="closeModalEdit()" class="proj-cancel-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <div id="timer-widget" class="timer-widget" style="display: none;">
+      <div class="timer-content">
+        <span class="timer-icon">⏱️</span>
+        <div class="timer-details">
+          <span id="timer-time">00:00:00</span>
+          <span id="timer-task">No active task</span>
+        </div>
+        <button id="timer-stop-btn" onclick="stopTimer()">⏹</button>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal (shared by all delete actions) -->
+    <div id="confirm-modal" class="modal"
+      style="display:none; z-index:9999; background:rgba(0,0,0,0.65); backdrop-filter:blur(8px);">
+      <div
+        style="background:rgba(20,20,35,0.95); border:1px solid rgba(244,63,94,0.35); border-radius:20px; padding:36px 40px; max-width:420px; width:90%; box-shadow:0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06); text-align:center; margin:auto;">
+        <div id="confirm-icon" style="font-size:40px; margin-bottom:16px;">🗑️</div>
+        <h3 id="confirm-title"
+          style="color:rgba(255,255,255,0.95); font-size:18px; font-weight:700; margin-bottom:10px;">
+          Confirm</h3>
+        <p id="confirm-message"
+          style="color:rgba(255,255,255,0.5); font-size:14px; line-height:1.6; margin-bottom:28px;">
+          Are you sure?</p>
+        <div style="display:flex; gap:12px; justify-content:center;">
+          <button id="confirm-yes-btn"
+            style="flex:1; padding:12px 20px; background:rgba(244,63,94,0.2); border:1px solid rgba(244,63,94,0.45); border-radius:12px; color:#fda4af; font-size:14px; font-weight:700; cursor:pointer;">Yes,
+            Delete</button>
+          <button onclick="closeConfirmModal()"
+            style="flex:1; padding:12px 20px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:12px; color:rgba(255,255,255,0.7); font-size:14px; font-weight:600; cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="creation-modal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 600px;">
+        <div id="creation-form-container" class="form-container"
+          style="margin-bottom: 0; border: none; box-shadow: none;">
+          <h3 id="creation-modal-title">Create New</h3>
+          <form id="unified-creation-form" onsubmit="handleCreationSubmit(event)">
+            <!-- Type Selector -->
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Select Type</label>
+              <select id="creation-type" onchange="toggleCreationFields()" required>
+                <option value="meeting">🎥 Meeting</option>
+                <option value="task">📝 Task</option>
+                <option value="event">📅 Calendar Event</option>
+              </select>
+            </div>
+
+            <!-- Global Fields -->
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Title</label>
+              <input type="text" id="creation-title" placeholder="e.g. Weekly Standup" required>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Description</label>
+              <textarea id="creation-description" placeholder="Details..."></textarea>
+            </div>
+
+            <!-- Meeting/Event Specific: Time -->
+            <div class="form-group creation-section meeting-only event-only">
+              <label>Start Time</label>
+              <input type="datetime-local" id="creation-start">
+            </div>
+            <div class="form-group creation-section meeting-only event-only">
+              <label>End Time</label>
+              <input type="datetime-local" id="creation-end">
+            </div>
+
+            <!-- Meeting Specific: Attendees & Meet -->
+            <div class="form-group creation-section meeting-only" style="grid-column: span 2;">
+              <label>Attendees</label>
+              <input type="text" id="creation-attendees" placeholder="Emails (comma-separated)">
+            </div>
+            <div class="form-group creation-section meeting-only"
+              style="grid-column: span 2; display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="creation-google-meet" checked style="width: auto;">
+              <label for="creation-google-meet" style="margin-bottom: 0;">Create Google Meet link</label>
+            </div>
+
+            <div class="form-group creation-section event-only">
+              <label>Send Reminder To (Optional)</label>
+              <select id="creation-event-staff">
+                <option value="">Select Staff...</option>
+                <!-- Populated via JS -->
+              </select>
+            </div>
+
+            <!-- Task Specific -->
+            <div class="form-group creation-section task-only">
+              <label>Status</label>
+              <select id="creation-task-status">
+                <option value="todo">To Do</option>
+                <option value="in-progress">In Progress</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+            <div class="form-group creation-section task-only">
+              <label>Priority</label>
+              <select id="creation-task-priority">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div class="form-group creation-section task-only">
+              <label>Client (Optional)</label>
+              <select id="creation-task-client">
+                <option value="">Select Client</option>
+                <!-- Populated via JS -->
+              </select>
+            </div>
+            <div class="form-group creation-section task-only">
+              <label>Assign To (Optional)</label>
+              <select id="creation-task-staff">
+                <option value="">Assign To...</option>
+                <!-- Populated via JS -->
+              </select>
+            </div>
+            <div class="form-group creation-section task-only">
+              <label>Due Date</label>
+              <input type="date" id="creation-task-due">
+            </div>
+
+            <div class="form-actions" style="grid-column: span 2;">
+              <button type="submit" id="creation-submit-btn">Create</button>
+              <button type="button" class="cancel-btn" onclick="hideCreationForm()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meeting Success Modal -->
+    <div id="meeting-success-modal" class="modal-overlay" style="display: none; z-index: 2000;">
+      <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
+        <div
+          style="background: #e6f4ea; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+          <span style="font-size: 30px;">🎥</span>
+        </div>
+        <h3 style="margin-bottom: 10px;">Meeting Created!</h3>
+        <p style="color: #64748b; margin-bottom: 20px;">You're ready to connect.</p>
+
+        <div
+          style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+          <span id="created-meet-link"
+            style="font-family: monospace; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;"></span>
+          <button onclick="copyMeetLink()"
+            style="background: none; border: none; cursor: pointer; color: #2563eb; font-weight: 500;">Copy</button>
+        </div>
+
+        <div class="form-actions" style="justify-content: center;">
+          <a id="join-meet-btn" href="#" target="_blank"
+            style="padding: 10px 20px; background: #2563eb; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">Join
+            Now</a>
+          <button onclick="closeMeetingModal()"
+            style="padding: 10px 20px; background: #f1f5f9; color: #1e293b; border: none; border-radius: 6px; cursor: pointer;">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campaigns Section -->
+    <section id="campaigns-section" class="section">
+      <div class="section-header">
+        <h2>Drip Campaigns</h2>
+        <div style="display:flex; gap:12px;">
+          <button onclick="openTemplateLibrary()" class="secondary-btn" style="padding: 10px 18px;">📚 Templates</button>
+          <button onclick="createNewCampaign()" class="primary-btn" style="padding: 10px 18px;">+ New Campaign</button>
+        </div>
+      </div>
+
+      <div id="campaign-stats-grid" class="stats-grid" style="margin-bottom: 25px;">
+        <!-- Stats summary -->
+      </div>
+
+      <div id="campaigns-list" class="list-container">
+        <!-- Campaigns cards -->
+      </div>
+    </section>
+
+    <!-- Visual Campaign Builder Modal -->
+    <div id="builder-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-content large-modal" style="width: 95vw; height: 90vh; max-width: 1540px; padding: 0; overflow: hidden; display: flex; flex-direction: column; background: #0f172a;">
+        <div class="modal-header" style="padding: 15px 25px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h2 id="builder-title" contenteditable="true" style="margin: 0; font-size: 18px; outline: none; border-bottom: 1px dashed rgba(255,255,255,0.2); min-width: 100px;">New Campaign</h2>
+              <span style="font-size: 12px; opacity: 0.5;">✏️</span>
+            </div>
+            <div id="builder-status-badge" class="badge" style="background: #10b981; color: white;">Draft</div>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <button onclick="saveCampaign()" class="primary-btn" style="padding: 8px 20px;">Save Campaign</button>
+            <button onclick="closeBuilder()" class="icon-btn" style="width: 32px; height: 32px; font-size: 16px;">✕</button>
+          </div>
+        </div>
+
+        <div class="builder-container" style="flex: 1;">
+          <div class="builder-sidebar">
+            <h3>Triggers</h3>
+            <div class="node-toolbox-item" draggable="true" ondragstart="onDragTool(event, 'trigger')">
+              <div class="dot" style="background: var(--trigger-color);"></div>
+              <span>Event Trigger</span>
+            </div>
+
+            <h3>Actions</h3>
+            <div class="node-toolbox-item" draggable="true" ondragstart="onDragTool(event, 'action', 'email')">
+              <div class="dot" style="background: var(--action-color);"></div>
+              <span>Send Email</span>
+            </div>
+            <div class="node-toolbox-item" draggable="true" ondragstart="onDragTool(event, 'action', 'sms')">
+              <div class="dot" style="background: var(--action-color);"></div>
+              <span>Send SMS</span>
+            </div>
+            <div class="node-toolbox-item" draggable="true" ondragstart="onDragTool(event, 'action', 'task')">
+              <div class="dot" style="background: var(--action-color);"></div>
+              <span>Create Task</span>
+            </div>
+
+            <h3>Logic</h3>
+            <div class="node-toolbox-item" draggable="true" ondragstart="onDragTool(event, 'wait')">
+              <div class="dot" style="background: var(--wait-color);"></div>
+              <span>Time Delay</span>
+            </div>
+            <div class="node-toolbox-item" draggable="true" ondragstart="onDragTool(event, 'condition')">
+              <div class="dot" style="background: var(--condition-color);"></div>
+              <span>Condition</span>
+            </div>
+            
+            <div class="node-toolbox-item" draggable="true" ondragstart="onDragTool(event, 'end')">
+              <div class="dot" style="background: var(--end-color);"></div>
+              <span>End Flow</span>
+            </div>
+
+            <div style="margin-top: auto; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; font-size: 11px; color: rgba(255,255,255,0.4);">
+              <p style="margin: 0;">Tip: Drag nodes onto the canvas and connect handles to build your flow.</p>
+            </div>
+          </div>
+
+          <div class="builder-canvas" id="builder-canvas" ondrop="onDropCanvas(event)" ondragover="allowDrop(event)">
+            <svg id="campaign-svg-canvas">
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orientation="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.3)" />
+                </marker>
+              </defs>
+            </svg>
+            <!-- Nodes will be injected here -->
+          </div>
+
+          <div class="builder-properties" id="builder-properties">
+            <h3 style="margin-top: 0; font-size: 16px;">Node Settings</h3>
+            <div id="node-config-form">
+              <p style="color: rgba(255,255,255,0.5); font-size: 13px;">Select a node to configure its properties.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subscriptions Section -->
+    <section id="subscriptions-section" class="section">
+      <div class="section-header">
+        <h2>Recurring Subscriptions</h2>
+        <div style="display: flex; gap: 10px;">
+          <button onclick="processDueSubscriptions()" class="secondary-btn" style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc;">Process Due</button>
+          <button onclick="showSubscriptionForm()" class="primary-btn">New Subscription</button>
+        </div>
+      </div>
+      <div id="subscriptions-list-container" class="invoices-grid">
+        <!-- Subscriptions populate here -->
+      </div>
+    </section>
+
+    <!-- Subscription Creation Modal -->
+    <div id="sub-form-modal" class="modal-overlay" style="display: none;">
+      <div class="modal-content" style="max-width: 500px;">
+        <h3 style="margin-bottom: 20px;">Create Recurring Subscription</h3>
+        <form onsubmit="createSubscription(event)">
+          <div class="form-group">
+            <label>Client</label>
+            <select id="sub-client-select" required style="width:100%; padding:12px; background:rgba(0,0,0,0.4); border:1px solid var(--glass-border); border-radius:var(--radius-md); color:white;"></select>
+          </div>
+          <div class="form-group">
+            <label>Subscription Name</label>
+            <input type="text" id="sub-name" placeholder="e.g. Monthly Retainer" required>
+          </div>
+          <div class="form-group">
+            <label>Monthly Amount ($)</label>
+            <input type="number" id="sub-amount" step="0.01" placeholder="0.00" required>
+          </div>
+          <div class="form-group">
+            <label>Interval</label>
+            <select id="sub-interval" style="width:100%; padding:12px; background:rgba(0,0,0,0.4); border:1px solid var(--glass-border); border-radius:var(--radius-md); color:white;">
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Billing Day of Month</label>
+            <input type="number" id="sub-billing-day" min="1" max="28" value="1">
+          </div>
+          <div class="form-actions" style="margin-top: 20px;">
+            <button type="submit" class="primary-btn">Create Subscription</button>
+            <button type="button" class="cancel-btn" onclick="hideSubscriptionForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </section>
+    
+    <!-- Campaign Builder Modal -->
+    <div id="campaign-modal" class="modal">
+      <div class="modal-content" style="max-width: 600px;">
+        <span class="close-modal" onclick="closeCampaignModal()">&times;</span>
+        <h3 id="campaign-modal-title">Sequence Builder</h3>
+        <form id="campaign-form">
+          <input type="hidden" id="campaign-id">
+          <div class="form-group">
+            <label>Campaign Name</label>
+            <input type="text" id="campaign-name" placeholder="e.g. Post-Project Check-in" required>
+          </div>
+          <div class="form-group">
+            <label>Trigger Event</label>
+            <select id="campaign-trigger" style="width: 100%; padding: 12px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); border-radius: var(--radius-md); color: var(--text-primary);">
+              <option value="project_completed">Project Marked Completed</option>
+              <option value="invoice_paid">Invoice Paid</option>
+            </select>
+          </div>
+          
+          <div style="margin-top: 20px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h4 style="margin: 0; color: var(--text-primary); font-size: 14px;">Sequence Steps</h4>
+              <button type="button" onclick="addCampaignStep()" style="background: rgba(45, 212, 191, 0.2); color: #2dd4bf; border: none; padding: 4px 10px; border-radius: 4px; font-weight: 600; cursor: pointer;">+ Add Step</button>
+            </div>
+            
+            <div id="campaign-steps-container" style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Steps go here -->
+            </div>
+          </div>
+          
+          <button type="submit" class="primary-btn" style="width: 100%; margin-top: 24px;">Save Campaign</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Template Library Modal -->
+  <div id="template-library-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content large-modal" style="width: 80vw; max-width: 1000px; height: 80vh;">
+      <div class="modal-header" style="background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px 25px;">
+        <h2 style="font-size: 18px; font-weight: 700;">Template Library</h2>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button onclick="createNewTemplate('email')" class="primary-btn" style="padding: 8px 16px; font-size: 12px;">+ New Email</button>
+          <button onclick="createNewTemplate('sms')" class="primary-btn" style="padding: 8px 16px; font-size: 12px;">+ New SMS</button>
+          <button onclick="closeTemplateLibrary()" class="icon-btn" style="width: 32px; height: 32px; font-size: 16px;">✕</button>
+        </div>
+      </div>
+      <div class="modal-body" style="padding: 20px; overflow-y: auto;">
+        <div class="tabs" style="margin-bottom: 20px;">
+          <button class="tab-btn active" onclick="switchTemplateTab(event, 'email')">Email Templates</button>
+          <button class="tab-btn" onclick="switchTemplateTab(event, 'sms')">SMS Templates</button>
+        </div>
+        <div id="template-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+          <!-- Templates populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Template Editor Modal -->
+  <div id="template-editor-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header" style="background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px 25px;">
+        <h2 id="template-editor-title" style="font-size: 18px; font-weight: 700;">Edit Template</h2>
+        <button onclick="closeTemplateEditor()" class="icon-btn" style="width: 32px; height: 32px; font-size: 16px;">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <form id="template-editor-form" onsubmit="saveTemplate(event)">
+          <input type="hidden" id="editor-template-id">
+          <input type="hidden" id="editor-template-type">
+          
+          <div class="form-group">
+            <label>Template Name</label>
+            <input type="text" id="editor-template-name" required placeholder="e.g. Welcome Email">
+          </div>
+          
+          <div id="email-only-fields">
+            <div class="form-group">
+              <label>Subject Line</label>
+              <input type="text" id="editor-template-subject" placeholder="Email subject">
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <input type="text" id="editor-template-category" placeholder="e.g. Onboarding">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Body Content</label>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 5px;">Use {{client_name}}, {{company}}, {{due_date}} for variables.</p>
+            <textarea id="editor-template-body" rows="8" required></textarea>
+          </div>
+          
+          <button type="submit" class="primary-btn" style="width: 100%; margin-top: 15px;">Save Template</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Campaign Analytics Modal -->
+  <div id="campaign-analytics-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content large-modal" style="width: 80vw; max-width: 1000px; height: 80vh;">
+      <div class="modal-header" style="background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px 25px;">
+        <h2 id="analytics-title" style="font-size: 18px; font-weight: 700;">Campaign Analytics</h2>
+        <button onclick="closeCampaignAnalytics()" class="icon-btn" style="width: 32px; height: 32px; font-size: 16px;">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 24px; overflow-y: auto;">
+        <div id="analytics-summary-grid" class="stats-grid" style="grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+           <!-- Dynamic summary cards -->
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+          <div class="widget">
+            <h3>Daily Send Volume</h3>
+            <canvas id="campaign-sends-chart" height="200"></canvas>
+          </div>
+          <div class="widget">
+            <h3>Recent Executions</h3>
+            <div id="recent-executions-list" style="max-height: 300px; overflow-y: auto;">
+              <!-- Execution log -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Detail Drawer -->
+  <div id="drawer-backdrop" class="drawer-backdrop" onclick="closeTaskDrawer()"></div>
+  <div id="drawer-panel" class="drawer-panel">
+    <div class="drawer-header">
+      <div class="drawer-header-icon" id="drawer-icon"></div>
+      <div class="drawer-header-info">
+        <div class="drawer-header-title" id="drawer-title">Task Title</div>
+        <div class="drawer-header-tags" id="drawer-tags"></div>
+      </div>
+      <button class="drawer-close-btn" onclick="closeTaskDrawer()" title="Close">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- Subtitle / Description -->
+      <div class="drawer-subtitle-info" id="drawer-subtitle" style="display:none;"></div>
+
+      <!-- Activity Feed Container -->
+      <div id="drawer-activity-feed-container"></div>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="drawer-btn drawer-btn-primary" onclick="handleDrawerSaveNote()">💾 Save Note</button>
+      <button class="drawer-btn drawer-btn-success" id="drawer-complete-btn" onclick="handleDrawerComplete()">✅ Mark
+        Complete</button>
+    </div>
+  </div>
+
+  <!-- HTML2PDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+      integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+      crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/components/ActivityFeed.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/tasks.js"></script>
+    <script src="js/schedule.js"></script>
+    <script src="js/meetings.js"></script>
+    <script src="js/crm.js"></script>
+    <script src="js/invoices.js"></script>
+    <script src="js/subscriptions.js"></script>
+    <script src="js/contextMenu.js"></script>
+    <script src="js/campaigns.js"></script>
+    <script src="js/archives.js"></script>
+    <script src="js/campaign-builder.js"></script>
+
+</body>
+
+</html>
