@@ -44,7 +44,9 @@ app.use(session({
     saveUninitialized: false,
     rolling: true,
     cookie: { 
-        secure: false, // Railway proxy handles SSL in front
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 15 * 60 * 1000 // 15 minutes of inactivity
     }
 }));
@@ -65,8 +67,10 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/login');
+    req.session.destroy((err) => {
+        res.clearCookie('connect.sid');
+        res.redirect('/login');
+    });
 });
 
 function requireAuth(req, res, next) {
