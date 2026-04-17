@@ -62,7 +62,7 @@ const subscriptionsRoutes = require('./routes/subscriptions');
 const staffRoutes = require('./routes/staff');
 const archivesRoutes = require('./routes/archives');
 const settingsRoutes = require('./routes/settings');
-const { verifyPassword, hashPassword, requireAuth } = require('./utils/auth');
+const { verifyPassword, hashPassword, requireAuth, requireAdmin } = require('./utils/auth');
 const { startArchiveScheduler } = require('./jobs/archiveScheduler');
 
 console.log("[BOOT] Creating Express app instance...");
