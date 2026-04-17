@@ -98,6 +98,15 @@ function showSection(sectionName) {
 
     if (btn) btn.classList.add('active');
 
+    // Update mobile tab bar
+    document.querySelectorAll('.mobile-tab-bar .tab-item').forEach(item => {
+        item.classList.remove('active');
+        // Match by section name in the onclick attribute
+        if (item.getAttribute('onclick')?.includes(`'${sectionName}'`)) {
+            item.classList.add('active');
+        }
+    });
+
     // Load data for the section
     if (sectionName === 'dashboard') {
         if (typeof window.loadDashboard === 'function') loadDashboard();
@@ -168,6 +177,41 @@ async function refreshAllData() {
     }
 }
 window.refreshAllData = refreshAllData;
+
+// Mobile Trove Helpers
+function filterDashboard(category) {
+    document.querySelectorAll('#dashboard-section .mobile-pill-tabs .pill-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
+    });
+    showToast(`Filtering Dashboard by ${category}...`, 'info');
+}
+
+function filterCRM(category) {
+    document.querySelectorAll('#crm-section .mobile-pill-tabs .pill-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
+    });
+    // Triggers actual filtering if global filter function exists
+    if (window.loadClients) window.loadClients(category === 'all' ? null : category);
+}
+
+function filterInvoices(category) {
+    document.querySelectorAll('#invoices-section .mobile-pill-tabs .pill-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
+    });
+    showToast(`Filtering Invoices by ${category}...`, 'info');
+}
+
+function openGlobalSearch() {
+    showToast('Search coming soon...', 'info');
+}
+
+function showGlobalQuickAction() {
+    showToast('Quick actions coming soon...', 'info');
+}
+
 
 async function checkGlobalAuth() {
     const statusDiv = document.getElementById('global-auth-status');

@@ -72,11 +72,24 @@
 
     <!-- Dashboard Section -->
     <section id="dashboard-section" class="section active">
-      <div class="section-header" style="align-items: flex-end; margin-bottom: 25px;">
-        <div>
-          <h2 style="display: flex; align-items: center; gap: 10px;">Welcome back 👋 <span class="date-display" id="current-date" style="font-size: 14px; font-weight: 500; color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px;"></span></h2>
-          <p class="section-subtitle" style="margin-top: 5px;">Here's an overview of your agency today.</p>
-        </div>
+      <div class="section-header" style="margin-bottom: 10px;">
+        <h2 style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 800; font-size: 38px;">Trove</h2>
+      </div>
+
+      <!-- Mobile Sub-stats (Trove Style) -->
+      <div class="mobile-sub-stats">
+        <span>📦 <span id="mobile-stat-clients-count">0</span> clients</span>
+        <span>📡 <span id="mobile-stat-projects-count">0</span> active</span>
+        <span>📄 <span id="mobile-stat-tasks-count">0</span> unread</span>
+      </div>
+
+      <!-- Mobile Pill Tabs (Trove Style) -->
+      <div class="mobile-pill-tabs">
+        <div class="pill-tab active" onclick="filterDashboard('all')">All</div>
+        <div class="pill-tab" onclick="filterDashboard('financials')">Financials 🔐</div>
+        <div class="pill-tab" onclick="filterDashboard('ops')">Operations</div>
+        <div class="pill-tab" onclick="filterDashboard('team')">Social</div>
+        <div class="pill-tab" onclick="filterDashboard('media')">Media</div>
       </div>
 
       <!-- Unbilled Time Banner (Feature 2) -->
@@ -308,8 +321,23 @@
 
     <!-- Invoices Section -->
     <section id="invoices-section" class="section">
-      <div class="section-header">
-        <h2>Invoices</h2>
+      <div class="section-header" style="margin-bottom: 10px;">
+        <h2 style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 800; font-size: 34px;">Invoices</h2>
+      </div>
+
+      <div class="mobile-sub-stats">
+        <span>💰 Paid</span>
+        <span>⏳ Pending</span>
+        <span>🛑 Overdue</span>
+      </div>
+
+      <div class="mobile-pill-tabs">
+        <div class="pill-tab active" onclick="filterInvoices('all')">All</div>
+        <div class="pill-tab" onclick="filterInvoices('paid')">Paid</div>
+        <div class="pill-tab" onclick="filterInvoices('unpaid')">Unpaid</div>
+      </div>
+
+      <div class="header-actions" style="margin-bottom: 25px; display: flex; gap: 10px; padding: 0 20px;">
         <button onclick="showInvoiceForm()">+ New Invoice</button>
       </div>
 
@@ -448,21 +476,31 @@
 
     <!-- CRM Section -->
     <section id="crm-section" class="section">
-      <div class="section-header">
-        <h2>Clients</h2>
-        <div style="display:flex; align-items:center; gap:12px;">
-          <div id="client-search-wrap" class="client-search-wrap">
-            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="text" id="client-search-input" placeholder="Search clients, businesses..." autocomplete="off">
-            <kbd class="search-kbd" id="search-kbd-hint">⌘K</kbd>
-            <div id="client-search-results" class="client-search-results"></div>
-          </div>
-          <button onclick="showClientForm()">+ New Client</button>
+      <div class="section-header" style="margin-bottom: 10px;">
+        <h2 style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 800; font-size: 34px;">Clients</h2>
+      </div>
+
+      <div class="mobile-sub-stats">
+        <span>✅ <span id="mobile-crm-stat-active">0</span> Active</span>
+        <span>⏱️ <span id="mobile-crm-stat-leads">0</span> Leads</span>
+      </div>
+
+      <div class="mobile-pill-tabs">
+        <div class="pill-tab active" onclick="filterCRM('all')">All</div>
+        <div class="pill-tab" onclick="filterCRM('active')">Active</div>
+        <div class="pill-tab" onclick="filterCRM('leads')">Leads</div>
+      </div>
+
+      <div class="header-actions" style="display: flex; gap: 10px; margin-bottom: 25px; padding: 0 20px; align-items: center;">
+        <div id="client-search-wrap" class="client-search-wrap" style="flex: 1;">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="client-search-input" placeholder="Search clients..." autocomplete="off">
         </div>
+        <button onclick="showClientForm()">+ New Client</button>
       </div>
 
       <div id="client-form" class="form-container" style="display: none;">
@@ -1476,6 +1514,43 @@
     <script src="js/archives.js"></script>
     <script src="js/campaign-builder.js"></script>
 
+  </div><!-- end container -->
+
+  <!-- Mobile Bottom Tab Bar (Trove Style) -->
+  <nav class="mobile-tab-bar">
+    <div class="tab-item active" onclick="showSection('dashboard')">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+      </div>
+      <span>Dashboard</span>
+    </div>
+    <div class="tab-item" onclick="showSection('crm')">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+      </div>
+      <span>Clients</span>
+    </div>
+    <div class="tab-item" onclick="showSection('tasks')">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg>
+      </div>
+      <span>Tasks</span>
+    </div>
+    <div class="tab-item" onclick="showSection('meetings')">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </div>
+      <span>Meetings</span>
+    </div>
+    <div class="tab-search-btn" onclick="openGlobalSearch()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    </div>
+  </nav>
+
+  <!-- Mobile Floating Action Button -->
+  <button class="mobile-fab" onclick="showGlobalQuickAction()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+  </button>
 
 </body>
 

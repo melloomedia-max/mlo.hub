@@ -27,10 +27,27 @@ async function loadDashboard() {
         const subscriptions = await subscriptionsRes.json();
 
         // Update Stats
+        const activeProjects = projects.filter(p => p.status === 'active').length || 0;
+        const pendingTasks = tasks.filter(t => t.status !== 'done').length || 0;
+
         document.getElementById('stat-clients').textContent = clients.length || 0;
-        document.getElementById('stat-projects').textContent = projects.filter(p => p.status === 'active').length || 0;
-        document.getElementById('stat-tasks').textContent = tasks.filter(t => t.status !== 'done').length || 0;
+        document.getElementById('stat-projects').textContent = activeProjects;
+        document.getElementById('stat-tasks').textContent = pendingTasks;
         document.getElementById('stat-subscriptions').textContent = subscriptions.filter(s => s.status === 'active').length || 0;
+
+        // Mobile Stats (Trove Style)
+        const mClients = document.getElementById('mobile-stat-clients-count');
+        const mProjects = document.getElementById('mobile-stat-projects-count');
+        const mTasks = document.getElementById('mobile-stat-tasks-count');
+        if (mClients) mClients.textContent = clients.length || 0;
+        if (mProjects) mProjects.textContent = activeProjects;
+        if (mTasks) mTasks.textContent = pendingTasks;
+
+        // CRM Specific Mobile Stats
+        const mCrmActive = document.getElementById('mobile-crm-stat-active');
+        const mCrmLeads = document.getElementById('mobile-crm-stat-leads');
+        if (mCrmActive) mCrmActive.textContent = clients.filter(c => c.status === 'active').length || 0;
+        if (mCrmLeads) mCrmLeads.textContent = clients.filter(c => c.status === 'lead').length || 0;
 
         // Meetings Today
         const today = new Date().toISOString().split('T')[0];
