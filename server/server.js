@@ -53,7 +53,9 @@ app.use(session({
 
 // --- Pure Server Auth Middleware ---
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/login.html'));
+    const loginPath = path.join(__dirname, '../public/login.html');
+    console.log(`[AUTH] Serving login from: ${loginPath}`);
+    res.sendFile(loginPath);
 });
 
 app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
