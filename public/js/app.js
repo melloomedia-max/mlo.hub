@@ -205,7 +205,39 @@ function filterInvoices(category) {
 }
 
 function openGlobalSearch() {
-    showToast('Search coming soon...', 'info');
+    const overlay = document.getElementById('mobile-search-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        document.getElementById('mobile-global-search-input').focus();
+    }
+}
+
+function closeGlobalSearch() {
+    const overlay = document.getElementById('mobile-search-overlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+function handleGlobalSearch(query) {
+    const resultsContainer = document.getElementById('mobile-search-results');
+    if (!query || query.length < 2) {
+        resultsContainer.innerHTML = '';
+        return;
+    }
+
+    // In a real app, we'd search across multiple datasets
+    resultsContainer.innerHTML = `
+        <div class="search-section-label">Results for "${query}"</div>
+        <div class="search-suggestions-list">
+            <div class="suggestion-item" onclick="showSection('crm'); closeGlobalSearch();">
+                <span class="s-icon">👥</span>
+                <span class="s-text">Finding clients matching "${query}"...</span>
+            </div>
+            <div class="suggestion-item" onclick="showSection('tasks'); closeGlobalSearch();">
+                <span class="s-icon">⚡</span>
+                <span class="s-text">Finding tasks matching "${query}"...</span>
+            </div>
+        </div>
+    `;
 }
 
 function showGlobalQuickAction() {

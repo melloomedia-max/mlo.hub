@@ -1547,6 +1547,60 @@
     </div>
   </nav>
 
+  <!-- Trove Global Search Overlay (Mobile) -->
+  <div id="mobile-search-overlay" class="mobile-search-overlay">
+    <div class="search-overlay-header">
+      <div class="search-bar-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="mobile-global-search-input" placeholder="Search for anything..." oninput="handleGlobalSearch(this.value)">
+        <button onclick="closeGlobalSearch()" class="search-close-btn">Cancel</button>
+      </div>
+    </div>
+
+    <div class="search-overlay-body">
+      <div class="search-section-label">Filter by Type</div>
+      <div class="search-type-pills">
+        <div class="pill-tab active">All</div>
+        <div class="pill-tab">Clients</div>
+        <div class="pill-tab">Invoices</div>
+        <div class="pill-tab">Tasks</div>
+        <div class="pill-tab">Folders</div>
+        <div class="pill-tab">Staff</div>
+      </div>
+
+      <div class="search-section-label">Filter by Person</div>
+      <div class="search-people-list" id="search-people-list">
+        <!-- Populated by staff list -->
+        <div class="person-avatar-wrap">
+          <div class="person-avatar" style="background: #6366f1;">ET</div>
+          <span>Ethan</span>
+        </div>
+        <div class="person-avatar-wrap">
+          <div class="person-avatar" style="background: #10b981;">MM</div>
+          <span>Melloo</span>
+        </div>
+      </div>
+
+      <div class="search-section-label">Suggestions</div>
+      <div class="search-suggestions-list">
+        <div class="suggestion-item">
+          <span class="s-icon">📄</span>
+          <span class="s-text">Unread Tasks</span>
+        </div>
+        <div class="suggestion-item">
+          <span class="s-icon">💰</span>
+          <span class="s-text">Overdue Invoices</span>
+        </div>
+        <div class="suggestion-item">
+          <span class="s-icon">👥</span>
+          <span class="s-text">Recent Leads</span>
+        </div>
+      </div>
+
+      <div id="mobile-search-results" class="search-results-container"></div>
+    </div>
+  </div>
+
   <!-- Mobile Floating Action Button -->
   <button class="mobile-fab" onclick="showGlobalQuickAction()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
