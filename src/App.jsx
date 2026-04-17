@@ -7,6 +7,7 @@ import MobileShell from './components/mobile/MobileShell';
 import MobileDashboard from './pages/mobile/MobileDashboard';
 import MobileClients from './pages/mobile/MobileClients';
 import MobileTasks from './pages/mobile/MobileTasks';
+import MobileMeetings from './pages/mobile/MobileMeetings';
 
 // Global styles
 import './styles/mobile.css';
@@ -85,15 +86,7 @@ export default function App() {
         <Route path="/dashboard" element={
           <RequireAuth>
             <SmartRoute 
-              mobilePage={<MobileDashboard stats={{
-                clients: data.clients.length,
-                active: data.clients.filter(c => c.status === 'active').length,
-                pending: data.tasks.filter(t => t.status !== 'done').length,
-                totalRevenue: '$' + (data.totalRevenue || 0),
-                pendingInvoices: '$' + (data.pendingInvoices || 0),
-                projected: '$0',
-                totalClients: data.clients.length
-              }} />} 
+              mobilePage={<MobileDashboard />} 
               desktopPage={<div>Desktop Dashboard Works</div>} 
             />
           </RequireAuth>
@@ -102,7 +95,7 @@ export default function App() {
         <Route path="/clients" element={
           <RequireAuth>
             <SmartRoute 
-              mobilePage={<MobileClients clients={data.clients} />} 
+              mobilePage={<MobileClients />} 
               desktopPage={<div>Desktop Clients Works</div>} 
             />
           </RequireAuth>
@@ -111,8 +104,17 @@ export default function App() {
         <Route path="/tasks" element={
           <RequireAuth>
             <SmartRoute 
-              mobilePage={<MobileTasks tasks={data.tasks} />} 
+              mobilePage={<MobileTasks />} 
               desktopPage={<div>Desktop Tasks Works</div>} 
+            />
+          </RequireAuth>
+        } />
+
+        <Route path="/meetings" element={
+          <RequireAuth>
+            <SmartRoute 
+              mobilePage={<MobileMeetings />} 
+              desktopPage={<div>Desktop Meetings Works</div>} 
             />
           </RequireAuth>
         } />

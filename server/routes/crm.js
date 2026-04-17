@@ -60,6 +60,21 @@ router.get('/clients/search', (req, res) => {
     });
 });
 
+// Global Activity Feed
+router.get('/activity', (req, res) => {
+    const sql = `
+        SELECT cc.*, c.name as client_name
+        FROM client_communications cc
+        JOIN clients c ON cc.client_id = c.id
+        ORDER BY cc.created_at DESC
+        LIMIT 50
+    `;
+    db.all(sql, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
 // Get all clients (with business names)
 router.get('/clients', (req, res) => {
     const sql = `
