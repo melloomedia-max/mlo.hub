@@ -5,7 +5,11 @@
     "main": "server/server.js",
     "scripts": {
         "start": "node server/server.js",
-        "dev": "nodemon server/server.js"
+        "dev": "nodemon server/server.js",
+        "postinstall": "npm rebuild sqlite3 --build-from-source"
+    },
+    "engines": {
+        "node": "20.x"
     },
     "keywords": [],
     "author": "",
