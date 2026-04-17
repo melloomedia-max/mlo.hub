@@ -162,6 +162,9 @@
     animation-play-state: paused;
 }
 
+.card-mobile-layout { display: none; }
+.card-desktop-layout { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
+
 .card-avatar {
     width: 64px;
     height: 64px;

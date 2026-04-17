@@ -235,15 +235,84 @@
         page-break-inside: avoid;
     }
 
-    td {
-        border: none !important;
-        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
-        position: relative !important;
-        padding: 14px 15px !important;
-        text-align: right !important;
-        font-size: 15px !important;
+    /* CRM Mobile Card Redesign */
+    .clients-grid {
         display: flex !important;
-        justify-content: flex-end;
+        flex-direction: column !important;
+        gap: 16px !important;
+        overflow-x: visible !important;
+        padding: 0 !important;
+    }
+
+    .client-card-square {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 140px !important;
+        border-radius: var(--radius-lg) !important;
+        padding: 16px !important;
+        animation: none !important;
+        transform: none !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+        background: var(--glass-bg-strong) !important;
+    }
+
+    .card-desktop-layout { display: none !important; }
+    .card-mobile-layout { display: flex !important; flex-direction: column; gap: 12px; }
+
+    .card-top { display: flex; align-items: center; gap: 12px; }
+    .card-main-meta { flex: 1; min-width: 0; }
+    .card-main-meta .card-name { font-size: 16px !important; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-main-meta .card-company { font-size: 13px !important; opacity: 0.6; }
+
+    .card-status-pill {
+        font-size: 10px;
+        text-transform: uppercase;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.05);
+    }
+    .card-status-pill.status-active { color: var(--green); background: rgba(16, 185, 129, 0.1); }
+    .card-status-pill.status-lead { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+
+    .card-mid { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .card-contact-info .contact-line { font-size: 12px; opacity: 0.7; margin-bottom: 2px; }
+    .card-balance { font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 8px; }
+    .card-balance.warning { background: rgba(244, 63, 94, 0.1); color: #fda4af; }
+    .card-balance.success { background: rgba(16, 185, 129, 0.1); color: #34d399; }
+
+    .card-note-snippet { font-size: 11px; opacity: 0.5; font-style: italic; line-height: 1.4; }
+
+    .card-quick-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.2fr;
+        gap: 8px;
+        margin-top: 4px;
+    }
+    .q-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+        text-decoration: none;
+        padding: 10px 0;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .q-btn.primary { background: var(--accent); border-color: var(--accent-glow); }
+
         align-items: center;
         gap: 12px;
         min-height: 50px;
@@ -297,5 +366,42 @@
     .login-container {
         margin: 20px !important;
         padding: 30px 20px !important;
+    }
+    /* General Responsiveness Fixes */
+    body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+    }
+
+    canvas, .chart-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Settings Layout Redesign for Mobile */
+    .settings-layout {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+
+    .settings-sidebar {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        padding-bottom: 10px !important;
+        position: static !important;
+        gap: 10px !important;
+        scrollbar-width: none;
+    }
+
+    .settings-sidebar-item {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        padding: 8px 12px !important;
+    }
+
+    .settings-sidebar-divider {
+        display: none !important;
     }
 }

@@ -63,7 +63,8 @@ router.get('/clients/search', (req, res) => {
 router.get('/clients', (req, res) => {
     const sql = `
         SELECT c.*,
-            GROUP_CONCAT(DISTINCT cb.name) as business_names
+            GROUP_CONCAT(DISTINCT cb.name) as business_names,
+            (SELECT SUM(total_amount - amount_paid) FROM invoices WHERE invoices.client_id = c.id AND invoices.status IN ('sent', 'finalized', 'overdue')) as total_balance
         FROM clients c
         LEFT JOIN client_businesses cb ON cb.client_id = c.id
         GROUP BY c.id
@@ -82,7 +83,8 @@ router.get('/clients', (req, res) => {
 router.get('/clients/:id', (req, res) => {
     const sql = `
         SELECT c.*,
-            GROUP_CONCAT(DISTINCT cb.name) as business_names
+            GROUP_CONCAT(DISTINCT cb.name) as business_names,
+            (SELECT SUM(total_amount - amount_paid) FROM invoices WHERE invoices.client_id = c.id AND invoices.status IN ('sent', 'finalized', 'overdue')) as total_balance
         FROM clients c
         LEFT JOIN client_businesses cb ON cb.client_id = c.id
         WHERE c.id = ?
@@ -721,7 +723,7 @@ router.get('/ai-insights', async (req, res) => {
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             generationConfig: { responseMimeType: "application/json" }
         });
 

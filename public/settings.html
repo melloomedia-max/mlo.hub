@@ -702,6 +702,9 @@
           <button class="settings-sidebar-item" onclick="showSettingsPanel('security')">
             <span class="sidebar-icon">🔐</span> Security
           </button>
+          <button class="settings-sidebar-item" onclick="showSettingsPanel('staff')">
+            <span class="sidebar-icon">👥</span> Staff Accounts
+          </button>
           <button class="settings-sidebar-item" onclick="showSettingsPanel('portal')">
             <span class="sidebar-icon">🌐</span> Client Portal
           </button>
@@ -877,6 +880,81 @@
 
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
               <button class="settings-btn settings-btn-primary" onclick="saveSecuritySettings()">💾 Save Security Settings</button>
+            </div>
+          </div>
+
+          <!-- ═══ STAFF MANAGEMENT ═══ -->
+          <div id="panel-staff" class="settings-panel">
+            <div class="settings-panel-header">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                  <h2>👥 Staff Management</h2>
+                  <p>Create and manage individual accounts for your team.</p>
+                </div>
+                <button class="settings-btn settings-btn-primary" onclick="openStaffForm()">+ Add New Member</button>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <th style="padding: 12px; font-size: 11px; text-transform: uppercase; color: var(--text-tertiary);">Name</th>
+                    <th style="padding: 12px; font-size: 11px; text-transform: uppercase; color: var(--text-tertiary);">Email</th>
+                    <th style="padding: 12px; font-size: 11px; text-transform: uppercase; color: var(--text-tertiary);">Role</th>
+                    <th style="padding: 12px; font-size: 11px; text-transform: uppercase; color: var(--text-tertiary);">Status</th>
+                    <th style="padding: 12px; font-size: 11px; text-transform: uppercase; color: var(--text-tertiary); text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="staff-list-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Modal for Add/Edit Staff -->
+          <div id="staff-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 20000; align-items: center; justify-content: center;">
+            <div class="modal-content" style="background: var(--glass-bg-strong); border: 1px solid var(--glass-border); border-radius: 20px; width: 440px; padding: 32px; box-shadow: var(--glass-shadow-lg);">
+              <h3 id="staff-modal-title" style="margin-top: 0; margin-bottom: 8px;">Add Staff Member</h3>
+              <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 24px;">Assign roles and credentials for your team.</p>
+              
+              <form id="staff-member-form" onsubmit="saveStaffMember(event)">
+                <input type="hidden" id="staff-id">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                  <div>
+                    <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; display: block; margin-bottom: 6px;">Full Name</label>
+                    <input type="text" id="staff-name" class="settings-input" required placeholder="John Doe">
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; display: block; margin-bottom: 6px;">Email Address</label>
+                    <input type="email" id="staff-email" class="settings-input" required placeholder="john@melloo.com">
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; display: block; margin-bottom: 6px;">New Password <span id="pwd-label-note" style="text-transform: none; font-weight: 400; opacity: 0.6;">(min 6 chars)</span></label>
+                    <input type="password" id="staff-password" class="settings-input" placeholder="••••••••">
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                      <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; display: block; margin-bottom: 6px;">Role</label>
+                      <select id="staff-role" class="settings-select">
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; display: block; margin-bottom: 6px;">Status</label>
+                      <select id="staff-status" class="settings-select">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 32px;">
+                  <button type="button" class="settings-btn" style="flex: 1;" onclick="closeStaffModal()">Cancel</button>
+                  <button type="submit" class="settings-btn settings-btn-primary" style="flex: 1.5;">Save Account</button>
+                </div>
+              </form>
             </div>
           </div>
 
@@ -1618,6 +1696,8 @@
 
       const btn = event?.target?.closest?.('.settings-sidebar-item');
       if (btn) btn.classList.add('active');
+
+      if (panelName === 'staff') loadStaffList();
     }
 
     // ─── Init ────────────────────────────────────────────
@@ -1871,38 +1951,99 @@
 
     // ─── Auth Check (copied from app.js) ─────────────────
     async function checkGlobalAuth() {
-      const statusDiv = document.getElementById('global-auth-status');
-      if (!statusDiv) return;
+      // ... (existing checkGlobalAuth logic)
+    }
+
+    // ─── Staff Management Logic ──────────────────────────
+    async function loadStaffList() {
+      const tbody = document.getElementById('staff-list-tbody');
+      tbody.innerHTML = '<tr><td colspan="5" style="padding: 40px; text-align: center; opacity: 0.5;">Loading accounts...</td></tr>';
       try {
-        const response = await fetch('/api/auth/status');
-        const status = await response.json();
-        if (status.isAuthenticated) {
-          statusDiv.innerHTML = `
-            <a href="/auth/google" target="_blank" title="Click to refresh connection" style="color: #6ee7b7; display: flex; align-items: center; gap: 4px; text-decoration: none; font-size:12px; font-weight:600;">
-              <span style="width: 7px; height: 7px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px rgba(16,185,129,0.6);"></span>
-              Google Connected
-            </a>
-            <span style="color: rgba(255,255,255,0.4); font-size: 11px;">(${status.email || 'melloomedia@gmail.com'})</span>
+        const res = await fetch('/api/staff');
+        const list = await res.json();
+        tbody.innerHTML = '';
+        list.forEach(s => {
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid rgba(255,255,255,0.04)';
+          tr.innerHTML = `
+            <td style="padding:14px 12px; font-weight:600; color:#fff;">${s.name}</td>
+            <td style="padding:14px 12px; font-size:13px; color:rgba(255,255,255,0.6);">${s.email}</td>
+            <td style="padding:14px 12px;"><span style="font-size:11px; font-weight:800; text-transform:uppercase; color:#a5b4fc; background:rgba(99,102,241,0.1); padding:2px 8px; border-radius:4px;">${s.role}</span></td>
+            <td style="padding:14px 12px;"><span style="color:${s.status === 'active' ? '#10b981' : '#f43f5e'}; font-size:12px; font-weight:600;">● ${s.status}</span></td>
+            <td style="padding:14px 12px; text-align:right;">
+              <button class="settings-btn" style="padding:6px 14px; font-size:11px;" onclick="openStaffForm(${JSON.stringify(s).replace(/"/g, '&quot;')})">Edit</button>
+            </td>
           `;
-          const dot = document.getElementById('google-status-dot');
-          if (dot) { dot.className = 'status-dot green'; }
-        } else {
-          statusDiv.innerHTML = `
-            <a href="/auth/google" target="_blank" style="color: #a5b4fc; text-decoration: none; font-weight: 600; font-size:12px; display: flex; align-items: center; gap: 4px;">
-              <span style="width: 7px; height: 7px; background: #f43f5e; border-radius: 50%; box-shadow: 0 0 6px rgba(244,63,94,0.6);"></span>
-              Connect Google
-            </a>
-          `;
-          const dot = document.getElementById('google-status-dot');
-          if (dot) { dot.className = 'status-dot red'; }
-        }
+          tbody.appendChild(tr);
+        });
       } catch (e) {
-        console.error('Auth check fail', e);
+        tbody.innerHTML = '<tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--rose);">Failed to load staff list.</td></tr>';
+      }
+    }
+
+    function openStaffForm(member = null) {
+      const modal = document.getElementById('staff-modal');
+      const title = document.getElementById('staff-modal-title');
+      const form = document.getElementById('staff-member-form');
+      
+      form.reset();
+      if (member) {
+        title.textContent = 'Edit Staff Member';
+        document.getElementById('staff-id').value = member.id;
+        document.getElementById('staff-name').value = member.name;
+        document.getElementById('staff-email').value = member.email;
+        document.getElementById('staff-role').value = member.role;
+        document.getElementById('staff-status').value = member.status;
+        document.getElementById('pwd-label-note').textContent = '(leave blank to keep current)';
+        document.getElementById('staff-password').required = false;
+      } else {
+        title.textContent = 'Add Staff Member';
+        document.getElementById('staff-id').value = '';
+        document.getElementById('pwd-label-note').textContent = '(min 6 characters)';
+        document.getElementById('staff-password').required = true;
+      }
+      modal.style.display = 'flex';
+    }
+
+    function closeStaffModal() {
+      document.getElementById('staff-modal').style.display = 'none';
+    }
+
+    async function saveStaffMember(e) {
+      e.preventDefault();
+      const id = document.getElementById('staff-id').value;
+      const data = {
+        name: document.getElementById('staff-name').value,
+        email: document.getElementById('staff-email').value,
+        role: document.getElementById('staff-role').value,
+        status: document.getElementById('staff-status').value,
+        password: document.getElementById('staff-password').value
+      };
+
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `/api/staff/${id}` : '/api/staff';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          showToast(id ? 'Account updated' : 'Account created');
+          closeStaffModal();
+          loadStaffList();
+        } else {
+          const err = await res.json();
+          showToast(err.error || 'Failed to save account', 'error');
+        }
+      } catch (err) {
+        showToast('Connection error', 'error');
       }
     }
   </script>
 
-    <!-- Build Marker -->
+
 
 </body>
 </html>

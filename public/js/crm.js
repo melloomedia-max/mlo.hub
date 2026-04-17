@@ -39,14 +39,17 @@ function displayClients(clients) {
 
     // Helper function to render a client card
     const renderClientCard = (client) => {
-        const names = client.name.split(' ');
-        const initials = names.length > 1 ? names[0][0] + names[names.length - 1][0] : names[0][0];
-        const displayName = names.length > 1 ? `${names[0]} ${names[names.length - 1][0]}.` : client.name;
+        const names = (client.name || '').split(' ');
+        const initials = names.length > 1 ? names[0][0] + names[names.length - 1][0] : (names[0] ? names[0][0] : '?');
+        const displayName = client.name || 'Unknown';
 
-        // Business tags from aggregated column
+        const balance = client.total_balance ? parseFloat(client.total_balance) : 0;
+        const balanceText = balance > 0 
+            ? `<span class="card-balance warning">$${balance.toLocaleString()} Owed</span>` 
+            : `<span class="card-balance success">Paid</span>`;
+
         const bizNames = client.business_names ? client.business_names.split(',') : [];
-        const bizTags = bizNames.slice(0, 2).map(b => `<span class="card-biz-tag">${b.trim()}</span>`).join('');
-        const bizMore = bizNames.length > 2 ? `<span class="card-biz-tag">+${bizNames.length - 2}</span>` : '';
+        const mainBiz = bizNames[0] || client.company || 'Personal';
 
         return `
         <div class="client-card-square" 
@@ -54,10 +57,46 @@ function displayClients(clients) {
              oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${client.name}')"
              data-context="client">
             <div class="card-status-dot status-dot-${client.status}"></div>
-            <div class="card-avatar">${initials}</div>
-            <div class="card-name">${displayName}</div>
-            ${bizTags || bizMore ? `<div class="card-businesses" style="margin-bottom: 4px;">${bizTags}${bizMore}</div>` : ''}
-            <div class="card-phone" style="font-size: 11px; color: rgba(255,255,255,0.4);">${formatPhone(client.phone) || '-'}</div>
+            
+            <!-- Mobile Layout Container (Visible via CSS on phones) -->
+            <div class="card-mobile-layout">
+                <div class="card-top">
+                    <div class="card-avatar">${initials}</div>
+                    <div class="card-main-meta">
+                        <div class="card-name">${displayName}</div>
+                        <div class="card-company">${mainBiz}</div>
+                    </div>
+                    <div class="card-status-pill status-${client.status}">${client.status}</div>
+                </div>
+
+                <div class="card-mid">
+                    <div class="card-contact-info">
+                        <div class="contact-line"><span>📧</span> ${client.email || '-'}</div>
+                        <div class="contact-line"><span>📞</span> ${formatPhone(client.phone) || '-'}</div>
+                    </div>
+                    <div class="card-finance-info">
+                        ${balanceText}
+                    </div>
+                </div>
+
+                <div class="card-bottom">
+                    <div class="card-note-snippet">
+                        ${client.notes ? client.notes.substring(0, 80) + (client.notes.length > 80 ? '...' : '') : 'No recent notes.'}
+                    </div>
+                    <div class="card-quick-actions">
+                        <a href="tel:${client.phone}" class="q-btn" onclick="event.stopPropagation()">Call</a>
+                        <a href="mailto:${client.email}" class="q-btn" onclick="event.stopPropagation()">Email</a>
+                        <button class="q-btn primary">Full Bio</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legacy Desktop Layout (Visible via CSS) -->
+            <div class="card-desktop-layout">
+                <div class="card-avatar">${initials}</div>
+                <div class="card-name">${displayName}</div>
+                <div class="card-company" style="font-size: 11px; opacity: 0.6; margin-top: 4px;">${mainBiz}</div>
+            </div>
         </div>
       `;
     };

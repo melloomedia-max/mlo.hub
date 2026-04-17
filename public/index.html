@@ -17,12 +17,7 @@
         return response;
     };
 
-    // Inactivity Session Pinger (60s)
-    setInterval(() => {
-        if (document.visibilityState === 'visible') {
-            fetch('/api/session/ping').catch(() => {}); // Catch silent network errors
-        }
-    }, 60000);
+    // Data is now refreshed globally via app.js
   </script>
 
   <link rel="stylesheet" href="css/style.css">

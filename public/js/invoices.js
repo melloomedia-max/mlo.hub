@@ -812,30 +812,7 @@ async function loadPaymentHistory(invoiceId, symbol) {
     }
 }
 
-// Global refresh function to update all affected views
-async function refreshAllData() {
-    // 1. Dashboard stats
-    if (typeof loadDashboard === 'function') loadDashboard();
-
-    // 2. Invoices list (always reload to keep list fresh even if hidden)
-    loadInvoices();
-
-    // 3. CRM Projects (if viewing a client)
-    if (typeof currentProfileId !== 'undefined' && currentProfileId) {
-        if (typeof loadProjects === 'function') loadProjects(currentProfileId);
-    }
-
-    // 4. Project Modal (if open)
-    const modal = document.getElementById('proj-detail-modal');
-    if (modal && modal.style.display !== 'none' && typeof _modalProjectId !== 'undefined' && _modalProjectId) {
-        // Reload linked invoices for open project modal
-        if (typeof loadProjectInvoices === 'function') loadProjectInvoices(_modalProjectId);
-        // Also reload project details (like payment pill) - but tricky to just reload p. find a way?
-        // Actually, loadProjects above updates the list -> we might need to update modal header too.
-        // For now invoice list refresh is key.
-    }
-}
-window.refreshAllData = refreshAllData;
+// refreshAllData moved to app.js for global availability
 
 async function loadClientProjectsForInvoice(clientId, selectedProjectId = null) {
     const select = document.getElementById('invoice-project-select');

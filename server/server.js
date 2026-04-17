@@ -24,7 +24,7 @@ const subscriptionsRoutes = require('./routes/subscriptions');
 const staffRoutes = require('./routes/staff');
 const archivesRoutes = require('./routes/archives');
 const settingsRoutes = require('./routes/settings');
-const { verifyPassword, hashPassword } = require('./utils/auth');
+const { verifyPassword, hashPassword, requireAuth } = require('./utils/auth');
 const { startArchiveScheduler } = require('./jobs/archiveScheduler');
 
 console.log("[BOOT] Creating Express app instance...");
@@ -49,7 +49,7 @@ app.use(bodyParser.json());
 console.log("[BOOT] Setting up session middleware...");
 const session = require('express-session');
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || 'secret',
     resave: false,
     saveUninitialized: false,
     rolling: true,
@@ -57,7 +57,7 @@ app.use(session({
         httpOnly: true,
         sameSite: 'lax',
         secure: true,
-        maxAge: 15 * 60 * 1000 // 15 minutes of inactivity
+        maxAge: 1000 * 60 * 60 * 6 // 6 hours
     }
 }));
 console.log("[BOOT] Registering authentication routes...");
@@ -114,19 +114,7 @@ app.get('/logout', (req, res) => {
     });
 });
 
-function requireAuth(req, res, next) {
-    const isAuth = !!(req.session && req.session.isAuthenticated);
-    console.log(`[AUTH-DEBUG] Page check: ${req.path} | AUTH: ${isAuth}`);
-
-    if (isAuth) {
-        return next();
-    }
-    
-    if (req.path.startsWith('/api/')) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-    return res.redirect('/login');
-}
+// requireAuth moved to utils/auth.js
 
 // Explicit Root Handler
 app.get('/', requireAuth, (req, res) => {

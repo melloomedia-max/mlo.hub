@@ -136,7 +136,38 @@ window.addEventListener('DOMContentLoaded', () => {
         initArchives();
     }
     checkGlobalAuth();
+
+    // STOP API SPAM: Run once on load, then every 30-60s (NOT 1s)
+    // Only refresh if the tab is visible to save server resources
+    setInterval(() => {
+        if (!document.hidden) {
+            refreshAllData();
+        }
+    }, 30000); 
 });
+
+// Global refresh function to update all active views
+async function refreshAllData() {
+    console.log('[POLL] Refreshing global data...');
+    
+    // 1. Dashboard stats (if on dashboard or just to keep stats fresh)
+    if (typeof loadDashboard === 'function') loadDashboard();
+
+    // 2. Invoices list
+    if (typeof loadInvoices === 'function') loadInvoices();
+
+    // 3. CRM Projects (if viewing a client)
+    if (typeof currentProfileId !== 'undefined' && currentProfileId) {
+        if (typeof loadProjects === 'function') loadProjects(currentProfileId);
+    }
+
+    // 4. Project Modal (if open)
+    const modal = document.getElementById('proj-detail-modal');
+    if (modal && modal.style.display !== 'none' && typeof _modalProjectId !== 'undefined' && _modalProjectId) {
+        if (typeof loadProjectInvoices === 'function') loadProjectInvoices(_modalProjectId);
+    }
+}
+window.refreshAllData = refreshAllData;
 
 async function checkGlobalAuth() {
     const statusDiv = document.getElementById('global-auth-status');
