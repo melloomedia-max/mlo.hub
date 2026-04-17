@@ -12,15 +12,42 @@ console.log("[BOOT] Initializing database connection...");
 const db = require('./database');
 console.log("[BOOT] Loading route modules...");
 // Admin Account Audit
-db.get("SELECT email, role, status FROM staff WHERE role = 'admin' LIMIT 1", (err, row) => {
-    if (err) {
-        console.error("[BOOT-AUDIT] Admin check failed:", err.message);
-    } else if (row) {
-        console.log(`[BOOT-AUDIT] Admin account verified: ${row.email} | Role: ${row.role} | Status: ${row.status}`);
-    } else {
-        console.warn("[BOOT-AUDIT] No admin account found in staff table!");
+db.get("SELECT email, role, status, password FROM staff WHERE email = 'melloomedia@gmail.com'", (err, row) => {
+    console.log("[BOOT-AUDIT] Admin account check for melloomedia@gmail.com:");
+    console.log(` - Admin exists: ${!!row ? 'YES' : 'NO'}`);
+    if (row) {
+        console.log(` - Admin active: ${row.status === 'active' ? 'YES' : 'NO'}`);
+        console.log(` - Admin role: ${row.role}`);
+        console.log(` - Password hash present: ${!!row.password ? 'YES' : 'NO'}`);
     }
 });
+
+// --- FORCE ADMIN SYNC ---
+// This ensures that even if migrations or manual steps failed, the admin account is ready.
+setTimeout(() => {
+    const email = 'melloomedia@gmail.com';
+    const pass = 'melloo';
+    const { hashPassword } = require('./utils/auth');
+    const hashed = hashPassword(pass);
+    
+    db.get("SELECT id FROM staff WHERE email = ?", [email], (err, row) => {
+        if (err) return console.error("[BOOT-SYNC] Error checking admin:", err.message);
+        
+        if (row) {
+            db.run("UPDATE staff SET password = ?, role = 'admin', status = 'active' WHERE id = ?", [hashed, row.id], (updErr) => {
+                if (!updErr) console.log(`[BOOT-SYNC] Successfully UPDATED admin account: ${email}`);
+                else console.error("[BOOT-SYNC] Update failed:", updErr.message);
+            });
+        } else {
+            db.run("INSERT INTO staff (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)", 
+                ['Admin', email, hashed, 'admin', 'active'], (insErr) => {
+                if (!insErr) console.log(`[BOOT-SYNC] Successfully CREATED admin account: ${email}`);
+                else console.error("[BOOT-SYNC] Insert failed:", insErr.message);
+            });
+        }
+    });
+}, 2000); // Small delay to ensure DB is fully ready
+
 
 const tasksRoutes = require('./routes/tasks');
 const meetingsRoutes = require('./routes/meetings');
@@ -95,14 +122,27 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
     const adminPass = process.env.APP_PASSWORD;
 
     // Check staff accounts in DB
-    db.get('SELECT * FROM staff WHERE email = ? AND status = "active"', [email], (err, user) => {
-        if (err) return res.redirect('/login?error=db');
+    db.get('SELECT * FROM staff WHERE email = ?', [email], (err, user) => {
+        console.log(`[AUTH-DEBUG] Attempt for: ${email}`);
+        console.log(` - User found: ${!!user ? 'YES' : 'NO'}`);
+        
+        if (err) {
+            console.error("[AUTH-DEBUG] DB Error:", err.message);
+            return res.redirect('/login?error=db');
+        }
 
-        if (user && verifyPassword(password, user.password)) {
-            console.log(`[AUTH] Login success for user: ${email}`);
-            req.session.isAuthenticated = true;
-            req.session.user = { id: user.id, name: user.name, role: user.role };
-            return req.session.save(() => res.redirect('/'));
+        if (user) {
+            console.log(` - Active: ${user.status === 'active' ? 'YES' : 'NO'}`);
+            console.log(` - Role: ${user.role}`);
+            const match = verifyPassword(password, user.password);
+            console.log(` - Password verified: ${match ? 'YES' : 'NO'}`);
+
+            if (user.status === 'active' && match) {
+                console.log(`[AUTH] Login success for user: ${email}`);
+                req.session.isAuthenticated = true;
+                req.session.user = { id: user.id, name: user.name, role: user.role };
+                return req.session.save(() => res.redirect('/'));
+            }
         }
 
         // Legacy Fallback (only if email matches adminPass or APP_PASSWORD exactly)
