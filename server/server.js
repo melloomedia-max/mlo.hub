@@ -382,3 +382,69 @@ try {
 } catch (listenErr) {
     console.error("[BOOT-FATAL] Failed to start server listening:", listenErr);
 }
+
+// --- UNIFIED DASHBOARD API ---
+app.get('/api/dashboard', requireAuth, async (req, res) => {
+    try {
+        const stats = {
+            totalRevenue: 0,
+            pendingInvoices: 0,
+            projected: 0,
+            totalClients: 0,
+            activeClients: 0,
+            pendingTasks: 0,
+            recentActivity: []
+        };
+
+        const revenue = await new Promise((resolve) => {
+            db.get(`
+                SELECT 
+                    SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as total,
+                    SUM(CASE WHEN status IN ('sent', 'finalized', 'overdue') THEN (total_amount - amount_paid) ELSE 0 END) as pending
+                FROM invoices
+            `, (err, row) => resolve(row || { total: 0, pending: 0 }));
+        });
+        stats.totalRevenue = (revenue.total || 0).toFixed(2);
+        stats.pendingInvoices = (revenue.pending || 0).toFixed(2);
+
+        const clients = await new Promise((resolve) => {
+            db.get(`
+                SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active
+                FROM clients
+            `, (err, row) => resolve(row || { total: 0, active: 0 }));
+        });
+        stats.totalClients = clients.total;
+        stats.activeClients = clients.active;
+
+        const tasks = await new Promise((resolve) => {
+            db.get("SELECT COUNT(*) as count FROM tasks WHERE status != 'done'", (err, row) => resolve(row?.count || 0));
+        });
+        stats.pendingTasks = tasks;
+
+        const activity = await new Promise((resolve) => {
+            db.all(`
+                SELECT cc.*, c.name as client_name
+                FROM client_communications cc
+                JOIN clients c ON cc.client_id = c.id
+                ORDER BY cc.created_at DESC
+                LIMIT 5
+            `, (err, rows) => resolve(rows || []));
+        });
+        stats.recentActivity = activity;
+
+        res.json(stats);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- ADDED ALIAS FOR CONVENIENCE ---
+app.get('/api/clients', requireAuth, (req, res) => {
+    const sql = 'SELECT * FROM clients ORDER BY created_at DESC';
+    db.all(sql, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
