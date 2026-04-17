@@ -28,6 +28,64 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+
+// --- Simple Cookie Auth ---
+app.post('/api/login', (req, res) => {
+    const { password } = req.body;
+    // Default password 'melloo' if ADMIN_PASSWORD is not set in Railway
+    const adminPass = process.env.ADMIN_PASSWORD || 'melloo';
+    
+    if (password === adminPass) {
+        res.setHeader('Set-Cookie', 'agency_auth=authenticated; Path=/; HttpOnly; Max-Age=2592000'); // 30 days
+        res.json({ success: true, token: 'authenticated' });
+    } else {
+        res.status(401).json({ error: 'Incorrect password' });
+    }
+});
+
+app.get('/api/check-auth', (req, res) => {
+    const cookieHeader = req.headers.cookie || '';
+    if (cookieHeader.includes('agency_auth=authenticated')) {
+        res.json({ authenticated: true });
+    } else {
+        res.json({ authenticated: false });
+    }
+});
+
+// Protect all routes except public assets and portal
+app.use((req, res, next) => {
+    const path = req.path;
+    const isPublic = path === '/login.html' || 
+                     path.startsWith('/css/') || 
+                     path.startsWith('/img/') || 
+                     path.startsWith('/js/components/') || // allow public components logic if needed
+                     path.startsWith('/portal') ||
+                     path === '/oauth2callback' || 
+                     path.startsWith('/auth/google') ||
+                     path === '/api/login' || 
+                     path === '/api/check-auth';
+
+    // Portal API routes match /api/TOKEN/...
+    const isPortalApi = path.match(/^\/api\/[A-Z0-9]{30,}/i);
+
+    if (isPublic || isPortalApi) {
+        return next();
+    }
+
+    const cookieHeader = req.headers.cookie || '';
+    if (!cookieHeader.includes('agency_auth=authenticated')) {
+        // Redirect browser navigation to login, return 401 for fetch
+        if (req.accepts('html', 'json') === 'html') {
+            return res.redirect('/login.html');
+        } else {
+            return res.status(401).json({ error: 'Unauthorized. Please log in.' });
+        }
+    }
+
+    next();
+});
+// -------------------------
+
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Debug logger
