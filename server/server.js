@@ -60,11 +60,24 @@ app.get('/login', (req, res) => {
 
 app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
     const password = req.body.password;
-    if (password && password === process.env.APP_PASSWORD) {
+    const adminPass = process.env.APP_PASSWORD;
+    
+    console.log(`[AUTH-DEBUG] APP_PASSWORD present: ${adminPass ? 'yes' : 'no'}`);
+    
+    if (!adminPass) {
+        console.log('[AUTH-DEBUG] Password match: no (Not Configured)');
+        return res.redirect('/login?error=notconfigured');
+    }
+
+    const matches = (password === adminPass);
+    console.log(`[AUTH-DEBUG] Password match: ${matches ? 'yes' : 'no'}`);
+
+    if (matches) {
         req.session.isAuthenticated = true;
+        console.log('[AUTH-DEBUG] LOGIN SUCCESS');
         res.redirect('/');
     } else {
-        res.redirect('/login?error=true');
+        res.redirect('/login?error=invalid');
     }
 });
 

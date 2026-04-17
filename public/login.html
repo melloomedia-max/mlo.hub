@@ -128,9 +128,17 @@
 
   <script>
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('error')) {
-          document.getElementById('error-msg').textContent = 'Invalid password';
+      const error = urlParams.get('error');
+      const errorEl = document.getElementById('error-msg');
+      
+      if (error === 'invalid') {
+          errorEl.textContent = 'Invalid password';
+      } else if (error === 'notconfigured') {
+          errorEl.textContent = 'Server password not configured';
+      } else if (error) {
+          errorEl.textContent = 'Login error';
       }
+      
       // clear any legacy localStorage token
       localStorage.removeItem('agency_admin_token');
   </script>
