@@ -763,7 +763,8 @@ async function sendPortalLink(method) {
 
 async function copyPortalLink() {
     if (!mhClientPortalToken) { showToast('No portal token', 'error'); return; }
-    const url = `https://melloo.media/portal/${mhClientPortalToken}`;
+    const baseUrl = window.PORTAL_CONFIG?.PORTAL_BASE_URL || window.location.origin;
+    const url = `${baseUrl}/portal/${mhClientPortalToken}`;
     try {
         await navigator.clipboard.writeText(url);
         showToast('🔗 Portal link copied!');
