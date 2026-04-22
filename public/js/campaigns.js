@@ -338,6 +338,11 @@ async function deleteCampaign(id) {
     }
 }
 
+function editCampaign(id) {
+    console.warn('editCampaign called with id:', id);
+    // TODO: implement edit campaign modal
+}
+
 window.deleteCampaign = deleteCampaign;
 window.editCampaign = editCampaign;
 window.viewCampaignStats = viewCampaignStats;

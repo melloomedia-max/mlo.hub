@@ -124,6 +124,7 @@ function showSection(sectionName) {
 
 // Initialize on load
 window.addEventListener('DOMContentLoaded', () => {
+    if (typeof initKeyboardShortcuts === 'function') initKeyboardShortcuts();
     const urlParams = new URLSearchParams(window.location.search);
     const sectionToLoad = urlParams.get('section');
 
@@ -270,8 +271,3 @@ window.navigateTo = function(section) {
     }
 };
 
-// Initialize shortcuts on load
-document.addEventListener('DOMContentLoaded', () => {
-    checkGlobalAuth();
-    if (typeof initKeyboardShortcuts === 'function') initKeyboardShortcuts();
-});
