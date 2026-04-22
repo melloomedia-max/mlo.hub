@@ -7,6 +7,7 @@ const fs = require('fs');
 const { getDriveClient, createInvoicesSubfolder, getInvoicesSubfolderId, createActivityDoc, appendNoteToDoc, getMeetingRecordingsSubfolderId, getOrCreateProjectFolder } = require('../utils/driveHelpers');
 const { generateClientIntelligence } = require('../utils/clientIntelligence');
 const { sendPortalLinkNotify } = require('../utils/notifications');
+const { hashPassword } = require('../utils/auth');
 const upload = multer({ dest: 'uploads/' });
 
 // Helper to create client folder
@@ -68,6 +69,22 @@ router.get('/activity', (req, res) => {
         JOIN clients c ON cc.client_id = c.id
         ORDER BY cc.created_at DESC
         LIMIT 50
+    `;
+    db.all(sql, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Portal Requests Feed
+router.get('/portal-requests', (req, res) => {
+    const sql = `
+        SELECT cc.*, c.name as client_name, c.company
+        FROM client_communications cc
+        JOIN clients c ON cc.client_id = c.id
+        WHERE cc.method = 'Portal Request'
+        ORDER BY cc.created_at DESC
+        LIMIT 20
     `;
     db.all(sql, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -145,8 +162,7 @@ router.post('/clients/:id/portal-link', async (req, res) => {
             });
         }
 
-        const baseUrl = process.env.PORTAL_BASE_URL || `${req.protocol}://${req.get('host')}`;
-        const portalUrl = `${baseUrl}/portal/${token}`;
+        const portalUrl = `${process.env.PORTAL_BASE_URL || (req.protocol + '://' + req.get('host'))}/portal/${token}`;
         console.log(`[PORTAL-LOG] portal link created successfully: ${portalUrl}`);
 
         // 3. Save to portal_links table
@@ -278,7 +294,8 @@ router.put('/clients/:id', (req, res) => {
     const updateableFields = [
         'first_name', 'last_name', 'birthday', 'email', 'phone', 'company',
         'status', 'notes', 'google_drive_folder_id',
-        'social_instagram', 'social_linkedin', 'social_twitter', 'social_facebook'
+        'social_instagram', 'social_linkedin', 'social_twitter', 'social_facebook',
+        'password'
     ];
 
     const updates = [];
@@ -304,8 +321,12 @@ router.put('/clients/:id', (req, res) => {
 
     updateableFields.forEach(field => {
         if (req.body[field] !== undefined) {
+            let value = req.body[field];
+            if (field === 'password' && value) {
+                value = hashPassword(value);
+            }
             updates.push(`${field} = ?`);
-            params.push(req.body[field]);
+            params.push(value);
         }
     });
 

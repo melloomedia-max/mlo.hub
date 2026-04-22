@@ -20,6 +20,15 @@
     };
 
     // Data is now refreshed globally via app.js
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.PORTAL_CONFIG?.PORTAL_BASE_URL) {
+            const webLink = document.getElementById('website-link');
+            if (webLink) {
+                webLink.href = window.PORTAL_CONFIG.PORTAL_BASE_URL;
+            }
+        }
+    });
   </script>
 
   <link rel="stylesheet" href="css/style.css">
@@ -36,6 +45,7 @@
     rel="stylesheet">
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 
+  <script src="/js/config.js"></script>
 </head>
 
 <body>
@@ -62,7 +72,7 @@
         <button onclick="showSection('campaigns')" data-section="campaigns" data-role="admin">Campaigns</button>
         <button data-role="admin" onclick="window.location.href='settings.html'">⚙️ Settings</button>
         <div style="width: 1px; height: 20px; background: var(--border-color); margin: 0 10px;"></div>
-        <a href="https://melloo.media" class="back-to-site">← Website</a>
+        <a id="website-link" href="https://melloo.media" class="back-to-site">← Website</a>
       </nav>
       <div id="global-auth-status" class="auth-status-pill">
         <!-- Populated by JS -->
@@ -191,6 +201,12 @@
           <ul id="activity-feed" class="activity-list"></ul>
         </div>
         
+        <div class="widget">
+          <h3>🚨 Portal Requests</h3>
+          <ul id="portal-requests-feed" class="activity-list"></ul>
+          <p id="portal-requests-empty" style="display: none; text-align: center; color: var(--text-tertiary); font-size: 13px; padding: 20px 0;">No pending requests.</p>
+        </div>
+
         <div class="widget">
           <h3>Upcoming Deadlines</h3>
           <ul id="deadline-list" class="deadline-list"></ul>
@@ -837,6 +853,11 @@
               <div class="form-group">
                 <label>Facebook</label>
                 <input type="text" id="edit-facebook" placeholder="Full URL">
+              </div>
+              <div class="form-group" style="grid-column: span 2;">
+                <label>Portal Password (Optional)</label>
+                <input type="password" id="edit-portal-password" placeholder="Set or update portal login password">
+                <p style="font-size:11px; color:rgba(255,255,255,0.3); margin-top:4px;">Leave blank to keep existing password. Clients use this to log into portal.melloo.media</p>
               </div>
             </div>
 

@@ -100,6 +100,14 @@ app.use(session({
 }));
 console.log("[BOOT] Registering authentication routes...");
 
+// Domain Detection Middleware
+app.use((req, res, next) => {
+    const host = req.get('host') || '';
+    req.isPortal = host.startsWith('portal.');
+    req.isHub = host.startsWith('hub.') || !req.isPortal; // Default to Hub if not explicitly Portal
+    next();
+});
+
 // --- Pure Server Auth Middleware ---
 app.get('/login', (req, res) => {
     // Migration: Create initial admin if none exists
@@ -121,32 +129,52 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
     const { email, password } = req.body;
     const adminPass = process.env.APP_PASSWORD;
 
-    // Check staff accounts in DB
-    db.get('SELECT * FROM staff WHERE email = ?', [email], (err, user) => {
-        if (err) {
-            return res.redirect('/login?error=db');
-        }
-
-        if (user) {
-            const match = verifyPassword(password, user.password);
-            if (user.status === 'active' && match) {
+    if (req.isPortal) {
+        // Portal Login (Clients)
+        db.get('SELECT * FROM clients WHERE email = ?', [email], (err, user) => {
+            if (err) return res.redirect('/login?error=db');
+            if (user && user.password && verifyPassword(password, user.password)) {
                 req.session.isAuthenticated = true;
-                req.session.user = { id: user.id, name: user.name, role: user.role, email: user.email };
+                req.session.user = { 
+                    id: user.id, 
+                    name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.name, 
+                    role: 'client', 
+                    email: user.email,
+                    portal_token: user.portal_token
+                };
+                
+                const portalToken = user.portal_token;
+                if (!portalToken || portalToken === 'N/A') {
+                    return req.session.save(() => res.redirect('/login?error=portal_not_setup'));
+                }
+                return req.session.save(() => res.redirect(`/portal/${portalToken}`));
+            }
+            res.redirect('/login?error=invalid');
+        });
+    } else {
+        // Hub Login (Staff)
+        db.get('SELECT * FROM staff WHERE email = ?', [email], (err, user) => {
+            if (err) return res.redirect('/login?error=db');
+
+            if (user) {
+                const match = verifyPassword(password, user.password);
+                if (user.status === 'active' && match) {
+                    req.session.isAuthenticated = true;
+                    req.session.user = { id: user.id, name: user.name, role: user.role, email: user.email };
+                    return req.session.save(() => res.redirect('/'));
+                }
+            }
+
+            // Legacy Fallback
+            if (!email && password === adminPass) {
+                req.session.isAuthenticated = true;
+                req.session.user = { id: 0, name: 'Legacy Admin', role: 'admin', email: 'legacy@agency.com' };
                 return req.session.save(() => res.redirect('/'));
             }
-        }
 
-        // Legacy Fallback (only if email matches adminPass or APP_PASSWORD exactly)
-        if (!email && password === adminPass) {
-            console.log('[AUTH] Legacy password login success');
-            req.session.isAuthenticated = true;
-            req.session.user = { id: 0, name: 'Legacy Admin', role: 'admin', email: 'legacy@agency.com' };
-            return req.session.save(() => res.redirect('/'));
-        }
-
-        console.log(`[AUTH] Login failed for: ${email}`);
-        res.redirect('/login?error=invalid');
-    });
+            res.redirect('/login?error=invalid');
+        });
+    }
 });
 
 app.get('/logout', (req, res) => {
@@ -158,10 +186,15 @@ app.get('/logout', (req, res) => {
 
 // requireAuth moved to utils/auth.js
 
-// Explicit Root Handler
 app.get('/', requireAuth, (req, res) => {
+    if (req.isPortal) {
+        const token = req.session.user?.portal_token;
+        if (!token || token === 'N/A') {
+            return res.redirect('/login?error=portal_not_setup');
+        }
+        return res.redirect(`/portal/${token}`);
+    }
     const indexPath = path.join(__dirname, '../public/index.html');
-    console.log(`[AUTH-CHECK] Serving index from: ${indexPath}`);
     res.sendFile(indexPath);
 });
 
@@ -205,12 +238,19 @@ app.use((req, res, next) => {
     
     // Always skip these completely
     if (route === '/oauth2callback' || route.startsWith('/auth/google') || route === '/login' || route === '/logout') return next();
-    if (route.startsWith('/portal') || route.match(/^\/api\/[A-Z0-9]{30,}/i)) return next();
     if (route.startsWith('/css/') || route.startsWith('/img/') || route.startsWith('/js/components/')) return next();
 
-    // Catch exactly the specified frontend routes or API logic
+    // Portal logic: If on portal domain, require auth for almost everything except login
+    if (req.isPortal) {
+        // Allow public access to the portal token-based API ONLY IF we want to keep token access public.
+        // But the user said "log in", so let's require auth.
+        // However, we need to allow the portal HTML and its assets.
+        if (route.startsWith('/js/') || route.startsWith('/img/') || route.startsWith('/css/')) return next();
+        return requireAuth(req, res, next);
+    }
+
+    // Hub logic (current)
     if (protectedRoutes.includes(route) || route.startsWith('/api/')) {
-        // Special Case: Settings page and specific APIs are Admin Only
         const adminOnlyRoutes = ['/settings', '/settings.html', '/api/staff', '/api/billing', '/api/revenue', '/api/archives'];
         if (adminOnlyRoutes.some(r => route === r || route.startsWith(r + '/'))) {
             return requireAdmin(req, res, next);
@@ -221,6 +261,14 @@ app.use((req, res, next) => {
     next();
 });
 // -------------------------
+
+
+app.get('/js/config.js', (req, res) => {
+    // Priority: 1. ENV, 2. Current Host
+    const portalBaseUrl = process.env.PORTAL_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    res.type('application/javascript');
+    res.send(`window.PORTAL_CONFIG = { PORTAL_BASE_URL: "${portalBaseUrl}" };`);
+});
 
 app.use(express.static(path.join(__dirname, '../public'), {
     setHeaders: (res, filePath) => {

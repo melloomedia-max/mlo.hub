@@ -268,18 +268,33 @@ async function openClientProfile(clientId) {
                 </div>
             `;
             
-            // Show portal buttons
+            // Visibility logic for portal buttons
             const pBtn = document.getElementById('mh-portal-link-btn');
             const eBtn = document.getElementById('mh-portal-email-btn');
             const sBtn = document.getElementById('mh-portal-sms-btn');
-            if (pBtn) pBtn.style.display = 'inline-flex';
+            
+            mhClientPortalToken = client.portal_token;
+
+            // Copy button only if token exists
+            const hasPortalToken = !!mhClientPortalToken && mhClientPortalToken !== 'N/A';
+            if (pBtn) pBtn.style.display = hasPortalToken ? 'inline-flex' : 'none';
+            
+            // Email/SMS buttons can stay visible (they trigger generation on backend)
             if (eBtn) eBtn.style.display = 'inline-flex';
             if (sBtn) sBtn.style.display = 'inline-flex';
-            mhClientPortalToken = client.portal_token;
         } else {
             driveLink.style.display = 'none';
             createFolderBtn.style.display = 'block';
             mediaGrid.innerHTML = '<p class="empty-state">No Drive folder linked.</p>';
+            
+            // Hide all portal buttons if no drive (usually means lead/uninitialized)
+            const pBtn = document.getElementById('mh-portal-link-btn');
+            const eBtn = document.getElementById('mh-portal-email-btn');
+            const sBtn = document.getElementById('mh-portal-sms-btn');
+            if (pBtn) pBtn.style.display = 'none';
+            if (eBtn) eBtn.style.display = 'none';
+            if (sBtn) sBtn.style.display = 'none';
+            mhClientPortalToken = null;
         }
 
         // Populate Edit Form (Pre-fill)
@@ -356,6 +371,10 @@ async function openClientProfile(clientId) {
         if (editLinked) editLinked.value = client.social_linkedin || '';
         if (editTwitter) editTwitter.value = client.social_twitter || '';
         if (editFB) editFB.value = client.social_facebook || '';
+        
+        // Reset Password Field
+        const editPortalPass = document.getElementById('edit-portal-password');
+        if (editPortalPass) editPortalPass.value = '';
 
         // Reset View
         const viewModeEl = document.getElementById('profile-view-mode');
@@ -761,9 +780,19 @@ async function sendPortalLink(method) {
     }
 }
 
+function getPortalUrl(token) {
+    if (!token || token === 'N/A' || token === 'null' || token === 'undefined') return null;
+    const baseUrl = window.PORTAL_CONFIG?.PORTAL_BASE_URL || window.location.origin;
+    return `${baseUrl}/portal/${token}`;
+}
+
 async function copyPortalLink() {
-    if (!mhClientPortalToken) { showToast('No portal token', 'error'); return; }
-    const url = `${window.location.origin}/portal/${mhClientPortalToken}`;
+    const url = getPortalUrl(mhClientPortalToken);
+    if (!url) { 
+        showToast('Portal not set up for this client', 'error'); 
+        return; 
+    }
+
     try {
         await navigator.clipboard.writeText(url);
         showToast('🔗 Portal link copied!');
@@ -830,8 +859,8 @@ async function saveClientProfile(event) {
     const editInsta = document.getElementById('edit-instagram');
     const editLinked = document.getElementById('edit-linkedin');
     const editTwitter = document.getElementById('edit-twitter');
-    const editFB = document.getElementById('edit-facebook');
-
+    const editPass = document.getElementById('edit-portal-password');
+    
     const client = {
         first_name: editFirstName ? editFirstName.value : '',
         last_name: editLastName ? editLastName.value : '',
@@ -846,6 +875,10 @@ async function saveClientProfile(event) {
         social_twitter: editTwitter ? editTwitter.value : '',
         social_facebook: editFB ? editFB.value : ''
     };
+
+    if (editPass && editPass.value) {
+        client.password = editPass.value;
+    }
 
     if (client.email && !validateEmail(client.email)) {
         showToast('Please enter a valid email address', 'error');

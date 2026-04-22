@@ -31,14 +31,32 @@ function requireAuth(req, res, next) {
     // LOCAL DEV BYPASS
     const host = req.get('host') || '';
     if (host.includes('localhost') || host.includes('127.0.0.1')) {
-        req.session.isAuthenticated = true;
-        req.session.user = req.session.user || { id: 0, name: 'Dev Admin', role: 'admin', email: 'dev@melloo.media' };
+        // If we're on a portal subdomain on localhost, simulate a client
+        if (host.startsWith('portal.')) {
+            req.session.isAuthenticated = true;
+            req.session.user = req.session.user || { id: 1, name: 'Dev Client', role: 'client', email: 'client@melloo.media' };
+        } else {
+            req.session.isAuthenticated = true;
+            req.session.user = req.session.user || { id: 0, name: 'Dev Admin', role: 'admin', email: 'dev@melloo.media' };
+        }
         return next();
     }
 
     const isAuth = !!(req.session && req.session.isAuthenticated);
     
     if (isAuth) {
+        // Enforce role based on domain
+        const user = req.session.user;
+        const host = req.get('host') || '';
+        const isPortalDomain = host.startsWith('portal.');
+
+        if (isPortalDomain && user.role !== 'client') {
+            return res.redirect('/login?error=portal_access');
+        }
+        if (!isPortalDomain && user.role === 'client') {
+            return res.redirect('/login?error=hub_access');
+        }
+
         return next();
     }
     

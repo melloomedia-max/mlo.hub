@@ -4,7 +4,7 @@ const db = require('../database');
 const path = require('path');
 const { getDriveClient } = require('../utils/driveHelpers');
 const { sendSMS } = require('../utils/emailService');
-const nodemailer = require('nodemailer');
+const { sendPortalRequestNotify } = require('../utils/notifications');
 
 function dbAll(query, params = []) {
     return new Promise((resolve, reject) => {
@@ -30,20 +30,35 @@ function dbRun(query, params = []) {
     });
 }
 
+// Helper to validate token
+function isValidToken(token) {
+    if (!token) return false;
+    const invalid = ['N/A', 'null', 'undefined', 'api'];
+    return !invalid.includes(token.toLowerCase());
+}
+
 // Serve Portal HTML
 router.get('/:token', (req, res) => {
-    if (req.params.token === 'api') return;
+    const { token } = req.params;
+    if (!isValidToken(token)) {
+        return res.status(400).send('Invalid portal link');
+    }
     res.sendFile(path.join(__dirname, '../../public/portal.html'));
 });
 
 // ─── Main Portal Data ────────────────────────────────────
 router.get('/api/:token', async (req, res) => {
+    const { token } = req.params;
+    if (!isValidToken(token)) {
+        return res.status(400).json({ error: "Invalid token format" });
+    }
+    
     try {
         const client = await dbGet(
             `SELECT id, name, first_name, last_name, company, email,
                     google_drive_folder_id, created_at
              FROM clients WHERE portal_token = ?`,
-            [req.params.token]
+            [token]
         );
         if (!client) return res.status(404).json({ error: "Invalid token" });
 
@@ -128,47 +143,34 @@ router.post('/api/:token/request', async (req, res) => {
     try {
         const { message } = req.body;
         if (!message || !message.trim()) return res.status(400).json({ error: "Message is required" });
-
-        const client = await dbGet("SELECT id, name, first_name, company FROM clients WHERE portal_token = ?", [req.params.token]);
+        const client = await dbGet("SELECT id, name FROM clients WHERE portal_token = ?", [req.params.token]);
         if (!client) return res.status(404).json({ error: "Invalid token" });
 
-        const clientLabel = client.company || client.first_name || client.name || 'Client';
-
-        await dbRun(
-            "INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)",
-            [client.id, 'note', 'Portal Request', `[CLIENT PORTAL REQUEST] ${clientLabel}: ${message.trim()}`]
-        );
-
-        // Email admin
-        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            try {
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-                });
-                await transporter.sendMail({
-                    from: `"Melloo Hub" <${process.env.EMAIL_USER}>`,
-                    to: process.env.EMAIL_USER,
-                    subject: `Portal Request from ${clientLabel}`,
-                    html: `<p><strong>${clientLabel}</strong> submitted a request via their client portal:</p>
-                           <blockquote style="border-left:4px solid #6366f1;padding:10px 16px;background:#f9f9fb;border-radius:4px;">${message.trim()}</blockquote>
-                           <p style="color:#94a3b8;font-size:12px;">Log in to Melloo Hub to view and respond.</p>`
-                });
-            } catch (emailErr) {
-                console.error('[PORTAL-REQUEST] Email notification failed:', emailErr.message);
-            }
-        }
-
-        // SMS to staff (best-effort)
-        const staff = await dbGet("SELECT phone FROM staff LIMIT 1");
-        if (staff && staff.phone) {
-            sendSMS(staff.phone, `Portal request from ${clientLabel}: ${message.trim()}`, 'verizon');
-        }
-
+        await dbRun("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)", [client.id, 'note', 'Portal Request', `[CLIENT PORTAL REQUEST]: ${message}`]);
+        
+        // Return success immediately to avoid loading delays
         res.json({ success: true });
+
+        // Trigger background notifications
+        (async () => {
+            try {
+                // 1. Email Notification
+                await sendPortalRequestNotify(client, message);
+                
+                // 2. SMS Notification to Admin
+                const don = await dbGet("SELECT phone, name FROM staff WHERE role = 'admin' LIMIT 1");
+                if (don && don.phone) {
+                    const smsMessage = `🚨 ${client.name} sent a request: ${message}`;
+                    // Use Verizon/vtext as requested
+                    await sendSMS(don.phone, smsMessage, 'verizon');
+                }
+            } catch (notifyErr) {
+                console.error('[PORTAL-LOG] Background notification failed:', notifyErr);
+            }
+        })();
+
     } catch (err) {
-        console.error('[PORTAL-REQUEST] Error:', err.message);
-        res.status(500).json({ error: err.message });
+        if (!res.headersSent) res.status(500).json({ error: err.message });
     }
 });
 
