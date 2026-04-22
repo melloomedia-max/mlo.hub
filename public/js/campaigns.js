@@ -40,14 +40,14 @@ function renderCampaigns() {
                 <div>
                     <h3 style="margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.01em;">${campaign.name}</h3>
                     <div style="display: flex; gap: 8px; margin-top: 6px;">
-                        <span class="status-badge ${campaign.status === 'active' ? 'status-active' : 'status-todo'}" style="font-size: 9px; padding: 2px 8px;">
-                            ${campaign.status.toUpperCase()}
+                        <span class="status-badge status-${campaign.status || 'draft'}" style="font-size: 9px; padding: 2px 8px;">
+                            ${(campaign.status || 'draft').toUpperCase()}
                         </span>
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                    <button onclick="editCampaign(${campaign.id})" class="icon-btn" style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✏️</button>
-                    <button onclick="deleteCampaign(${campaign.id})" class="icon-btn delete-btn" style="width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">🗑️</button>
+                    <button onclick="editCampaign(${campaign.id})" class="icon-btn" aria-label="Edit campaign ${campaign.name.replace(/"/g, '&quot;')}" title="Edit" style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✏️</button>
+                    <button onclick="deleteCampaign(${campaign.id})" class="icon-btn delete-btn" aria-label="Delete campaign ${campaign.name.replace(/"/g, '&quot;')}" title="Delete" style="width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">🗑️</button>
                 </div>
             </div>
             
