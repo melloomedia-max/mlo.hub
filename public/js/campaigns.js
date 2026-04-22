@@ -338,12 +338,10 @@ async function deleteCampaign(id) {
     }
 }
 
-function editCampaign(id) {
-    console.warn('editCampaign called with id:', id);
-    // TODO: implement edit campaign modal
-}
+// NOTE: `editCampaign` is defined in campaign-builder.js — it opens the visual
+// flow builder with the campaign loaded. Do not re-declare or re-assign it here;
+// a stub would clobber the real implementation.
 
 window.deleteCampaign = deleteCampaign;
-window.editCampaign = editCampaign;
 window.viewCampaignStats = viewCampaignStats;
 window.loadCampaigns = loadCampaigns;
