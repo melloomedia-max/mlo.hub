@@ -1796,7 +1796,7 @@ async function deleteAttachment(id) {
 let _searchTimeout = null;
 
 function initClientSearch() {
-    const input = document.getElementById('client-search-input');
+    const input = document.getElementById('client-search');
     const results = document.getElementById('client-search-results');
     if (!input || !results) return;
 
@@ -1888,7 +1888,7 @@ function renderSearchResults(clients, query) {
 
             return `
             <div class="search-result-item" 
-                 onclick="openClientProfile(${client.id}); document.getElementById('client-search-results').classList.remove('active'); document.getElementById('client-search-input').value = '';"
+                 onclick="openClientProfile(${client.id}); document.getElementById('client-search-results').classList.remove('active'); document.getElementById('client-search').value = '';"
                  oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${(client.name || '').replace(/'/g, "\\'")}')"
                  data-context="client">
                 <div class="search-result-avatar">${initials}</div>

@@ -157,43 +157,52 @@ async function refreshAllData() {
 }
 window.refreshAllData = refreshAllData;
 
-async function checkGlobalAuth() {
-    const statusDiv = document.getElementById('global-auth-status');
-    if (!statusDiv) return;
+window.initKeyboardShortcuts = function() {
+    document.addEventListener('keydown', (e) => {
+        const isMac = navigator.platform.toUpperCase().includes('MAC');
+        const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+        const activeTag = document.activeElement.tagName;
 
-    try {
-        const response = await fetch('/api/auth/status');
-        const status = await response.json();
+        // Ignore if typing in input/textarea unless it's the Escape key
+        if (e.key !== 'Escape' && (activeTag === 'INPUT' || activeTag === 'TEXTAREA')) return;
 
-        if (status.loggedIn && status.user) {
-            const role = status.user.role || 'staff';
-            window.userRole = role;
-            
-            statusDiv.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                    <a href="/auth/google" target="_blank" style="color: ${status.googleConnected ? '#10b981' : '#f43f5e'};">
-                        <span style="width: 8px; height: 8px; background: ${status.googleConnected ? '#10b981' : '#f43f5e'}; border-radius: 50%;"></span>
-                        ${status.googleConnected ? 'Google Connected' : 'Google Disconnected'}
-                    </a>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: var(--text-secondary); font-size: 12px;">${status.user.email}</span>
-                        <span class="badge">${role}</span>
-                    </div>
-                </div>
-            `;
+        // CRM search input
+        const searchInput = document.getElementById('client-search');
 
-            if (role !== 'admin') {
-                document.querySelectorAll('[data-role="admin"]').forEach(el => el.remove());
+        // Cmd/Ctrl + K - Focus and select
+        if (cmdOrCtrl && e.key.toLowerCase() === 'k') {
+            if (searchInput && searchInput.offsetParent !== null) {
+                e.preventDefault();
+                // If not in CRM, switch to it
+                if (typeof showSection === 'function' && !document.getElementById('crm-section').classList.contains('active')) {
+                    showSection('crm');
+                }
+                setTimeout(() => {
+                    searchInput.focus();
+                    searchInput.select();
+                }, 10);
             }
-        } else {
-            statusDiv.innerHTML = `
-                <a href="/auth/google" target="_blank" style="color: var(--accent);">
-                    <span style="width: 8px; height: 8px; background: #f43f5e; border-radius: 50%;"></span>
-                    Connect Google
-                </a>
-            `;
         }
-    } catch (e) {
-        console.error('Auth check fail', e);
-    }
-}
+
+        // "/" shortcut - Focus (only if not already typing)
+        if (e.key === '/' && activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+            if (searchInput && searchInput.offsetParent !== null) {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        }
+
+        // Escape to blur
+        if (e.key === 'Escape') {
+            if (searchInput && document.activeElement === searchInput) {
+                searchInput.blur();
+            }
+        }
+    });
+};
+
+// Initialize shortcuts on load
+document.addEventListener('DOMContentLoaded', () => {
+    checkGlobalAuth();
+    if (typeof initKeyboardShortcuts === 'function') initKeyboardShortcuts();
+});
