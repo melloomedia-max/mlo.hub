@@ -139,13 +139,20 @@
     </form>
 
     <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border);">
-        <a href="https://melloo.media" style="color: var(--text-tertiary); text-decoration: none; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-tertiary)'">
+        <a id="website-link" href="https://melloo.media" style="color: var(--text-tertiary); text-decoration: none; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-tertiary)'">
             ← Back to Website
         </a>
     </div>
   </div>
 
+  <script src="/js/config.js"></script>
   <script>
+      // Update website link from config
+      if (window.PORTAL_CONFIG?.PORTAL_BASE_URL) {
+          const webLink = document.getElementById('website-link');
+          if (webLink) webLink.href = window.PORTAL_CONFIG.PORTAL_BASE_URL;
+      }
+
       const urlParams = new URLSearchParams(window.location.search);
       const error = urlParams.get('error');
       const errorEl = document.getElementById('error-msg');

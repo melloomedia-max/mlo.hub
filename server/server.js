@@ -222,6 +222,14 @@ app.use((req, res, next) => {
 });
 // -------------------------
 
+
+app.get('/js/config.js', (req, res) => {
+    // Priority: 1. ENV, 2. Current Host
+    const portalBaseUrl = process.env.PORTAL_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    res.type('application/javascript');
+    res.send(`window.PORTAL_CONFIG = { PORTAL_BASE_URL: "${portalBaseUrl}" };`);
+});
+
 app.use(express.static(path.join(__dirname, '../public'), {
     setHeaders: (res, filePath) => {
         if (filePath.endsWith('.html')) {
