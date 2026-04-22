@@ -102,3 +102,13 @@ function formatPhone(phoneStr) {
 }
 
 window.formatPhone = formatPhone;
+
+// Auth guard - stub until login system is built
+function checkGlobalAuth() {
+    const session = localStorage.getItem('mlo_session');
+    if (!session) {
+        // Not blocking yet - just log for now
+        console.info('Auth check: no session found (non-blocking)');
+    }
+}
+window.checkGlobalAuth = checkGlobalAuth;

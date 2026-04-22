@@ -246,14 +246,27 @@ window.initKeyboardShortcuts = function() {
 };
 
 window.navigateTo = function(section) {
+    // Try data-section first
     const navItem = document.querySelector(`[data-section="${section}"]`);
     if (navItem) {
         navItem.click();
+        return;
+    }
+
+    // Fallback: find nav button by its onclick attribute
+    const btn = Array.from(document.querySelectorAll('nav button')).find(b =>
+        b.getAttribute('onclick')?.includes(`'${section}'`)
+    );
+    if (btn) {
+        btn.click();
+        return;
+    }
+
+    // Final fallback: call showSection directly
+    if (typeof showSection === 'function') {
+        showSection(section);
     } else {
-        // Fallback to showSection directly if nav item missing
-        if (typeof showSection === 'function') {
-            showSection(section);
-        }
+        console.warn(`navigateTo: could not find section "${section}"`);
     }
 };
 
