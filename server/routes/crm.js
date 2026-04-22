@@ -145,7 +145,7 @@ router.post('/clients/:id/portal-link', async (req, res) => {
             });
         }
 
-        const portalUrl = `${req.protocol}://${req.get('host')}/portal/${token}`;
+        const portalUrl = `https://melloo.media/portal/${token}`;
         console.log(`[PORTAL-LOG] portal link created successfully: ${portalUrl}`);
 
         // 3. Save to portal_links table

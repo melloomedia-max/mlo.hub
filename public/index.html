@@ -5,6 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Agency Hub</title>
+  <link rel="icon" type="image/png" href="img/logo-icon.png">
+  <link rel="apple-touch-icon" href="img/logo-icon.png">
   
   <script>
     // Global 401 Fetch Interceptor
@@ -21,9 +23,9 @@
     
     document.addEventListener('DOMContentLoaded', () => {
         if (window.PORTAL_CONFIG?.PORTAL_BASE_URL) {
-            const webBtn = document.getElementById('website-btn');
-            if (webBtn) {
-                webBtn.onclick = () => window.location.href = window.PORTAL_CONFIG.PORTAL_BASE_URL;
+            const webLink = document.getElementById('website-link');
+            if (webLink) {
+                webLink.href = window.PORTAL_CONFIG.PORTAL_BASE_URL;
             }
         }
     });
@@ -70,7 +72,7 @@
         <button onclick="showSection('campaigns')" data-section="campaigns" data-role="admin">Campaigns</button>
         <button data-role="admin" onclick="window.location.href='settings.html'">⚙️ Settings</button>
         <div style="width: 1px; height: 20px; background: var(--border-color); margin: 0 10px;"></div>
-        <button id="website-btn" onclick="window.location.href='https://melloo.media'" style="opacity: 0.7; font-size: 11px;">← Website</button>
+        <a id="website-link" href="https://melloo.media" class="back-to-site">← Website</a>
       </nav>
       <div id="global-auth-status" class="auth-status-pill">
         <!-- Populated by JS -->

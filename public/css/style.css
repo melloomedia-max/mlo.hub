@@ -165,6 +165,23 @@ nav button.active {
   box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
+/* ─── Back-to-Website Link ─────────────────────────────────── */
+.back-to-site {
+  opacity: 0.7;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: opacity 0.15s var(--ease), background 0.15s var(--ease), color 0.15s var(--ease);
+}
+.back-to-site:hover {
+  opacity: 1;
+  color: var(--text-primary);
+  background: var(--glass-bg);
+}
+
 /* ─── Auth Status Pill ───────────────────────────────────────── */
 .auth-status-pill {
   margin-left: 20px;
