@@ -100,9 +100,9 @@
 /* Clean client cards */
 .client-card-square {
     width: 100%;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur-sm);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     padding: 32px 24px;
     display: flex;
@@ -111,15 +111,30 @@
     justify-content: center;
     text-align: center;
     cursor: pointer;
-    transition: all 0.3s var(--spring);
+    transition: all 0.4s var(--spring);
     position: relative;
+    overflow: hidden;
+    box-shadow: var(--glass-shadow);
+}
+
+.client-card-square::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-reflection);
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
 }
 
 .client-card-square:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.15);
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    background: var(--glass-bg-strong);
+    border-color: var(--glass-border-hi);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--glass-shadow-lg);
+}
+
+.client-card-square:hover::before {
+    opacity: 1;
 }
 
 .card-avatar {

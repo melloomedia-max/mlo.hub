@@ -27,24 +27,40 @@
 
 /* Invoice list row */
 .invoice-item-card {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur-sm);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     padding: 24px 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 20px;
-    transition: all 0.3s var(--ease);
+    transition: all 0.4s var(--ease);
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--glass-shadow);
+}
+
+.invoice-item-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-reflection);
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
 }
 
 .invoice-item-card:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--glass-bg-strong);
+    border-color: var(--glass-border-hi);
     transform: translateX(8px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: var(--glass-shadow-lg);
+}
+
+.invoice-item-card:hover::before {
+    opacity: 1;
 }
 
 /* Quick-delete trash button on list card */
