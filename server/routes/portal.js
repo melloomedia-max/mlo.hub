@@ -147,19 +147,29 @@ router.post('/api/:token/request', async (req, res) => {
 
         await dbRun("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)", [client.id, 'note', 'Portal Request', `[CLIENT PORTAL REQUEST]: ${message}`]);
         
-        // 1. Email Notification (Primary & Reliable)
-        await sendPortalRequestNotify(client, message);
-        
-        // 2. SMS Notification (Secondary)
-        const staff = await dbGet("SELECT phone FROM staff LIMIT 1");
-        if (staff && staff.phone) {
-            const smsMessage = `Portal Request from ${client.name || 'Client'}: ${message}`;
-            sendSMS(staff.phone, smsMessage, 'verizon');
-        }
-
+        // Return success immediately to avoid loading delays
         res.json({ success: true });
+
+        // Trigger background notifications
+        (async () => {
+            try {
+                // 1. Email Notification
+                await sendPortalRequestNotify(client, message);
+                
+                // 2. SMS Notification to Admin
+                const don = await dbGet("SELECT phone, name FROM staff WHERE role = 'admin' LIMIT 1");
+                if (don && don.phone) {
+                    const smsMessage = `🚨 ${client.name} sent a request: ${message}`;
+                    // Use Verizon/vtext as requested
+                    await sendSMS(don.phone, smsMessage, 'verizon');
+                }
+            } catch (notifyErr) {
+                console.error('[PORTAL-LOG] Background notification failed:', notifyErr);
+            }
+        })();
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        if (!res.headersSent) res.status(500).json({ error: err.message });
     }
 });
 

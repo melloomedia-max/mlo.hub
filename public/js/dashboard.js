@@ -110,9 +110,49 @@ async function loadDashboard() {
         `).join('') || '<li>No recent activity</li>';
         }
 
+        // Portal Requests
+        loadPortalRequests();
+
     } catch (error) {
         console.error('Error loading dashboard:', error);
         showToast('Failed to load dashboard data', 'error');
+    }
+}
+
+async function loadPortalRequests() {
+    try {
+        const res = await fetch(`${API_BASE}/crm/portal-requests`);
+        const requests = await res.json();
+        const list = document.getElementById('portal-requests-feed');
+        const empty = document.getElementById('portal-requests-empty');
+        
+        if (!list) return;
+
+        if (!requests || requests.length === 0) {
+            list.innerHTML = '';
+            if (empty) empty.style.display = 'block';
+            return;
+        }
+
+        if (empty) empty.style.display = 'none';
+        list.innerHTML = requests.map(r => {
+            // Clean up the message for display (remove prefix)
+            const cleanMsg = r.description.replace('[CLIENT PORTAL REQUEST]: ', '');
+            return `
+                <li oncontextmenu="ContextMenu.attach(event, 'client', ${r.client_id}, '${r.client_name.replace(/'/g, "\\'")}')" data-context="client" style="cursor:pointer; border-left: 3px solid #f43f5e; padding-left: 12px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span style="font-weight: 700; font-size: 13px;">${r.client_name}</span>
+                        <small style="color: var(--text-tertiary); font-size: 11px;">${new Date(r.created_at).toLocaleDateString()}</small>
+                    </div>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-secondary); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        ${cleanMsg}
+                    </p>
+                </li>
+            `;
+        }).join('');
+
+    } catch (e) {
+        console.error('Error loading portal requests:', e);
     }
 }
 

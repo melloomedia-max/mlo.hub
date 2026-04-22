@@ -76,6 +76,22 @@ router.get('/activity', (req, res) => {
     });
 });
 
+// Portal Requests Feed
+router.get('/portal-requests', (req, res) => {
+    const sql = `
+        SELECT cc.*, c.name as client_name, c.company
+        FROM client_communications cc
+        JOIN clients c ON cc.client_id = c.id
+        WHERE cc.method = 'Portal Request'
+        ORDER BY cc.created_at DESC
+        LIMIT 20
+    `;
+    db.all(sql, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
 // Get all clients (with business names)
 router.get('/clients', (req, res) => {
     const sql = `
