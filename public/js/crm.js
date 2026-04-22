@@ -57,7 +57,7 @@ function displayClients(clients) {
         return `
         <div class="client-card-square" 
              onclick="openClientProfile(${client.id})" 
-             oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${client.name.replace(/'/g, "\\'")}')"
+             oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${(client.name || '').replace(/'/g, "\\'")}')"
              data-context="client">
             <div class="card-status-dot status-dot-${client.status}"></div>
             <div class="card-avatar">${initials}</div>
@@ -518,16 +518,16 @@ async function mhLoadFolder(folderId) {
         // Folders
         if (folders.length) {
             html += folders.map(f => `
-                <div class="media-item media-item-folder" onclick="mhNavigateInto('${f.id}', '${f.name.replace(/'/g, "\\'")}')"
+                <div class="media-item media-item-folder" onclick="mhNavigateInto('${f.id}', '${(f.name || '').replace(/'/g, "\\'")}')"
                      style="cursor:pointer; position:relative;">
                     <div class="media-preview" style="display:flex;align-items:center;justify-content:center;">
                         <span class="media-icon" style="font-size:26px;">📁</span>
                     </div>
                     <div class="media-name" title="${f.name}">${f.name}</div>
                     <div class="mh-item-actions" style="position:absolute;top:6px;right:6px;display:flex;gap:3px;">
-                        <button onclick="event.stopPropagation(); mhRenameItem('${f.id}', '${f.name.replace(/'/g, "\\'")}')" title="Rename"
+                        <button onclick="event.stopPropagation(); mhRenameItem('${f.id}', '${(f.name || '').replace(/'/g, "\\'")}')" title="Rename"
                             style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(0,0,0,0.4);color:white;font-size:10px;cursor:pointer;backdrop-filter:blur(8px);">✏️</button>
-                        <button onclick="event.stopPropagation(); mhDeleteItem('${f.id}', '${f.name.replace(/'/g, "\\'")}')" title="Delete"
+                        <button onclick="event.stopPropagation(); mhDeleteItem('${f.id}', '${(f.name || '').replace(/'/g, "\\'")}')" title="Delete"
                             style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(244,63,94,0.3);color:white;font-size:10px;cursor:pointer;backdrop-filter:blur(8px);">🗑</button>
                     </div>
                 </div>
@@ -548,9 +548,9 @@ async function mhLoadFolder(folderId) {
                         </div>
                         <div class="media-name" title="${file.name}">${file.name}</div>
                         <div class="mh-item-actions" style="position:absolute;top:6px;right:6px;display:flex;gap:3px;">
-                            <button onclick="event.stopPropagation(); mhRenameItem('${file.id}', '${file.name.replace(/'/g, "\\'")}')" title="Rename"
+                            <button onclick="event.stopPropagation(); mhRenameItem('${file.id}', '${(file.name || '').replace(/'/g, "\\'")}')" title="Rename"
                                 style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(0,0,0,0.4);color:white;font-size:10px;cursor:pointer;backdrop-filter:blur(8px);">✏️</button>
-                            <button onclick="event.stopPropagation(); mhDeleteItem('${file.id}', '${file.name.replace(/'/g, "\\'")}')" title="Delete"
+                            <button onclick="event.stopPropagation(); mhDeleteItem('${file.id}', '${(file.name || '').replace(/'/g, "\\'")}')" title="Delete"
                                 style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(244,63,94,0.3);color:white;font-size:10px;cursor:pointer;backdrop-filter:blur(8px);">🗑</button>
                         </div>
                     </div>
@@ -711,8 +711,6 @@ async function mhRenameItem(fileId, currentName) {
 }
 
 // ─── Portal Link ────────────────────────────────────────────
-    }
-}
 
 async function sendPortalLink(method) {
     if (!currentProfileId) return;
@@ -1236,7 +1234,7 @@ function renderProjects(projects) {
         return `
         <div class="proj-card" id="proj-card-${p.id}" 
              ondblclick="openProjectModal(${p.id})"
-             oncontextmenu="ContextMenu.attach(event, 'project', ${p.id}, '${p.name.replace(/'/g, "\\'")}')"
+             oncontextmenu="ContextMenu.attach(event, 'project', ${p.id}, '${(p.name || '').replace(/'/g, "\\'")}')"
              data-context="project">
             <div class="proj-card-header">
                 <span class="proj-card-name">${p.name}</span>
@@ -1861,7 +1859,7 @@ function renderSearchResults(clients, query) {
             return `
             <div class="search-result-item" 
                  onclick="openClientProfile(${client.id}); document.getElementById('client-search-results').classList.remove('active'); document.getElementById('client-search-input').value = '';"
-                 oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${client.name.replace(/'/g, "\\'")}')"
+                 oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${(client.name || '').replace(/'/g, "\\'")}')"
                  data-context="client">
                 <div class="search-result-avatar">${initials}</div>
                 <div class="search-result-info">
