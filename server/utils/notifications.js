@@ -85,4 +85,44 @@ async function sendPortalLinkNotify(client, url, method = 'email') {
     return results;
 }
 
-module.exports = { sendPortalLinkNotify };
+/**
+ * Notifies admin of a new portal request
+ */
+async function sendPortalRequestNotify(client, message) {
+    try {
+        const adminEmail = process.env.EMAIL_USER;
+        const htmlBody = `
+            <div style="font-family: sans-serif; padding: 30px; background: #fff1f2; border-radius: 12px; max-width: 600px; margin: auto; border: 1px solid #fda4af;">
+                <div style="text-align: center; margin-bottom: 25px;">
+                     <h2 style="color: #e11d48; margin: 0;">New Portal Request</h2>
+                     <p style="color: #64748b; font-size: 14px;">Melloo Agency Hub</p>
+                </div>
+                <div style="background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                     <p><strong>Client:</strong> ${client.name}</p>
+                     <p><strong>Message:</strong></p>
+                     <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #e11d48; margin: 15px 0; font-style: italic;">
+                        "${message}"
+                     </div>
+                     <div style="text-align: center; margin: 30px 0;">
+                         <a href="${process.env.PORTAL_BASE_URL || ''}/" style="background: #1e293b; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 700; text-decoration: none; display: inline-block;">Open Agency Hub</a>
+                     </div>
+                </div>
+            </div>
+        `;
+
+        await transporter.sendMail({
+            from: `"Melloo Portal" <${process.env.EMAIL_USER}>`,
+            to: adminEmail,
+            subject: `🚨 New Request from ${client.name}`,
+            html: htmlBody
+        });
+
+        // Also try SMS if phone exists in env or we can fetch from staff
+        // For now, let's just do email as it's more reliable than hardcoded carrier SMS
+        console.log(`[PORTAL-LOG] Admin notification sent for request from ${client.name}`);
+    } catch (err) {
+        console.error(`[PORTAL-LOG] Admin notification failed: ${err.message}`);
+    }
+}
+
+module.exports = { sendPortalLinkNotify, sendPortalRequestNotify };

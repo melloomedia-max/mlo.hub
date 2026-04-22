@@ -4,6 +4,7 @@ const db = require('../database');
 const path = require('path');
 const { getDriveClient } = require('../utils/driveHelpers');
 const { sendSMS } = require('../utils/emailService');
+const { sendPortalRequestNotify } = require('../utils/notifications');
 
 function dbAll(query, params = []) {
     return new Promise((resolve, reject) => {
@@ -130,8 +131,11 @@ router.post('/api/:token/request', async (req, res) => {
         if (!client) return res.status(404).json({ error: "Invalid token" });
 
         await dbRun("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)", [client.id, 'note', 'Portal Request', `[CLIENT PORTAL REQUEST]: ${message}`]);
-
-        // Send vtext SMS notification to Staff/Admin
+        
+        // 1. Email Notification (Primary & Reliable)
+        await sendPortalRequestNotify(client, message);
+        
+        // 2. SMS Notification (Secondary)
         const staff = await dbGet("SELECT phone FROM staff LIMIT 1");
         if (staff && staff.phone) {
             const smsMessage = `Portal Request from ${client.name || 'Client'}: ${message}`;
