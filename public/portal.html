@@ -1225,11 +1225,15 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: msg })
         });
-        if (!res.ok) throw new Error('Fail');
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Server error ${res.status}`);
+        }
         showToast('✅ Request sent to Melloo Media!');
         document.getElementById('request-message').value = '';
       } catch (e) {
-        showToast('❌ Failed to send. Email us directly.');
+        console.error('Portal request error:', e);
+        showToast(`❌ Failed to send: ${e.message}`);
       } finally {
         btn.disabled = false;
         btn.textContent = '📨 Send to Melloo Media';

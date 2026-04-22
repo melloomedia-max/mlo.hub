@@ -4,6 +4,7 @@ const db = require('../database');
 const path = require('path');
 const { getDriveClient } = require('../utils/driveHelpers');
 const { sendSMS } = require('../utils/emailService');
+const nodemailer = require('nodemailer');
 
 function dbAll(query, params = []) {
     return new Promise((resolve, reject) => {
@@ -126,20 +127,47 @@ router.get('/api/:token/folder/:folderId', async (req, res) => {
 router.post('/api/:token/request', async (req, res) => {
     try {
         const { message } = req.body;
-        const client = await dbGet("SELECT id, name FROM clients WHERE portal_token = ?", [req.params.token]);
+        if (!message || !message.trim()) return res.status(400).json({ error: "Message is required" });
+
+        const client = await dbGet("SELECT id, name, first_name, company FROM clients WHERE portal_token = ?", [req.params.token]);
         if (!client) return res.status(404).json({ error: "Invalid token" });
 
-        await dbRun("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)", [client.id, 'note', 'Portal Request', `[CLIENT PORTAL REQUEST]: ${message}`]);
+        const clientLabel = client.company || client.first_name || client.name || 'Client';
 
-        // Send vtext SMS notification to Staff/Admin
+        await dbRun(
+            "INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)",
+            [client.id, 'note', 'Portal Request', `[CLIENT PORTAL REQUEST] ${clientLabel}: ${message.trim()}`]
+        );
+
+        // Email admin
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            try {
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+                });
+                await transporter.sendMail({
+                    from: `"Melloo Hub" <${process.env.EMAIL_USER}>`,
+                    to: process.env.EMAIL_USER,
+                    subject: `Portal Request from ${clientLabel}`,
+                    html: `<p><strong>${clientLabel}</strong> submitted a request via their client portal:</p>
+                           <blockquote style="border-left:4px solid #6366f1;padding:10px 16px;background:#f9f9fb;border-radius:4px;">${message.trim()}</blockquote>
+                           <p style="color:#94a3b8;font-size:12px;">Log in to Melloo Hub to view and respond.</p>`
+                });
+            } catch (emailErr) {
+                console.error('[PORTAL-REQUEST] Email notification failed:', emailErr.message);
+            }
+        }
+
+        // SMS to staff (best-effort)
         const staff = await dbGet("SELECT phone FROM staff LIMIT 1");
         if (staff && staff.phone) {
-            const smsMessage = `Portal Request from ${client.name || 'Client'}: ${message}`;
-            sendSMS(staff.phone, smsMessage, 'verizon');
+            sendSMS(staff.phone, `Portal request from ${clientLabel}: ${message.trim()}`, 'verizon');
         }
 
         res.json({ success: true });
     } catch (err) {
+        console.error('[PORTAL-REQUEST] Error:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
