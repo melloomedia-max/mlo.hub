@@ -158,6 +158,9 @@ async function refreshAllData() {
 window.refreshAllData = refreshAllData;
 
 window.initKeyboardShortcuts = function() {
+    let gPressed = false;
+    let gTimer = null;
+
     document.addEventListener('keydown', (e) => {
         const isMac = navigator.platform.toUpperCase().includes('MAC');
         const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
@@ -166,16 +169,15 @@ window.initKeyboardShortcuts = function() {
         // Ignore if typing in input/textarea unless it's the Escape key
         if (e.key !== 'Escape' && (activeTag === 'INPUT' || activeTag === 'TEXTAREA')) return;
 
-        // CRM search input
         const searchInput = document.getElementById('client-search');
 
-        // Cmd/Ctrl + K - Focus and select
+        // ─── SEARCH SHORTCUTS ───────────────────────────
         if (cmdOrCtrl && e.key.toLowerCase() === 'k') {
             if (searchInput && searchInput.offsetParent !== null) {
                 e.preventDefault();
                 // If not in CRM, switch to it
-                if (typeof showSection === 'function' && !document.getElementById('crm-section').classList.contains('active')) {
-                    showSection('crm');
+                if (!document.getElementById('crm-section').classList.contains('active')) {
+                    navigateTo('crm');
                 }
                 setTimeout(() => {
                     searchInput.focus();
@@ -184,21 +186,75 @@ window.initKeyboardShortcuts = function() {
             }
         }
 
-        // "/" shortcut - Focus (only if not already typing)
-        if (e.key === '/' && activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+        if (e.key === '/') {
             if (searchInput && searchInput.offsetParent !== null) {
                 e.preventDefault();
                 searchInput.focus();
             }
         }
 
-        // Escape to blur
         if (e.key === 'Escape') {
             if (searchInput && document.activeElement === searchInput) {
                 searchInput.blur();
             }
+            gPressed = false;
+            clearTimeout(gTimer);
+        }
+
+        // ─── QUICK ACTIONS ──────────────────────────────
+        // Cmd/Ctrl + N -> New Client
+        if (cmdOrCtrl && e.key.toLowerCase() === 'n') {
+            e.preventDefault();
+            const newClientBtn = document.getElementById('new-client-btn');
+            if (newClientBtn) newClientBtn.click();
+        }
+
+        // ─── G + KEY NAVIGATION ─────────────────────────
+        if (e.key.toLowerCase() === 'g' && !cmdOrCtrl) {
+            // Only trigger if not already waiting for G follow-up
+            if (!gPressed) {
+                gPressed = true;
+                // Auto-reset G after 1.5s
+                clearTimeout(gTimer);
+                gTimer = setTimeout(() => {
+                    gPressed = false;
+                }, 1500);
+                return;
+            }
+        }
+
+        if (gPressed) {
+            const key = e.key.toLowerCase();
+            const sections = {
+                'd': 'dashboard',
+                'c': 'crm',
+                'i': 'invoices',
+                't': 'tasks',
+                's': 'subscriptions',
+                'm': 'campaigns',
+                'l': 'schedule' // L for scheduLe/caLendar
+            };
+
+            if (sections[key]) {
+                e.preventDefault();
+                gPressed = false;
+                clearTimeout(gTimer);
+                navigateTo(sections[key]);
+            }
         }
     });
+};
+
+window.navigateTo = function(section) {
+    const navItem = document.querySelector(`[data-section="${section}"]`);
+    if (navItem) {
+        navItem.click();
+    } else {
+        // Fallback to showSection directly if nav item missing
+        if (typeof showSection === 'function') {
+            showSection(section);
+        }
+    }
 };
 
 // Initialize shortcuts on load
