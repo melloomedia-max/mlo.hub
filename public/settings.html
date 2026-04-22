@@ -1834,9 +1834,10 @@
 
         container.innerHTML = clients.map(c => {
           const name = `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name || 'Unnamed';
-          const token = c.portal_token || 'N/A';
+          const token = c.portal_token;
           const baseUrl = window.PORTAL_CONFIG?.PORTAL_BASE_URL || window.location.origin;
-          const link = `${baseUrl}/portal/${token}`;
+          const link = token ? `${baseUrl}/portal/${token}` : null;
+          
           return `
             <div class="portal-link-row">
               <div style="width:32px; height:32px; border-radius:10px; background:linear-gradient(135deg, rgba(99,102,241,0.2), rgba(167,139,250,0.15)); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#a5b4fc; flex-shrink:0;">

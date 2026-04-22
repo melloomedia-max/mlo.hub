@@ -116,10 +116,10 @@
   <div class="login-container">
     <div class="brand-header">
       <lottie-player src="/img/Siri.json" background="transparent" speed="1" style="width: 50px; height: 50px;" loop autoplay></lottie-player>
-      <h1><span style="background: var(--melloo-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">melloo</span> Agency Hub</h1>
+      <h1 id="brand-title"><span style="background: var(--melloo-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">melloo</span> Agency Hub</h1>
     </div>
     
-    <p style="color: var(--text-secondary); margin-bottom: 25px; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em;">Staff Authentication</p>
+    <p id="auth-type" style="color: var(--text-secondary); margin-bottom: 25px; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em;">Staff Authentication</p>
     
     <form id="login-form" action="/login" method="POST">
       <div style="margin-bottom: 16px; text-align: left;">
@@ -134,7 +134,7 @@
                style="width: 100%; padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; font-size: 15px; box-sizing: border-box; outline: none; transition: 0.3s; letter-spacing: 2px; font-family: inherit;">
       </div>
 
-      <button type="submit" style="width: 100%; padding: 14px; background: var(--melloo-gradient); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(255, 59, 59, 0.3);">
+      <button id="login-btn" type="submit" style="width: 100%; padding: 14px; background: var(--melloo-gradient); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(255, 59, 59, 0.3);">
         Access Hub
       </button>
       <div id="error-msg" class="error-msg" style="margin-top: 20px; color: var(--rose); font-size: 13px; font-weight: 600;"></div>
@@ -149,6 +149,18 @@
 
   <script src="/js/config.js"></script>
   <script>
+      // Detect Domain
+      const host = window.location.host;
+      const isPortal = host.startsWith('portal.');
+      
+      if (isPortal) {
+          document.title = 'Client Portal - Login';
+          document.getElementById('brand-title').innerHTML = '<span style="background: var(--melloo-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">melloo</span> Client Portal';
+          document.getElementById('auth-type').textContent = 'Client Authentication';
+          document.getElementById('login-btn').textContent = 'Access Portal';
+          document.getElementById('username').placeholder = 'your@email.com';
+      }
+
       // Update website link from config
       if (window.PORTAL_CONFIG?.PORTAL_BASE_URL) {
           const webLink = document.getElementById('website-link');
@@ -160,11 +172,17 @@
       const errorEl = document.getElementById('error-msg');
       
       if (error === 'invalid') {
-          errorEl.textContent = 'Invalid password';
+          errorEl.textContent = 'Invalid credentials';
+      } else if (error === 'portal_access') {
+          errorEl.textContent = 'Please log in with a client account';
+      } else if (error === 'hub_access') {
+          errorEl.textContent = 'Please log in with a staff account';
+      } else if (error === 'portal_not_setup') {
+          errorEl.textContent = 'Portal access not configured. Please contact support.';
       } else if (error === 'notconfigured') {
-          errorEl.textContent = 'Server password not configured';
+          errorEl.textContent = 'Server not configured';
       } else if (error === 'session') {
-          errorEl.textContent = 'Session could not be established';
+          errorEl.textContent = 'Session error';
       } else if (error) {
           errorEl.textContent = 'Login error';
       }

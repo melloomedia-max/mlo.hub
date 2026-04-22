@@ -30,20 +30,35 @@ function dbRun(query, params = []) {
     });
 }
 
+// Helper to validate token
+function isValidToken(token) {
+    if (!token) return false;
+    const invalid = ['N/A', 'null', 'undefined', 'api'];
+    return !invalid.includes(token.toLowerCase());
+}
+
 // Serve Portal HTML
 router.get('/:token', (req, res) => {
-    if (req.params.token === 'api') return;
+    const { token } = req.params;
+    if (!isValidToken(token)) {
+        return res.status(400).send('Invalid portal link');
+    }
     res.sendFile(path.join(__dirname, '../../public/portal.html'));
 });
 
 // ─── Main Portal Data ────────────────────────────────────
 router.get('/api/:token', async (req, res) => {
+    const { token } = req.params;
+    if (!isValidToken(token)) {
+        return res.status(400).json({ error: "Invalid token format" });
+    }
+    
     try {
         const client = await dbGet(
             `SELECT id, name, first_name, last_name, company, email,
                     google_drive_folder_id, created_at
              FROM clients WHERE portal_token = ?`,
-            [req.params.token]
+            [token]
         );
         if (!client) return res.status(404).json({ error: "Invalid token" });
 

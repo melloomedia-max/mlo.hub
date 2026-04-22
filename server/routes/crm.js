@@ -7,6 +7,7 @@ const fs = require('fs');
 const { getDriveClient, createInvoicesSubfolder, getInvoicesSubfolderId, createActivityDoc, appendNoteToDoc, getMeetingRecordingsSubfolderId, getOrCreateProjectFolder } = require('../utils/driveHelpers');
 const { generateClientIntelligence } = require('../utils/clientIntelligence');
 const { sendPortalLinkNotify } = require('../utils/notifications');
+const { hashPassword } = require('../utils/auth');
 const upload = multer({ dest: 'uploads/' });
 
 // Helper to create client folder
@@ -277,7 +278,8 @@ router.put('/clients/:id', (req, res) => {
     const updateableFields = [
         'first_name', 'last_name', 'birthday', 'email', 'phone', 'company',
         'status', 'notes', 'google_drive_folder_id',
-        'social_instagram', 'social_linkedin', 'social_twitter', 'social_facebook'
+        'social_instagram', 'social_linkedin', 'social_twitter', 'social_facebook',
+        'password'
     ];
 
     const updates = [];
@@ -303,8 +305,12 @@ router.put('/clients/:id', (req, res) => {
 
     updateableFields.forEach(field => {
         if (req.body[field] !== undefined) {
+            let value = req.body[field];
+            if (field === 'password' && value) {
+                value = hashPassword(value);
+            }
             updates.push(`${field} = ?`);
-            params.push(req.body[field]);
+            params.push(value);
         }
     });
 

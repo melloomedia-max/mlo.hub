@@ -79,6 +79,7 @@ db.serialize(() => {
   db.run("ALTER TABLE clients ADD COLUMN last_name TEXT", (err) => { });
   db.run("ALTER TABLE clients ADD COLUMN birthday TEXT", (err) => { });
   db.run("ALTER TABLE clients ADD COLUMN google_drive_folder_id TEXT", (err) => { });
+  db.run("ALTER TABLE clients ADD COLUMN password TEXT", (err) => { });
 
   // Client Notes Thread
   db.run(`
