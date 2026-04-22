@@ -27,7 +27,6 @@
   <link rel="stylesheet" href="css/schedule.css">
   <link rel="stylesheet" href="css/context-menu.css">
   <link rel="stylesheet" href="css/components/activity-feed.css">
-  <link rel="stylesheet" href="/css/mobile.css?v=2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -41,18 +40,15 @@
 
   <div class="container">
     <header>
-      <div class="brand" style="display: flex; align-items: center; gap: 10px;">
+      <div class="brand">
         <a href="/" title="Refresh & Home" style="text-decoration: none; display: flex; align-items: center;">
           <lottie-player src="img/Siri.json" background="transparent" speed="1" style="width: 50px; height: 50px;" loop
             autoplay></lottie-player>
         </a>
         <h1><span
-            style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 700; font-style: italic; text-transform: lowercase;">melloo</span>
+            style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 700; font-style: italic; text-transform: lowercase; background: var(--melloo-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">melloo</span>
           Agency Hub</h1>
       </div>
-      <button class="mobile-menu-toggle" onclick="document.querySelector('nav').classList.toggle('mobile-active')">
-        <svg fill="currentColor" viewBox="0 0 20 20" style="width: 24px; height: 24px;"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>
-      </button>
       <nav>
         <button onclick="showSection('dashboard')" class="active">Dashboard</button>
         <button onclick="showSection('tasks')">Tasks</button>
@@ -63,32 +59,19 @@
         <button onclick="showSection('subscriptions')" data-role="admin">Subs</button>
         <button onclick="showSection('campaigns')" data-role="admin">Campaigns</button>
         <button data-role="admin" onclick="window.location.href='settings.html'">⚙️ Settings</button>
+        <div style="width: 1px; height: 20px; background: var(--border-color); margin: 0 10px;"></div>
+        <button onclick="window.location.href='https://melloo.media'" style="opacity: 0.7; font-size: 11px;">← Website</button>
       </nav>
-      <div id="global-auth-status"
-        style="margin-left: 20px; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+      <div id="global-auth-status" class="auth-status-pill">
         <!-- Populated by JS -->
       </div>
     </header>
 
     <!-- Dashboard Section -->
     <section id="dashboard-section" class="section active">
-      <div class="section-header" style="margin-bottom: 10px;">
+      <div class="section-header">
         <h2 style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 800; font-size: 34px;">Overview</h2>
-      </div>
-
-      <!-- Mobile Sub-stats -->
-      <div class="mobile-sub-stats">
-        <span>📦 <span id="mobile-stat-clients-count">0</span> clients</span>
-        <span>📡 <span id="mobile-stat-projects-count">0</span> active</span>
-        <span>⚡ <span id="mobile-stat-tasks-count">0</span> pending</span>
-      </div>
-
-      <!-- Mobile Pill Tabs -->
-      <div class="mobile-pill-tabs">
-        <div class="pill-tab active" onclick="filterDashboard('all')">All</div>
-        <div class="pill-tab" onclick="filterDashboard('financials')">Cashflow</div>
-        <div class="pill-tab" onclick="filterDashboard('ops')">Operations</div>
-        <div class="pill-tab" onclick="filterDashboard('team')">Activity</div>
+        <div id="current-date" class="date-display"></div>
       </div>
 
       <!-- Unbilled Time Banner (Feature 2) -->
@@ -103,25 +86,26 @@
         <button onclick="showSection('invoices')" style="background: #f59e0b; color: #fff; padding: 6px 14px; font-size: 13px; border-radius: var(--radius-pill); border: none; font-weight: 600; cursor: pointer;">Go to Billing</button>
       </div>
 
-      <!-- Master Dashboard Layout (Robust CSS Grid) -->
-      <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 24px; margin-bottom: 30px;">
+      <!-- Master Dashboard Layout -->
+      <div class="dashboard-grid">
         
-        <!-- Row 1: Financial Core (3 Columns) -->
-        <div class="stat-card" data-role="admin" style="grid-column: span 2; border-left: 4px solid #10b981; cursor: pointer;" onclick="showSection('invoices')">
+        <div class="stat-card" data-role="admin" onclick="showSection('invoices')" style="cursor: pointer;">
           <div class="stat-icon">💰</div>
           <div class="stat-info">
             <h3>Total Revenue</h3>
             <p class="stat-value" id="stat-revenue">$0</p>
           </div>
         </div>
-        <div class="stat-card" data-role="admin" style="grid-column: span 2; border-left: 4px solid #f59e0b; cursor: pointer;" onclick="showSection('invoices')">
+
+        <div class="stat-card" data-role="admin" onclick="showSection('invoices')" style="cursor: pointer;">
           <div class="stat-icon">⏳</div>
           <div class="stat-info">
-            <h3>Pending Invoices</h3>
+            <h3>Pending</h3>
             <p class="stat-value" id="stat-pending-invoices">$0</p>
           </div>
         </div>
-        <div class="stat-card" data-role="admin" style="grid-column: span 2; border-left: 4px solid #3b82f6; cursor: pointer;" onclick="showSection('invoices')">
+
+        <div class="stat-card" data-role="admin" onclick="showSection('invoices')" style="cursor: pointer;">
           <div class="stat-icon">📈</div>
           <div class="stat-info">
             <h3>Projected</h3>
@@ -129,85 +113,69 @@
           </div>
         </div>
 
-        <!-- Row 2: Operations Tracker (5 Columns via Subgrid) -->
-        <div style="grid-column: span 6; display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px;">
-          <div class="stat-card" style="cursor: pointer;" onclick="showSection('crm')">
-            <div class="stat-icon">👥</div>
-            <div class="stat-info">
-              <h3>Total Clients</h3>
-              <p class="stat-value" id="stat-clients">0</p>
-            </div>
-          </div>
-          <div class="stat-card" style="cursor: pointer;" onclick="showSection('crm')">
-            <div class="stat-icon">🚀</div>
-            <div class="stat-info">
-              <h3>Active Projects</h3>
-              <p class="stat-value" id="stat-projects">0</p>
-            </div>
-          </div>
-          <div class="stat-card" style="cursor: pointer;" onclick="showSection('tasks')">
-            <div class="stat-icon">⚡</div>
-            <div class="stat-info">
-              <h3>Pending Tasks</h3>
-              <p class="stat-value" id="stat-tasks">0</p>
-            </div>
-          </div>
-          <div class="stat-card" style="cursor: pointer;" onclick="showSection('meetings')">
-            <div class="stat-icon">📅</div>
-            <div class="stat-info">
-              <h3>Meetings Today</h3>
-              <p class="stat-value" id="stat-meetings">0</p>
-            </div>
-          </div>
-          <div class="stat-card" data-role="admin" style="cursor: pointer;" onclick="showSection('subscriptions')">
-            <div class="stat-icon">🔄</div>
-            <div class="stat-info">
-              <h3>Active Subs</h3>
-              <p class="stat-value" id="stat-subscriptions">0</p>
-            </div>
+        <div class="stat-card" onclick="showSection('crm')" style="cursor: pointer;">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <h3>Clients</h3>
+            <p class="stat-value" id="stat-clients">0</p>
           </div>
         </div>
 
-        <!-- Row 3: Live Intelligent Assistant -->
-        <div class="widget" id="ai-smart-panel" style="grid-column: span 6; border: 1px solid var(--accent-glow); box-shadow: 0 8px 32px var(--accent-glow);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border);">
-            <h3 style="margin-bottom: 0; display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 18px;">✨</span> AI Client Intelligence
+        <div class="stat-card" onclick="showSection('tasks')" style="cursor: pointer;">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-info">
+            <h3>Tasks</h3>
+            <p class="stat-value" id="stat-tasks">0</p>
+          </div>
+        </div>
+
+        <div class="stat-card" onclick="showSection('meetings')" style="cursor: pointer;">
+          <div class="stat-icon">📅</div>
+          <div class="stat-info">
+            <h3>Today</h3>
+            <p class="stat-value" id="stat-meetings">0</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="dashboard-widgets">
+        <!-- AI Intelligence Panel -->
+        <div class="widget" id="ai-smart-panel" style="grid-column: span 2; border: 1px solid rgba(99, 102, 241, 0.3); box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <h3 style="margin-bottom: 0; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 20px;">✨</span> AI Client Intelligence
             </h3>
-            <button onclick="generateAIInsights()" style="background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; padding: 6px 16px; font-size: 13px; font-weight: 600; border-radius: var(--radius-pill); cursor: pointer; border: none; transition: transform 0.2s;">Generate Insights</button>
+            <button onclick="generateAIInsights()" class="primary-btn" style="padding: 8px 20px; font-size: 13px;">Generate Insights</button>
           </div>
-          <div id="ai-insights-content" style="min-height: 80px;">
-            <p style="font-style: italic; color: var(--text-secondary); margin: 0; padding: 20px 0; text-align: center; font-size: 14px;">Click "Generate Insights" to analyze all clients (via invoices, tasks, notes) and surface health scores and critical action items.</p>
+          <div id="ai-insights-content">
+            <p style="font-style: italic; color: var(--text-secondary); margin: 0; padding: 40px 0; text-align: center; font-size: 14px;">Analyze client health and surface critical action items.</p>
           </div>
         </div>
 
-        <!-- Row 4: Chart Forecasts -->
-        <div class="widget" style="grid-column: span 2; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);">
+        <!-- Charts Row -->
+        <div class="widget">
           <h3>Outstanding Buckets</h3>
-          <canvas id="outstanding-chart" height="200"></canvas>
+          <canvas id="outstanding-chart" height="220"></canvas>
         </div>
         
-        <div class="widget" style="grid-column: span 4; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);">
-          <div style="display: flex; justify-content: space-between;">
-            <h3>Monthly Revenue Trend</h3>
-            <div id="avg-payment-cycle-badge" style="background: rgba(45, 212, 191, 0.2); color: #2dd4bf; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">Avg Cycle: -- days</div>
+        <div class="widget">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="margin: 0;">Revenue Trend</h3>
+            <div id="avg-payment-cycle-badge" style="background: rgba(20, 184, 166, 0.15); color: var(--teal); padding: 4px 12px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 800;">Avg Cycle: -- days</div>
           </div>
-          <canvas id="monthly-trend-chart" height="200"></canvas>
+          <canvas id="monthly-trend-chart" height="220"></canvas>
         </div>
 
-        <!-- Row 5: Action & Agenda -->
-        <div class="widget" style="grid-column: span 3;">
+        <!-- Activity & Deadlines -->
+        <div class="widget">
           <h3>Recent Activity</h3>
-          <ul id="activity-feed" class="activity-list">
-            <!-- Populated by JS -->
-          </ul>
+          <ul id="activity-feed" class="activity-list"></ul>
         </div>
         
-        <div class="widget" style="grid-column: span 3;">
+        <div class="widget">
           <h3>Upcoming Deadlines</h3>
-          <ul id="deadline-list" class="deadline-list">
-            <!-- Populated by JS -->
-          </ul>
+          <ul id="deadline-list" class="deadline-list"></ul>
         </div>
 
       </div>
@@ -324,17 +292,9 @@
         <h2 style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 800; font-size: 34px;">Invoices</h2>
       </div>
 
-      <div class="mobile-sub-stats">
-        <span>💰 Paid</span>
-        <span>⏳ Pending</span>
-        <span>🛑 Overdue</span>
-      </div>
 
-      <div class="mobile-pill-tabs">
-        <div class="pill-tab active" onclick="filterInvoices('all')">All</div>
-        <div class="pill-tab" onclick="filterInvoices('paid')">Paid</div>
-        <div class="pill-tab" onclick="filterInvoices('unpaid')">Unpaid</div>
-      </div>
+
+
 
       <div class="header-actions" style="margin-bottom: 25px; display: flex; gap: 10px; padding: 0 20px;">
         <button onclick="showInvoiceForm()">+ New Invoice</button>
@@ -479,16 +439,9 @@
         <h2 style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 800; font-size: 34px;">Clients</h2>
       </div>
 
-      <div class="mobile-sub-stats">
-        <span>✅ <span id="mobile-crm-stat-active">0</span> Active</span>
-        <span>⏱️ <span id="mobile-crm-stat-leads">0</span> Leads</span>
-      </div>
 
-      <div class="mobile-pill-tabs">
-        <div class="pill-tab active" onclick="filterCRM('all')">All</div>
-        <div class="pill-tab" onclick="filterCRM('active')">Active</div>
-        <div class="pill-tab" onclick="filterCRM('leads')">Leads</div>
-      </div>
+
+
 
       <div class="header-actions" style="display: flex; gap: 10px; margin-bottom: 25px; padding: 0 20px; align-items: center;">
         <div id="client-search-wrap" class="client-search-wrap" style="flex: 1;">
@@ -1492,145 +1445,46 @@
     </div>
   </div>
 
-  <!-- HTML2PDF Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
-      integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
-      crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- Auth Status (Overlay) -->
+  <div id="global-auth-status" style="position: fixed; top: 32px; right: 40px; z-index: 1000;"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/components/ActivityFeed.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/tasks.js"></script>
-    <script src="js/schedule.js"></script>
-    <script src="js/meetings.js"></script>
-    <script src="js/crm.js"></script>
-    <script src="js/invoices.js"></script>
-    <script src="js/subscriptions.js"></script>
-    <script src="js/contextMenu.js"></script>
-    <script src="js/campaigns.js"></script>
-    <script src="js/archives.js"></script>
-    <script src="js/campaign-builder.js"></script>
+  <!-- Global Toast -->
+  <div id="toast-container" class="toast-container"></div>
 
-  </div><!-- end container -->
-
-  <!-- Mobile Bottom Tab Bar (Trove Style) -->
-  <nav class="mobile-tab-bar">
-    <div class="tab-item active" onclick="showSection('dashboard')">
-      <div class="tab-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+  <!-- Global Confirm Modal -->
+  <div id="confirm-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="confirm-title">Confirm</h3>
+        <button class="icon-btn" onclick="closeConfirmModal()">✕</button>
       </div>
-      <span>Dashboard</span>
-    </div>
-    <div class="tab-item" onclick="showSection('crm')">
-      <div class="tab-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-      </div>
-      <span>Clients</span>
-    </div>
-    <div class="tab-item" onclick="showSection('tasks')">
-      <div class="tab-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg>
-      </div>
-      <span>Tasks</span>
-    </div>
-    <div class="tab-item" onclick="showSection('meetings')">
-      <div class="tab-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-      </div>
-      <span>Meetings</span>
-    </div>
-    <div class="tab-search-btn" onclick="openGlobalSearch()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-    </div>
-  </nav>
-
-  <!-- Quick Action Menu (Mobile Bottom Sheet) -->
-  <div id="quick-action-overlay" class="mobile-action-overlay" onclick="closeQuickActions()">
-    <div class="action-sheet" onclick="event.stopPropagation()">
-      <div class="handle"></div>
-      <div class="action-sheet-header">Quick Actions</div>
-      <div class="action-grid">
-        <div class="action-btn" onclick="showClientForm(); closeQuickActions();">
-          <div class="action-icon" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">👥</div>
-          <span>New Client</span>
-        </div>
-        <div class="action-btn" onclick="showTaskForm(); closeQuickActions();">
-          <div class="action-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">⚡</div>
-          <span>New Task</span>
-        </div>
-        <div class="action-btn" onclick="showInvoiceForm(); closeQuickActions();">
-          <div class="action-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">💰</div>
-          <span>New Invoice</span>
-        </div>
-        <div class="action-btn" onclick="showMeetingLink(); closeQuickActions();">
-          <div class="action-icon" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e;">📅</div>
-          <span>Meeting</span>
+      <div style="padding: 24px;">
+        <p id="confirm-message" style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;"></p>
+        <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+          <button class="secondary-btn" style="padding: 10px 20px;" onclick="closeConfirmModal()">Cancel</button>
+          <button id="confirm-yes-btn" class="primary-btn" style="padding: 10px 24px;">Confirm</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Trove Global Search Overlay (Mobile) -->
-  <div id="mobile-search-overlay" class="mobile-search-overlay">
-    <div class="search-overlay-header">
-      <div class="search-bar-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" id="mobile-global-search-input" placeholder="Search across agency..." oninput="handleGlobalSearch(this.value)">
-        <button onclick="closeGlobalSearch()" class="search-close-btn">Cancel</button>
-      </div>
-    </div>
-
-    <div class="search-overlay-body">
-      <div class="search-section-label">Filter by Type</div>
-      <div class="search-type-pills">
-        <div class="pill-tab active">All</div>
-        <div class="pill-tab">Clients</div>
-        <div class="pill-tab">Invoices</div>
-        <div class="pill-tab">Tasks</div>
-        <div class="pill-tab">Folders</div>
-        <div class="pill-tab">Staff</div>
-      </div>
-
-      <div class="search-section-label">Filter by Person</div>
-      <div class="search-people-list" id="search-people-list">
-        <!-- Populated by staff list -->
-        <div class="person-avatar-wrap">
-          <div class="person-avatar" style="background: #6366f1;">ET</div>
-          <span>Ethan</span>
-        </div>
-        <div class="person-avatar-wrap">
-          <div class="person-avatar" style="background: #10b981;">MM</div>
-          <span>Melloo</span>
-        </div>
-      </div>
-
-      <div class="search-section-label">Suggestions</div>
-      <div class="search-suggestions-list">
-        <div class="suggestion-item">
-          <span class="s-icon">📄</span>
-          <span class="s-text">Unread Tasks</span>
-        </div>
-        <div class="suggestion-item">
-          <span class="s-icon">💰</span>
-          <span class="s-text">Overdue Invoices</span>
-        </div>
-        <div class="suggestion-item">
-          <span class="s-icon">👥</span>
-          <span class="s-text">Recent Leads</span>
-        </div>
-      </div>
-
-      <div id="mobile-search-results" class="search-results-container"></div>
-    </div>
-  </div>
-
-  <!-- Mobile Floating Action Button -->
-  <button class="mobile-fab" onclick="showGlobalQuickAction()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-  </button>
-
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/components/ActivityFeed.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/tasks.js"></script>
+  <script src="js/schedule.js"></script>
+  <script src="js/meetings.js"></script>
+  <script src="js/crm.js"></script>
+  <script src="js/invoices.js"></script>
+  <script src="js/subscriptions.js"></script>
+  <script src="js/contextMenu.js"></script>
+  <script src="js/campaigns.js"></script>
+  <script src="js/archives.js"></script>
+  <script src="js/campaign-builder.js"></script>
 </body>
 
 </html>

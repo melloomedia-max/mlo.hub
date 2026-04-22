@@ -98,14 +98,7 @@ function showSection(sectionName) {
 
     if (btn) btn.classList.add('active');
 
-    // Update mobile tab bar
-    document.querySelectorAll('.mobile-tab-bar .tab-item').forEach(item => {
-        item.classList.remove('active');
-        // Match by section name in the onclick attribute
-        if (item.getAttribute('onclick')?.includes(`'${sectionName}'`)) {
-            item.classList.add('active');
-        }
-    });
+
 
     // Load data for the section
     if (sectionName === 'dashboard') {
@@ -146,161 +139,23 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     checkGlobalAuth();
 
-    // STOP API SPAM: Run once on load, then every 30-60s (NOT 1s)
-    // Only refresh if the tab is visible to save server resources
+    // Data Refresh Interval
     setInterval(() => {
         if (!document.hidden) {
             refreshAllData();
         }
-    }, 30000); 
+    }, 45000); 
 });
 
 // Global refresh function to update all active views
 async function refreshAllData() {
-    console.log('[POLL] Refreshing global data...');
-    
-    // 1. Dashboard stats (if on dashboard or just to keep stats fresh)
     if (typeof loadDashboard === 'function') loadDashboard();
-
-    // 2. Invoices list
     if (typeof loadInvoices === 'function') loadInvoices();
-
-    // 3. CRM Projects (if viewing a client)
     if (typeof currentProfileId !== 'undefined' && currentProfileId) {
         if (typeof loadProjects === 'function') loadProjects(currentProfileId);
     }
-
-    // 4. Project Modal (if open)
-    const modal = document.getElementById('proj-detail-modal');
-    if (modal && modal.style.display !== 'none' && typeof _modalProjectId !== 'undefined' && _modalProjectId) {
-        if (typeof loadProjectInvoices === 'function') loadProjectInvoices(_modalProjectId);
-    }
 }
 window.refreshAllData = refreshAllData;
-
-// ── MOBILE UI HANDLERS ──────────────────────────────────────────────────
-function showQuickActions() {
-    const overlay = document.getElementById('quick-action-overlay');
-    if (overlay) overlay.style.display = 'flex';
-}
-
-function closeQuickActions() {
-    const overlay = document.getElementById('quick-action-overlay');
-    if (overlay) overlay.style.display = 'none';
-}
-
-function openGlobalSearch() {
-    const overlay = document.getElementById('mobile-search-overlay');
-    if (overlay) {
-        overlay.style.display = 'flex';
-        const input = document.getElementById('mobile-global-search-input');
-        if (input) input.focus();
-    }
-}
-
-function closeGlobalSearch() {
-    const overlay = document.getElementById('mobile-search-overlay');
-    if (overlay) overlay.style.display = 'none';
-}
-
-async function handleGlobalSearch(query) {
-    const resultsContainer = document.getElementById('mobile-search-results');
-    if (!query || query.length < 2) {
-        resultsContainer.innerHTML = '';
-        return;
-    }
-
-    try {
-        // Fetch fresh data for search
-        const [cRes, tRes, mRes] = await Promise.all([
-            fetch(`${API_BASE}/crm/clients`),
-            fetch(`${API_BASE}/tasks`),
-            fetch(`${API_BASE}/meetings`)
-        ]);
-        const clients = await cRes.json();
-        const tasks = await tRes.json();
-        const meetings = await mRes.json();
-
-        const q = query.toLowerCase();
-        const clientMatches = clients.filter(c => c.name.toLowerCase().includes(q) || (c.company && c.company.toLowerCase().includes(q)));
-        const taskMatches = tasks.filter(t => t.title.toLowerCase().includes(q));
-        const meetingMatches = meetings.filter(m => m.client_name?.toLowerCase().includes(q));
-
-        let html = '';
-        if (clientMatches.length > 0) {
-            html += `<div class="search-section-label">Clients</div><div class="search-suggestions-list">` +
-                clientMatches.map(c => `
-                    <div class="suggestion-item" onclick="showSection('crm'); openClientProfile(${c.id}); closeGlobalSearch();">
-                        <span class="s-icon">👥</span>
-                        <div style="display:flex; flex-direction:column;">
-                            <span class="s-text">${c.name}</span>
-                            <small style="font-size:11px; color:#8e8e93;">${c.company || 'Private Client'}</small>
-                        </div>
-                    </div>
-                `).join('') + `</div>`;
-        }
-
-        if (taskMatches.length > 0) {
-            html += `<div class="search-section-label">Tasks</div><div class="search-suggestions-list">` +
-                taskMatches.map(t => `
-                    <div class="suggestion-item" onclick="showSection('tasks'); closeGlobalSearch();">
-                        <span class="s-icon">⚡</span>
-                        <span class="s-text">${t.title}</span>
-                    </div>
-                `).join('') + `</div>`;
-        }
-
-        if (html === '') {
-            html = `<div style="text-align:center; padding:40px; color:#8e8e93;">No results found for "${query}"</div>`;
-        }
-
-        resultsContainer.innerHTML = html;
-    } catch (err) {
-        console.error('Search error:', err);
-    }
-}
-
-// ── OVERRIDE OLD STUBS ──────────────────────────────────────────────────
-window.showGlobalQuickAction = showQuickActions;
-window.openGlobalSearch = openGlobalSearch;
-window.closeGlobalSearch = closeGlobalSearch;
-window.closeQuickActions = closeQuickActions;
-window.handleGlobalSearch = handleGlobalSearch;
-
-function filterDashboard(category) {
-    document.querySelectorAll('#dashboard-section .mobile-pill-tabs .pill-tab').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
-    });
-    // Visual feedback for now
-    showToast(`Dashboard filtered: ${category}`, 'info');
-}
-
-function filterCRM(category) {
-    document.querySelectorAll('#crm-section .mobile-pill-tabs .pill-tab').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
-    });
-    if (typeof window.loadClients === 'function') {
-        window.loadClients(category === 'all' ? null : category);
-    }
-}
-
-function filterInvoices(category) {
-    document.querySelectorAll('#invoices-section .mobile-pill-tabs .pill-tab').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.innerText.toLowerCase().includes(category)) tab.classList.add('active');
-    });
-    showToast(`Invoice view filtered: ${category}`, 'info');
-}
-
-// Add meeting success support for quick actions
-function showMeetingLink() {
-    showSection('meetings');
-    showToast('Redirected to meetings schedule', 'info');
-}
-
-
 
 async function checkGlobalAuth() {
     const statusDiv = document.getElementById('global-auth-status');
@@ -308,50 +163,32 @@ async function checkGlobalAuth() {
 
     try {
         const response = await fetch('/api/auth/status');
-        const status = await response.json(); // { loggedIn: bool, user: { name, email, role } }
+        const status = await response.json();
 
         if (status.loggedIn && status.user) {
             const role = status.user.role || 'staff';
-            window.userRole = role; // Global role for other scripts
+            window.userRole = role;
             
-            // ── Update Global Status Pill ────────────────────────────
             statusDiv.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
-                    <a href="/auth/google" target="_blank" title="Click to refresh connection" style="color: #6ee7b7; display: flex; align-items: center; gap: 4px; text-decoration: none; font-size:12px; font-weight:600;">
-                        <span style="width: 7px; height: 7px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px rgba(16,185,129,0.6);"></span>
-                        Google Connected
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                    <a href="/auth/google" target="_blank" style="color: ${status.googleConnected ? '#10b981' : '#f43f5e'};">
+                        <span style="width: 8px; height: 8px; background: ${status.googleConnected ? '#10b981' : '#f43f5e'}; border-radius: 50%;"></span>
+                        ${status.googleConnected ? 'Google Connected' : 'Google Disconnected'}
                     </a>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <span style="color: rgba(255,255,255,0.4); font-size: 11px;">${status.user.email}</span>
-                        <span class="badge" style="background: rgba(var(--brand-rgb, 99, 102, 241), 0.15); color: var(--brand-color); font-size: 9px; padding: 2px 6px; border-radius: 6px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">${role}</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: var(--text-secondary); font-size: 12px;">${status.user.email}</span>
+                        <span class="badge">${role}</span>
                     </div>
                 </div>
             `;
 
-            // Update Google Connection badge if disconnected
-            if (!status.googleConnected) {
-                const badge = statusDiv.querySelector('a');
-                if (badge) {
-                    badge.innerHTML = `
-                        <span style="width: 7px; height: 7px; background: #f43f5e; border-radius: 50%; box-shadow: 0 0 6px rgba(244,63,94,0.6);"></span>
-                        Google Disconnected
-                    `;
-                    badge.style.color = '#f43f5e';
-                }
-            }
-
-            // ── Role-Based UI Hiding ────────────────────────────
             if (role !== 'admin') {
-                console.log('[RBAC] Pruning admin-only elements for staff user...');
-                document.querySelectorAll('[data-role="admin"]').forEach(el => {
-                    el.style.display = 'none';
-                    el.remove(); // Force removal for security/cleanliness
-                });
+                document.querySelectorAll('[data-role="admin"]').forEach(el => el.remove());
             }
         } else {
             statusDiv.innerHTML = `
-                <a href="/auth/google" target="_blank" style="color: #a5b4fc; text-decoration: none; font-weight: 600; font-size:12px; display: flex; align-items: center; gap: 4px;">
-                    <span style="width: 7px; height: 7px; background: #f43f5e; border-radius: 50%; box-shadow: 0 0 6px rgba(244,63,94,0.6);"></span>
+                <a href="/auth/google" target="_blank" style="color: var(--accent);">
+                    <span style="width: 8px; height: 8px; background: #f43f5e; border-radius: 50%;"></span>
                     Connect Google
                 </a>
             `;

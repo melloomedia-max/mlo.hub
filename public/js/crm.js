@@ -48,60 +48,18 @@ function displayClients(clients) {
         const initials = names.length > 1 ? names[0][0] + names[names.length - 1][0] : (names[0] ? names[0][0] : '?');
         const displayName = client.name || 'Unknown';
 
-        const balance = client.total_balance ? parseFloat(client.total_balance) : 0;
-        const balanceText = balance > 0 
-            ? `<span class="card-balance warning">$${balance.toLocaleString()} Owed</span>` 
-            : `<span class="card-balance success">Paid</span>`;
-
         const bizNames = client.business_names ? client.business_names.split(',') : [];
-        const mainBiz = bizNames[0] || client.company || 'Personal';
+        const mainBiz = bizNames[0] || client.company || 'Personal Client';
 
         return `
         <div class="client-card-square" 
              onclick="openClientProfile(${client.id})" 
-             oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${client.name}')"
+             oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${client.name.replace(/'/g, "\\'")}')"
              data-context="client">
             <div class="card-status-dot status-dot-${client.status}"></div>
-            
-            <!-- Mobile Layout Container (Visible via CSS on phones) -->
-            <div class="card-mobile-layout">
-                <div class="card-top">
-                    <div class="card-avatar">${initials}</div>
-                    <div class="card-main-meta">
-                        <div class="card-name">${displayName}</div>
-                        <div class="card-company">${mainBiz}</div>
-                    </div>
-                    <div class="card-status-pill status-${client.status}">${client.status}</div>
-                </div>
-
-                <div class="card-mid">
-                    <div class="card-contact-info">
-                        <div class="contact-line"><span>📧</span> ${client.email || '-'}</div>
-                        <div class="contact-line"><span>📞</span> ${formatPhone(client.phone) || '-'}</div>
-                    </div>
-                    <div class="card-finance-info">
-                        ${balanceText}
-                    </div>
-                </div>
-
-                <div class="card-bottom">
-                    <div class="card-note-snippet">
-                        ${client.notes ? client.notes.substring(0, 80) + (client.notes.length > 80 ? '...' : '') : 'No recent notes.'}
-                    </div>
-                    <div class="card-quick-actions">
-                        <a href="tel:${client.phone}" class="q-btn" onclick="event.stopPropagation()">Call</a>
-                        <a href="mailto:${client.email}" class="q-btn" onclick="event.stopPropagation()">Email</a>
-                        <button class="q-btn primary">Full Bio</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Legacy Desktop Layout (Visible via CSS) -->
-            <div class="card-desktop-layout">
-                <div class="card-avatar">${initials}</div>
-                <div class="card-name">${displayName}</div>
-                <div class="card-company" style="font-size: 11px; opacity: 0.6; margin-top: 4px;">${mainBiz}</div>
-            </div>
+            <div class="card-avatar">${initials}</div>
+            <div class="card-name">${displayName}</div>
+            <div class="card-company">${mainBiz}</div>
         </div>
       `;
     };

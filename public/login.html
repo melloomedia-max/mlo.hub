@@ -114,29 +114,35 @@
   <div class="login-container">
     <div class="brand-header">
       <lottie-player src="/img/Siri.json" background="transparent" speed="1" style="width: 50px; height: 50px;" loop autoplay></lottie-player>
-      <h1><span>melloo</span> Agency Hub</h1>
+      <h1><span style="background: var(--melloo-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">melloo</span> Agency Hub</h1>
     </div>
     
-    <p style="color: rgba(255,255,255,0.95); margin-bottom: 25px; font-size: 16px; font-weight: 500;">Staff Login</p>
+    <p style="color: var(--text-secondary); margin-bottom: 25px; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em;">Staff Authentication</p>
     
     <form action="/login" method="POST">
-      <div style="margin-bottom: 12px; text-align: left;">
-        <label for="email" style="display: block; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px;">Email Address</label>
-        <input type="email" name="email" id="email" placeholder="name@agency.com" autocomplete="email" 
-               style="width: 100%; padding: 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; font-family: inherit;">
+      <div style="margin-bottom: 16px; text-align: left;">
+        <label for="email" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px;">Email Address</label>
+        <input type="email" name="email" id="email" placeholder="name@melloo.media" autocomplete="email" required
+               style="width: 100%; padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; font-size: 15px; box-sizing: border-box; outline: none; transition: 0.3s; font-family: inherit;">
       </div>
 
       <div style="margin-bottom: 24px; text-align: left;">
-        <label for="password" style="display: block; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px;">Password</label>
+        <label for="password" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px;">Password</label>
         <input type="password" name="password" id="password" placeholder="••••••••" required autocomplete="current-password"
-               style="width: 100%; padding: 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; letter-spacing: 2px; font-family: inherit;">
+               style="width: 100%; padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; font-size: 15px; box-sizing: border-box; outline: none; transition: 0.3s; letter-spacing: 2px; font-family: inherit;">
       </div>
 
-      <button type="submit" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);">
-        Secure Access
+      <button type="submit" style="width: 100%; padding: 14px; background: var(--melloo-gradient); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(255, 59, 59, 0.3);">
+        Access Hub
       </button>
-      <div id="error-msg" class="error-msg" style="margin-top: 20px; color: #f43f5e; font-size: 14px; font-weight: 600;"></div>
+      <div id="error-msg" class="error-msg" style="margin-top: 20px; color: var(--rose); font-size: 13px; font-weight: 600;"></div>
     </form>
+
+    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border);">
+        <a href="https://melloo.media" style="color: var(--text-tertiary); text-decoration: none; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-tertiary)'">
+            ← Back to Website
+        </a>
+    </div>
   </div>
 
   <script>
