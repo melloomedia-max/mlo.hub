@@ -28,6 +28,14 @@ function verifyPassword(password, storedHash) {
  * Middleware to require authentication
  */
 function requireAuth(req, res, next) {
+    // LOCAL DEV BYPASS
+    const host = req.get('host') || '';
+    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+        req.session.isAuthenticated = true;
+        req.session.user = req.session.user || { id: 0, name: 'Dev Admin', role: 'admin', email: 'dev@melloo.media' };
+        return next();
+    }
+
     const isAuth = !!(req.session && req.session.isAuthenticated);
     
     if (isAuth) {
@@ -44,6 +52,14 @@ function requireAuth(req, res, next) {
  * Middleware to require admin roll
  */
 function requireAdmin(req, res, next) {
+    // LOCAL DEV BYPASS
+    const host = req.get('host') || '';
+    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+        req.session.isAuthenticated = true;
+        req.session.user = req.session.user || { id: 0, name: 'Dev Admin', role: 'admin', email: 'dev@melloo.media' };
+        return next();
+    }
+
     const isAuth = !!(req.session && req.session.isAuthenticated);
     const isAdmin = !!(isAuth && req.session.user && req.session.user.role === 'admin');
     
