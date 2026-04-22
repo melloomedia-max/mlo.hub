@@ -140,37 +140,92 @@ router.get('/api/:token/folder/:folderId', async (req, res) => {
 
 // ─── Submit Request ──────────────────────────────────────
 router.post('/api/:token/request', async (req, res) => {
+    const token = req.params.token;
     try {
-        const { message } = req.body;
-        if (!message || !message.trim()) return res.status(400).json({ error: "Message is required" });
-        const client = await dbGet("SELECT id, name FROM clients WHERE portal_token = ?", [req.params.token]);
-        if (!client) return res.status(404).json({ error: "Invalid token" });
+        const { message, subject = 'General' } = req.body;
 
-        await dbRun("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)", [client.id, 'note', 'Portal Request', `[CLIENT PORTAL REQUEST]: ${message}`]);
-        
-        // Return success immediately to avoid loading delays
-        res.json({ success: true });
+        // Layer 1: validate inputs
+        if (!message || !message.trim()) {
+            return res.status(400).json({ error: "Message is required" });
+        }
+        const validSubjects = ['Revision', 'New Export', 'Question', 'Access Issue', 'General', 'Other'];
+        const safeSubject = validSubjects.includes(subject) ? subject : 'General';
 
-        // Trigger background notifications
-        (async () => {
+        // Layer 1: validate token → client
+        const client = await dbGet(
+            "SELECT id, name, first_name, company FROM clients WHERE portal_token = ?",
+            [token]
+        );
+        if (!client) {
+            console.warn(`[PORTAL-REQ] Invalid token attempt: ${token.slice(0, 8)}...`);
+            return res.status(404).json({ error: "Invalid portal link" });
+        }
+        console.log(`[PORTAL-REQ] Request from client ${client.id} (${client.name}) — subject: ${safeSubject}`);
+
+        // Layer 1: insert into portal_requests (source of truth)
+        const requestId = await dbRun(
+            `INSERT INTO portal_requests (client_id, subject, message, status, priority, source, token_used)
+             VALUES (?, ?, ?, 'new', 'normal', 'portal', ?)`,
+            [client.id, safeSubject, message.trim(), token]
+        );
+        console.log(`[PORTAL-REQ] Saved to portal_requests id=${requestId}`);
+
+        // Layer 2: mirror to client_communications (CRM activity log)
+        await dbRun(
+            "INSERT INTO client_communications (client_id, type, method, description) VALUES (?, 'note', 'Portal Request', ?)",
+            [client.id, `[PORTAL REQUEST #${requestId}] ${safeSubject}: ${message.trim()}`]
+        );
+
+        // DB write succeeded — return success with request ID immediately
+        res.json({ success: true, requestId });
+
+        // Layer 3: notifications (best-effort, never block the response)
+        setImmediate(async () => {
+            let emailStatus = 'skipped', smsStatus = 'skipped';
             try {
-                // 1. Email Notification
-                await sendPortalRequestNotify(client, message);
-                
-                // 2. SMS Notification to Admin
-                const don = await dbGet("SELECT phone, name FROM staff WHERE role = 'admin' LIMIT 1");
-                if (don && don.phone) {
-                    const smsMessage = `🚨 ${client.name} sent a request: ${message}`;
-                    // Use Verizon/vtext as requested
-                    await sendSMS(don.phone, smsMessage, 'verizon');
-                }
-            } catch (notifyErr) {
-                console.error('[PORTAL-LOG] Background notification failed:', notifyErr);
+                await sendPortalRequestNotify(client, message.trim());
+                emailStatus = 'sent';
+            } catch (e) {
+                emailStatus = 'failed';
+                console.error(`[PORTAL-REQ] Email notify failed for request ${requestId}:`, e.message);
             }
-        })();
+            try {
+                const admin = await dbGet("SELECT phone FROM staff WHERE role = 'admin' LIMIT 1");
+                if (admin && admin.phone) {
+                    const label = client.company || client.first_name || client.name;
+                    await sendSMS(admin.phone, `🚨 Portal request from ${label}: ${message.trim().slice(0, 100)}`, 'verizon');
+                    smsStatus = 'sent';
+                }
+            } catch (e) {
+                smsStatus = 'failed';
+                console.error(`[PORTAL-REQ] SMS notify failed for request ${requestId}:`, e.message);
+            }
+            // Log final notification outcome against the request row
+            db.run(
+                "UPDATE portal_requests SET notify_email_status=?, notify_sms_status=? WHERE id=?",
+                [emailStatus, smsStatus, requestId]
+            );
+        });
 
     } catch (err) {
-        if (!res.headersSent) res.status(500).json({ error: err.message });
+        console.error('[PORTAL-REQ] Fatal error:', err.message);
+        if (!res.headersSent) res.status(500).json({ error: "Failed to save request. Please try again." });
+    }
+});
+
+// ─── Client Request History ───────────────────────────────
+router.get('/api/:token/requests', async (req, res) => {
+    try {
+        const client = await dbGet("SELECT id FROM clients WHERE portal_token = ?", [req.params.token]);
+        if (!client) return res.status(404).json({ error: "Invalid token" });
+        const requests = await dbAll(
+            `SELECT id, subject, message, status, priority, created_at
+             FROM portal_requests WHERE client_id = ? ORDER BY created_at DESC LIMIT 20`,
+            [client.id]
+        );
+        res.json(requests);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 

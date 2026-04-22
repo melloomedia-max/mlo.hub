@@ -76,19 +76,76 @@ router.get('/activity', (req, res) => {
     });
 });
 
-// Portal Requests Feed
+// ── Portal Requests (dedicated table) ────────────────────────────────────────
+
+// List all (with optional status filter)
 router.get('/portal-requests', (req, res) => {
+    const { status } = req.query;
+    const params = [];
+    let where = '';
+    if (status && status !== 'all') {
+        where = 'WHERE pr.status = ?';
+        params.push(status);
+    }
     const sql = `
-        SELECT cc.*, c.name as client_name, c.company
-        FROM client_communications cc
-        JOIN clients c ON cc.client_id = c.id
-        WHERE cc.method = 'Portal Request'
-        ORDER BY cc.created_at DESC
-        LIMIT 20
+        SELECT pr.*, c.name as client_name, c.first_name, c.company,
+               s.name as assigned_to_name
+        FROM portal_requests pr
+        JOIN clients c ON pr.client_id = c.id
+        LEFT JOIN staff s ON pr.assigned_to = s.id
+        ${where}
+        ORDER BY pr.created_at DESC
+        LIMIT 100
     `;
-    db.all(sql, [], (err, rows) => {
+    db.all(sql, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
+    });
+});
+
+// Unread count (status = 'new')
+router.get('/portal-requests/count', (req, res) => {
+    db.get("SELECT COUNT(*) as count FROM portal_requests WHERE status = 'new'", [], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ count: row ? row.count : 0 });
+    });
+});
+
+// Single request
+router.get('/portal-requests/:id', (req, res) => {
+    const sql = `
+        SELECT pr.*, c.name as client_name, c.first_name, c.company, c.email,
+               s.name as assigned_to_name
+        FROM portal_requests pr
+        JOIN clients c ON pr.client_id = c.id
+        LEFT JOIN staff s ON pr.assigned_to = s.id
+        WHERE pr.id = ?
+    `;
+    db.get(sql, [req.params.id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'Not found' });
+        res.json(row);
+    });
+});
+
+// Update status / assign
+router.patch('/portal-requests/:id', (req, res) => {
+    const { status, assigned_to, priority } = req.body;
+    const allowed = ['new', 'in_progress', 'completed', 'archived'];
+    if (status && !allowed.includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+    }
+    const fields = [];
+    const vals = [];
+    if (status)      { fields.push('status = ?');      vals.push(status); }
+    if (assigned_to !== undefined) { fields.push('assigned_to = ?'); vals.push(assigned_to || null); }
+    if (priority)    { fields.push('priority = ?');    vals.push(priority); }
+    if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
+    fields.push('updated_at = CURRENT_TIMESTAMP');
+    vals.push(req.params.id);
+    db.run(`UPDATE portal_requests SET ${fields.join(', ')} WHERE id = ?`, vals, function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
     });
 });
 

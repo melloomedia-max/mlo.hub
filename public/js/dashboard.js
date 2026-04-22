@@ -121,11 +121,11 @@ async function loadDashboard() {
 
 async function loadPortalRequests() {
     try {
-        const res = await fetch(`${API_BASE}/crm/portal-requests`);
+        const res = await fetch(`${API_BASE}/crm/portal-requests?status=new`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const requests = await res.json();
         const list = document.getElementById('portal-requests-feed');
         const empty = document.getElementById('portal-requests-empty');
-        
         if (!list) return;
 
         if (!requests || requests.length === 0) {
@@ -135,22 +135,26 @@ async function loadPortalRequests() {
         }
 
         if (empty) empty.style.display = 'none';
-        list.innerHTML = requests.map(r => {
-            // Clean up the message for display (remove prefix)
-            const cleanMsg = r.description.replace('[CLIENT PORTAL REQUEST]: ', '');
+        const STATUS_COLOR = { new: '#f43f5e', in_progress: '#fbbf24', completed: '#34d399', archived: '#6b7280' };
+        list.innerHTML = requests.slice(0, 5).map(r => {
+            const clientLabel = r.company ? `${r.client_name} · ${r.company}` : r.client_name;
+            const preview = r.message.length > 100 ? r.message.slice(0, 100) + '…' : r.message;
+            const color = STATUS_COLOR[r.status] || '#f43f5e';
             return `
-                <li oncontextmenu="ContextMenu.attach(event, 'client', ${r.client_id}, '${r.client_name.replace(/'/g, "\\'")}')" data-context="client" style="cursor:pointer; border-left: 3px solid #f43f5e; padding-left: 12px; margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <span style="font-weight: 700; font-size: 13px;">${r.client_name}</span>
-                        <small style="color: var(--text-tertiary); font-size: 11px;">${new Date(r.created_at).toLocaleDateString()}</small>
+                <li onclick="showSection('portal-requests')" style="cursor:pointer;border-left:3px solid ${color};padding-left:12px;margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <span style="font-weight:700;font-size:13px;">${clientLabel.replace(/</g,'&lt;')}</span>
+                        <small style="color:var(--text-tertiary);font-size:11px;white-space:nowrap;margin-left:8px;">${new Date(r.created_at).toLocaleDateString()}</small>
                     </div>
-                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-secondary); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                        ${cleanMsg}
-                    </p>
+                    <div style="font-size:11px;color:#a78bfa;font-weight:600;margin:2px 0;">${r.subject}</div>
+                    <p style="margin:2px 0 0;font-size:12px;color:var(--text-secondary);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${preview.replace(/</g,'&lt;')}</p>
                 </li>
             `;
         }).join('');
 
+        if (requests.length > 5) {
+            list.innerHTML += `<li onclick="showSection('portal-requests')" style="cursor:pointer;text-align:center;font-size:12px;color:#a78bfa;padding:8px;">View all ${requests.length} new requests →</li>`;
+        }
     } catch (e) {
         console.error('Error loading portal requests:', e);
     }

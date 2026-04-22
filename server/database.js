@@ -446,6 +446,28 @@ db.serialize(() => {
     )
   `);
 
+  // Dedicated Portal Requests table (source of truth)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS portal_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL,
+      project_id INTEGER,
+      subject TEXT NOT NULL DEFAULT 'General',
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'new',
+      priority TEXT NOT NULL DEFAULT 'normal',
+      source TEXT NOT NULL DEFAULT 'portal',
+      token_used TEXT,
+      assigned_to INTEGER,
+      notify_email_status TEXT,
+      notify_sms_status TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+      FOREIGN KEY (assigned_to) REFERENCES staff(id) ON DELETE SET NULL
+    )
+  `);
+
   console.log("[DB] Database initialization scripts queued.");
 });
 
