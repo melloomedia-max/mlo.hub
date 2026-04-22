@@ -17,7 +17,7 @@ function renderSubscriptions(subscriptions) {
         return;
     }
 
-    container.innerHTML = subscriptions.map(sub => `
+    const html = subscriptions.map(sub => `
         <div class="invoice-item-card subscription-card" 
              oncontextmenu="ContextMenu.attach(event, 'subscription', ${sub.id}, '${sub.name}')"
              data-context="subscription"
@@ -43,6 +43,14 @@ function renderSubscriptions(subscriptions) {
             </div>
         </div>
     `).join('');
+
+    const renderedCount = (html.match(/class="invoice-item-card"/g) || []).length;
+    if (subscriptions.length > 0 && renderedCount !== subscriptions.length) {
+        container.innerHTML = `<div class="error-notice">⚠️ Only ${renderedCount} of ${subscriptions.length} subscriptions rendered.</div>`;
+        console.warn(`[CRM] Subscription render mismatch: expected ${subscriptions.length}, got ${renderedCount}`);
+    } else {
+        container.innerHTML = html;
+    }
 }
 
 async function toggleSubHistory(subId) {

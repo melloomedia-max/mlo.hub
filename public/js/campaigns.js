@@ -26,24 +26,16 @@ function renderCampaigns() {
         return;
     }
 
-    currentCampaigns.forEach(campaign => {
-        const div = document.createElement('div');
-        div.className = 'glass-card campaign-card'; 
-        div.style.cssText = `
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            padding: 24px;
-            cursor: default;
-        `;
-        div.oncontextmenu = (e) => ContextMenu.attach(e, 'campaign', campaign.id, campaign.name);
-        div.setAttribute('data-context', 'campaign');
-        
+    const html = currentCampaigns.map(campaign => {
         const flow = campaign.flow_data || { nodes: [] };
         const actionCount = flow.nodes ? flow.nodes.filter(n => n.type === 'action').length : 0;
         const enrollmentCount = campaign.enrollment_count || 0;
 
-        div.innerHTML = `
+        return `
+        <div class="glass-card campaign-card" 
+             oncontextmenu="ContextMenu.attach(event, 'campaign', ${campaign.id}, '${campaign.name.replace(/'/g, "\\'")}')"
+             data-context="campaign"
+             style="display: flex; flex-direction: column; gap: 15px; padding: 24px; cursor: default;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <h3 style="margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.01em;">${campaign.name}</h3>
@@ -80,9 +72,16 @@ function renderCampaigns() {
                     Analytics ↗
                 </button>
             </div>
-        `;
-        list.appendChild(div);
-    });
+        </div>`;
+    }).join('');
+
+    const renderedCount = (html.match(/class="glass-card campaign-card"/g) || []).length;
+    if (currentCampaigns.length > 0 && renderedCount !== currentCampaigns.length) {
+        list.innerHTML = `<div class="error-notice">⚠️ Only ${renderedCount} of ${currentCampaigns.length} campaigns rendered.</div>`;
+        console.warn(`[Campaigns] Render mismatch: expected ${currentCampaigns.length}, got ${renderedCount}`);
+    } else {
+        list.innerHTML = html;
+    }
 }
 
 let activeTemplateTab = 'email';
@@ -111,24 +110,14 @@ async function loadTemplates() {
         const response = await fetch(`/api/campaigns/templates/${activeTemplateTab}`);
         const templates = await response.json();
         
-        grid.innerHTML = '';
         if (templates.length === 0) {
             grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: rgba(255,255,255,0.3);">No templates found. Create your first one!</div>';
             return;
         }
 
-        templates.forEach(t => {
-            const card = document.createElement('div');
-            card.className = 'glass-card';
-            card.style.cssText = `
-                padding: 20px;
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-                cursor: default;
-            `;
-            
-            card.innerHTML = `
+        const html = templates.map(t => {
+            return `
+            <div class="glass-card template-card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; cursor: default;">
                 <div>
                     <div style="font-weight: 700; margin-bottom: 5px;">${t.name}</div>
                     ${activeTemplateTab === 'email' ? `<div style="font-size: 11px; color: var(--accent); margin-bottom: 8px;">${t.category || 'General'}</div>` : ''}
@@ -140,9 +129,16 @@ async function loadTemplates() {
                     <button onclick="editTemplate('${activeTemplateTab}', ${t.id})" class="secondary-btn" style="flex: 1; padding: 6px; font-size: 11px;">✏️ Edit</button>
                     <button onclick="deleteTemplate('${activeTemplateTab}', ${t.id})" class="icon-btn delete-btn" style="flex: 1; padding: 6px; font-size: 11px;">🗑️ Delete</button>
                 </div>
-            `;
-            grid.appendChild(card);
-        });
+            </div>`;
+        }).join('');
+
+        const renderedCount = (html.match(/class="glass-card template-card"/g) || []).length;
+        if (templates.length > 0 && renderedCount !== templates.length) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ef4444;">⚠️ Only ${renderedCount} of ${templates.length} templates rendered.</div>`;
+            console.warn(`[Campaigns] Template render mismatch: expected ${templates.length}, got ${renderedCount}`);
+        } else {
+            grid.innerHTML = html;
+        }
     } catch (e) {
         grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #ef4444;">Error loading templates</div>';
     }

@@ -82,22 +82,20 @@ function displayTasks(tasks) {
 
     // Counters
     let counts = { todo: 0, 'in-progress': 0, done: 0 };
+    let renderedCounts = { todo: 0, 'in-progress': 0, done: 0 };
 
     tasks.forEach(task => {
-        // Default to 'todo' if status allows
         const status = ['todo', 'in-progress', 'done'].includes(task.status) ? task.status : 'todo';
         counts[status]++;
 
         const container = document.getElementById(`list-${status}`);
+        if (!container) return;
+
         const card = document.createElement('div');
         card.className = `task-card priority-${task.priority}`;
         card.draggable = true;
         card.ondragstart = (e) => drag(e, task.id);
-
-        // Add Double Click to Edit
         card.ondblclick = (e) => editTask(task.id);
-        
-        // Context Menu
         card.oncontextmenu = (e) => ContextMenu.attach(e, 'task', task.id, task.title);
         card.setAttribute('data-context', 'task');
 
@@ -124,7 +122,20 @@ function displayTasks(tasks) {
       </div>
     `;
 
-        if (container) container.appendChild(card);
+        container.appendChild(card);
+        renderedCounts[status]++;
+    });
+
+    // Mismatch Check
+    ['todo', 'in-progress', 'done'].forEach(status => {
+        if (counts[status] > 0 && renderedCounts[status] !== counts[status]) {
+            const container = document.getElementById(`list-${status}`);
+            if (container) {
+                const notice = `<div class="error-notice" style="padding:15px; font-size:12px; color:#fda4af; text-align:center;">⚠️ Only ${renderedCounts[status]} of ${counts[status]} tasks rendered.</div>`;
+                container.innerHTML = notice + container.innerHTML;
+                console.warn(`[Tasks] Render mismatch in column ${status}: expected ${counts[status]}, got ${renderedCounts[status]}`);
+            }
+        }
     });
 
     // Update badges

@@ -44,6 +44,7 @@ function displayClients(clients) {
     const activeClients = clients.filter(c => c.status === 'active');
     const leadClients = clients.filter(c => c.status === 'lead');
     const pastClients = clients.filter(c => c.status === 'past');
+    const otherClients = clients.filter(c => !['active', 'lead', 'past'].includes(c.status));
 
     // Helper function to render a client card
     const renderClientCard = (client) => {
@@ -59,7 +60,7 @@ function displayClients(clients) {
              onclick="openClientProfile(${client.id})" 
              oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${(client.name || '').replace(/'/g, "\\'")}')"
              data-context="client">
-            <div class="card-status-dot status-dot-${client.status}"></div>
+            <div class="card-status-dot status-dot-${client.status || 'unknown'}"></div>
             <div class="card-avatar">${initials}</div>
             <div class="card-name">${displayName}</div>
             <div class="card-company">${mainBiz}</div>
@@ -68,19 +69,30 @@ function displayClients(clients) {
     };
 
     // Helper function to render a section
-    const renderSection = (title, clients, icon, emptyMessage) => {
+    const renderSection = (title, clients, icon, emptyMessage, isHiddenIfEmpty = false) => {
         if (clients.length === 0) {
+            if (isHiddenIfEmpty) return '';
             return `
                 <div class="client-section">
                     <div class="section-title">
                         <span class="section-icon">${icon}</span>
                         <h3>${title}</h3>
-                        <span class="section-count">${clients.length}</span>
+                        <span class="section-count">0</span>
                     </div>
                     <p class="empty-section-message">${emptyMessage}</p>
                 </div>
             `;
         }
+
+        const html = clients.map(renderClientCard).join('');
+        const renderedCount = (html.match(/class="client-card-square"/g) || []).length;
+
+        // Mismatch check
+        const mismatchNotice = (clients.length > 0 && renderedCount !== clients.length) 
+            ? `<div class="render-error-notice">⚠️ Only ${renderedCount} of ${clients.length} clients rendered. Please refresh or contact support.</div>` 
+            : '';
+
+        if (mismatchNotice) console.warn(`[CRM] Render mismatch in section "${title}": expected ${clients.length}, got ${renderedCount}`);
 
         return `
             <div class="client-section">
@@ -89,8 +101,9 @@ function displayClients(clients) {
                     <h3>${title}</h3>
                     <span class="section-count">${clients.length}</span>
                 </div>
+                ${mismatchNotice}
                 <div class="clients-grid">
-                    ${clients.map(renderClientCard).join('')}
+                    ${html}
                 </div>
             </div>
         `;
@@ -101,6 +114,7 @@ function displayClients(clients) {
         ${renderSection('Active Clients', activeClients, '✨', 'No active clients yet')}
         ${renderSection('Leads', leadClients, '🎯', 'No leads yet')}
         ${renderSection('Past Clients', pastClients, '📦', 'No past clients yet')}
+        ${renderSection('Other / Uncategorized', otherClients, '❓', 'No other clients', true)}
     `;
 }
 
@@ -1213,7 +1227,8 @@ function renderProjects(projects) {
         list.innerHTML = '<p class="empty-state" style="font-size:13px; padding:20px 0; text-align:center;">No projects yet.<br><span style="font-size:11px; opacity:0.5;">Click + Add to create one</span></p>';
         return;
     }
-    list.innerHTML = projects.map(p => {
+
+    const html = projects.map(p => {
         const statusClass = `proj-status-${p.status}`;
         const label = PROJECT_STATUS_LABELS[p.status] || p.status;
         const budget = p.budget ? `💰 $${parseFloat(p.budget).toLocaleString()}` : null;
@@ -1222,7 +1237,6 @@ function renderProjects(projects) {
         const payColor = p.payment_status === 'paid' ? '#4ade80' : (p.payment_status === 'invoice-sent' ? '#fbbf24' : (p.payment_status === 'partial' ? '#a78bfa' : '#f87171'));
 
         const pills = [];
-        // Show payment status with invoice count if linked
         const invCount = p.invoice_count || 0;
         const invBadge = invCount > 0 ? ` <span style="opacity:0.6; font-size:10px;">(${invCount} inv)</span>` : '';
         if (payLabel) pills.push(`<span class="proj-meta-pill" style="color:${payColor}; border-color:${payColor}">${payLabel}${invBadge}</span>`);
@@ -1244,6 +1258,14 @@ function renderProjects(projects) {
             ${p.notes ? `<div class="proj-card-notes">${p.notes}</div>` : ''}
         </div>`;
     }).join('');
+
+    const renderedCount = (html.match(/class="proj-card"/g) || []).length;
+    if (projects.length > 0 && renderedCount !== projects.length) {
+        list.innerHTML = `<div class="error-notice">⚠️ Only ${renderedCount} of ${projects.length} projects rendered.</div>`;
+        console.warn(`[CRM] Project render mismatch: expected ${projects.length}, got ${renderedCount}`);
+    } else {
+        list.innerHTML = html;
+    }
 }
 
 function showAddProjectForm() {
@@ -1649,7 +1671,7 @@ function renderCarousel() {
     const start = _carouselPage * CAROUSEL_PER_PAGE;
     const pageItems = attachments.slice(start, start + CAROUSEL_PER_PAGE);
 
-    carousel.innerHTML = pageItems.map(att => {
+    const html = pageItems.map(att => {
         const isImage = att.mime_type && att.mime_type.startsWith('image/');
         const icon = getAttachmentIcon(att.mime_type);
         const proxyUrl = isImage ? `${API_BASE}/crm/drive/proxy/${att.file_id}` : null;
@@ -1666,6 +1688,14 @@ function renderCarousel() {
             <button class="attach-delete" onclick="event.stopPropagation(); deleteAttachment(${att.id})" title="Remove">✕</button>
         </div>`;
     }).join('');
+
+    const renderedCount = (html.match(/class="proj-attachment-thumb"/g) || []).length;
+    if (pageItems.length > 0 && renderedCount !== pageItems.length) {
+        carousel.innerHTML = `<div class="error-notice">⚠️ Only ${renderedCount} of ${pageItems.length} attachments rendered.</div>`;
+        console.warn(`[CRM] Attachment render mismatch: expected ${pageItems.length}, got ${renderedCount}`);
+    } else {
+        carousel.innerHTML = html;
+    }
 
     // Dots
     if (dotsEl) {

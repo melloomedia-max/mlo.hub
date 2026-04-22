@@ -44,15 +44,17 @@ async function loadInvoices() {
 }
 
 function displayInvoices(invoices) {
-    if (!container) return;
+    const list = document.getElementById('invoices-list');
+    if (!list) return;
+    
     if (invoices.length === 0) {
-        container.innerHTML = '<p class="empty-state">No invoices created yet.</p>';
-        container.style.display = 'flex';
+        list.innerHTML = '<p class="empty-state">No invoices created yet.</p>';
+        list.style.display = 'flex';
         return;
     }
 
-    container.style.display = 'grid';
-    container.innerHTML = invoices.map(inv => {
+    list.style.display = 'grid';
+    const html = invoices.map(inv => {
         const isLocked = ['finalized', 'sent', 'paid'].includes(inv.status);
         const lockIcon = isLocked ? '<span title="Locked">🔒</span> ' : '';
         const amountPaid = inv.amount_paid || 0;
@@ -87,6 +89,14 @@ function displayInvoices(invoices) {
         </div>
         `;
     }).join('');
+
+    const renderedCount = (html.match(/class="invoice-item-card"/g) || []).length;
+    if (invoices.length > 0 && renderedCount !== invoices.length) {
+        list.innerHTML = `<div class="error-notice">⚠️ Only ${renderedCount} of ${invoices.length} invoices rendered.</div>`;
+        console.warn(`[CRM] Invoice render mismatch: expected ${invoices.length}, got ${renderedCount}`);
+    } else {
+        list.innerHTML = html;
+    }
 }
 
 // Show invoice creation form
