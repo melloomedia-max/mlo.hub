@@ -68,13 +68,11 @@ async function loadSubInvoices(subId) {
         console.error('loadSubInvoices called without subId');
         return;
     }
-    console.log('Loading invoices for sub:', subId);
     const historyDiv = document.getElementById(`sub-history-${subId}`);
     if (!historyDiv) return;
 
     try {
         const response = await fetch(`/api/subscriptions/${subId}/invoices`);
-        console.log('History fetched status:', response.status);
         
         if (!response.ok) {
             const errText = await response.text();
@@ -128,10 +126,8 @@ async function loadSubInvoices(subId) {
 }
 
 async function resendSubInvoice(invoiceId, subId) {
-    console.log('Resending invoice:', invoiceId);
     try {
         const res = await fetch(`/api/subscriptions/invoices/${invoiceId}/resend`, { method: 'POST' });
-        console.log('Resend status:', res.status);
         if (res.ok) {
             showToast('Invoice resent!', 'success');
             if (subId) loadSubInvoices(subId);
@@ -144,13 +140,11 @@ async function resendSubInvoice(invoiceId, subId) {
 }
 
 async function sendLateWarning(invoiceId, subId) {
-    console.log('Initiating late warning for:', invoiceId);
     const confirmed = await showConfirm('Send Warning', 'Send a late payment warning with service interruption notice?', null, null, 'Send Warning', false);
     if (!confirmed) return;
 
     try {
         const res = await fetch(`/api/subscriptions/invoices/${invoiceId}/warning`, { method: 'POST' });
-        console.log('Warning status:', res.status);
         if (res.ok) {
             showToast('Warning sent!', 'success');
             if (subId) loadSubInvoices(subId);

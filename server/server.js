@@ -123,22 +123,13 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
 
     // Check staff accounts in DB
     db.get('SELECT * FROM staff WHERE email = ?', [email], (err, user) => {
-        console.log(`[AUTH-DEBUG] Attempt for: ${email}`);
-        console.log(` - User found: ${!!user ? 'YES' : 'NO'}`);
-        
         if (err) {
-            console.error("[AUTH-DEBUG] DB Error:", err.message);
             return res.redirect('/login?error=db');
         }
 
         if (user) {
-            console.log(` - Active: ${user.status === 'active' ? 'YES' : 'NO'}`);
-            console.log(` - Role: ${user.role}`);
             const match = verifyPassword(password, user.password);
-            console.log(` - Password verified: ${match ? 'YES' : 'NO'}`);
-
             if (user.status === 'active' && match) {
-                console.log(`[AUTH] Login success for user: ${email}`);
                 req.session.isAuthenticated = true;
                 req.session.user = { id: user.id, name: user.name, role: user.role, email: user.email };
                 return req.session.save(() => res.redirect('/'));
@@ -242,11 +233,6 @@ app.use(express.static(path.join(__dirname, '../public'), {
     }
 }));
 
-// Debug logger
-app.use((req, res, next) => {
-    console.log(`[DEBUG] ${req.method} ${req.url}`);
-    next();
-});
 
 console.log("[BOOT] Registering API routes...");
 
