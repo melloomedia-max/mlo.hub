@@ -30,10 +30,10 @@ async function loadDashboard() {
         const activeProjects = projects.filter(p => p.status === 'active').length || 0;
         const pendingTasks = tasks.filter(t => t.status !== 'done').length || 0;
 
-        document.getElementById('stat-clients').textContent = clients.length || 0;
-        document.getElementById('stat-projects').textContent = activeProjects;
-        document.getElementById('stat-tasks').textContent = pendingTasks;
-        document.getElementById('stat-subscriptions').textContent = subscriptions.filter(s => s.status === 'active').length || 0;
+        if (document.getElementById('stat-clients')) document.getElementById('stat-clients').textContent = clients.length || 0;
+        if (document.getElementById('stat-projects')) document.getElementById('stat-projects').textContent = activeProjects;
+        if (document.getElementById('stat-tasks')) document.getElementById('stat-tasks').textContent = pendingTasks;
+        if (document.getElementById('stat-subscriptions')) document.getElementById('stat-subscriptions').textContent = subscriptions.filter(s => s.status === 'active').length || 0;
 
 
 
