@@ -23,10 +23,15 @@ async function loadInvoices() {
     const staleForm = document.getElementById('partial-payment-form');
     if (staleForm) staleForm.remove();
 
-    document.getElementById('invoice-form-container').style.display = 'none';
-    document.getElementById('invoice-detail-section').style.display = 'none';
+    const formContainer = document.getElementById('invoice-form-container');
+    const detailSection = document.getElementById('invoice-detail-section');
+    if (formContainer) formContainer.style.display = 'none';
+    if (detailSection) detailSection.style.display = 'none';
     const list = document.getElementById('invoices-list');
-    list.style.display = 'grid';
+    if (list) {
+        list.style.display = 'grid';
+        list.innerHTML = '';
+    }
 
     try {
         const response = await fetch(`${API_BASE}/invoices`);
@@ -34,13 +39,12 @@ async function loadInvoices() {
         displayInvoices(invoices);
     } catch (error) {
         console.error('Error loading invoices:', error);
-        list.innerHTML = '<p class="empty-state">Error loading invoices</p>';
+        if (list) list.innerHTML = '<p class="empty-state">Error loading invoices</p>';
     }
 }
 
 function displayInvoices(invoices) {
-    const container = document.getElementById('invoices-list');
-
+    if (!container) return;
     if (invoices.length === 0) {
         container.innerHTML = '<p class="empty-state">No invoices created yet.</p>';
         container.style.display = 'flex';
@@ -94,12 +98,14 @@ async function showInvoiceForm() {
     window.hasUnsavedDraft = true;
 
     // Update UI
-    document.querySelector('#invoice-form-container h3').textContent = 'Create New Invoice';
-    document.querySelector('#create-invoice-form button[type="submit"]').textContent = 'Finalize & Save';
+    const titleEl = document.querySelector('#invoice-form-container h3');
+    const submitBtn = document.querySelector('#create-invoice-form button[type="submit"]');
+    if (titleEl) titleEl.textContent = 'Create New Invoice';
+    if (submitBtn) submitBtn.textContent = 'Finalize & Save';
 
     // Load clients
     const select = document.getElementById('invoice-client-select');
-    select.innerHTML = '<option value="">Loading...</option>';
+    if (select) select.innerHTML = '<option value="">Loading...</option>';
 
     try {
         const response = await fetch(`${API_BASE}/crm/clients`);
@@ -108,29 +114,42 @@ async function showInvoiceForm() {
             clients.map(c => `<option value="${c.id}">${c.name} (${c.company || 'No Company'})</option>`).join('');
     } catch (error) {
         console.error('Error loading clients:', error);
-        select.innerHTML = '<option value="">Error loading clients</option>';
+        if (select) select.innerHTML = '<option value="">Error loading clients</option>';
     }
 
     // Reset form
-    document.getElementById('create-invoice-form').reset();
-    document.getElementById('invoice-issue-date').valueAsDate = new Date();
+    const form = document.getElementById('create-invoice-form');
+    if (form) form.reset();
+
+    const issueDate = document.getElementById('invoice-issue-date');
+    const dueDateEl = document.getElementById('invoice-due-date');
+    const currencyEl = document.getElementById('invoice-currency');
+    const discType = document.getElementById('invoice-discount-type');
+    const payInstr = document.getElementById('invoice-payment-instructions');
+    const projSelect = document.getElementById('invoice-project-select');
+
+    if (issueDate) issueDate.valueAsDate = new Date();
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 30);
-    document.getElementById('invoice-due-date').valueAsDate = dueDate;
-    document.getElementById('invoice-currency').value = 'USD';
-    document.getElementById('invoice-discount-type').value = 'fixed';
-    document.getElementById('invoice-payment-instructions').value = '';
-    document.getElementById('invoice-project-select').innerHTML = '<option value="">Select Project...</option>';
+    if (dueDateEl) dueDateEl.valueAsDate = dueDate;
+    if (currencyEl) currencyEl.value = 'USD';
+    if (discType) discType.value = 'fixed';
+    if (payInstr) payInstr.value = '';
+    if (projSelect) projSelect.innerHTML = '<option value="">Select Project...</option>';
 
     // Clear and add one line item
-    document.getElementById('invoice-line-items').innerHTML = '';
+    const lineItems = document.getElementById('invoice-line-items');
+    if (lineItems) lineItems.innerHTML = '';
     addInvoiceLine();
     calculateInvoiceTotal();
 
     // Show form
-    document.getElementById('invoice-form-container').style.display = 'block';
-    document.getElementById('invoices-list').style.display = 'none';
-    document.getElementById('invoice-detail-section').style.display = 'none';
+    const formCont = document.getElementById('invoice-form-container');
+    const invList = document.getElementById('invoices-list');
+    const detailSec = document.getElementById('invoice-detail-section');
+    if (formCont) formCont.style.display = 'block';
+    if (invList) invList.style.display = 'none';
+    if (detailSec) detailSec.style.display = 'none';
 }
 
 function hideInvoiceForm() {
@@ -139,7 +158,8 @@ function hideInvoiceForm() {
     }
     window.hasUnsavedDraft = false;
     isEditingInvoice = false;
-    document.getElementById('invoice-form-container').style.display = 'none';
+    const formCont = document.getElementById('invoice-form-container');
+    if (formCont) formCont.style.display = 'none';
     // If we were editing, go back to the detail view; otherwise go to list
     if (currentInvoiceId && !isEditingInvoice) {
         openInvoiceDetail(currentInvoiceId);
@@ -172,14 +192,14 @@ function addInvoiceLine(data = null) {
         <span class="line-total">${symbol}${lineTotal.toFixed(2)}</span>
         <button type="button" onclick="removeLine(this)" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2em;">&times;</button>
     `;
-    container.appendChild(div);
+    if (container) container.appendChild(div);
     // Always recalculate totals after adding any line
     calculateInvoiceTotal();
 }
 
 function removeLine(btn) {
     window.hasUnsavedDraft = true;
-    btn.parentElement.remove();
+    if (btn && btn.parentElement) btn.parentElement.remove();
     calculateInvoiceTotal();
 }
 
@@ -192,14 +212,19 @@ function calculateInvoiceTotal() {
     const symbol = currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : '$';
 
     rows.forEach(row => {
-        const qty = parseFloat(row.querySelector('.line-qty').value) || 0;
-        const rate = parseFloat(row.querySelector('.line-rate').value) || 0;
-        const disc = parseFloat(row.querySelector('.line-disc').value) || 0;
+        const qtyEl = row.querySelector('.line-qty');
+        const rateEl = row.querySelector('.line-rate');
+        const discEl = row.querySelector('.line-disc');
+        const totalEl = row.querySelector('.line-total');
+
+        const qty = parseFloat(qtyEl ? qtyEl.value : 0) || 0;
+        const rate = parseFloat(rateEl ? rateEl.value : 0) || 0;
+        const disc = parseFloat(discEl ? discEl.value : 0) || 0;
 
         let lineTotal = qty * rate;
         if (disc > 0) lineTotal = lineTotal * (1 - (disc / 100));
 
-        row.querySelector('.line-total').textContent = symbol + lineTotal.toFixed(2);
+        if (totalEl) totalEl.textContent = symbol + lineTotal.toFixed(2);
         subtotal += lineTotal;
     });
 
@@ -212,14 +237,17 @@ function calculateInvoiceTotal() {
     let taxAmount = taxable * (taxRate / 100);
     let total = taxable + taxAmount;
 
-    document.getElementById('invoice-total-display').innerHTML = `
-        <div style="display:inline-block; font-size:13px; text-align:right; color:rgba(255,255,255,0.5); vertical-align:middle; margin-right:12px; line-height:1.7;">
-            <div>Subtotal: ${symbol}${subtotal.toFixed(2)}</div>
-            ${discountAmount > 0 ? `<div style="color:#fda4af">Discount: -${symbol}${discountAmount.toFixed(2)}</div>` : ''}
-            ${taxAmount > 0 ? `<div style="color:#86efac">Tax: +${symbol}${taxAmount.toFixed(2)}</div>` : ''}
-        </div>
-        <span style="font-size:1.6em; font-weight:800; color:rgba(255,255,255,0.95); letter-spacing:-0.5px;">${symbol}${total.toFixed(2)}</span>
-    `;
+    const display = document.getElementById('invoice-total-display');
+    if (display) {
+        display.innerHTML = `
+            <div style="display:inline-block; font-size:13px; text-align:right; color:rgba(255,255,255,0.5); vertical-align:middle; margin-right:12px; line-height:1.7;">
+                <div>Subtotal: ${symbol}${subtotal.toFixed(2)}</div>
+                ${discountAmount > 0 ? `<div style="color:#fda4af">Discount: -${symbol}${discountAmount.toFixed(2)}</div>` : ''}
+                ${taxAmount > 0 ? `<div style="color:#86efac">Tax: +${symbol}${taxAmount.toFixed(2)}</div>` : ''}
+            </div>
+            <span style="font-size:1.6em; font-weight:800; color:rgba(255,255,255,0.95); letter-spacing:-0.5px;">${symbol}${total.toFixed(2)}</span>
+        `;
+    }
 }
 
 // Submit invoice (create or update)
@@ -249,17 +277,17 @@ async function handleInvoiceSubmit(event) {
 
     const invoiceData = {
         client_id: clientId,
-        project_id: document.getElementById('invoice-project-select').value || null,
-        issue_date: document.getElementById('invoice-issue-date').value,
-        due_date: document.getElementById('invoice-due-date').value,
+        project_id: document.getElementById('invoice-project-select')?.value || null,
+        issue_date: document.getElementById('invoice-issue-date')?.value || '',
+        due_date: document.getElementById('invoice-due-date')?.value || '',
         status: isEditingInvoice ? 'finalized' : 'finalized',
         items: items,
-        currency: document.getElementById('invoice-currency').value,
-        discount_amount: parseFloat(document.getElementById('invoice-discount-val').value) || 0,
-        discount_type: document.getElementById('invoice-discount-type').value,
-        tax_rate: parseFloat(document.getElementById('invoice-tax').value) || 0,
-        notes: document.getElementById('invoice-notes').value,
-        payment_instructions: document.getElementById('invoice-payment-instructions').value
+        currency: document.getElementById('invoice-currency')?.value || 'USD',
+        discount_amount: parseFloat(document.getElementById('invoice-discount-val')?.value || 0) || 0,
+        discount_type: document.getElementById('invoice-discount-type')?.value || 'fixed',
+        tax_rate: parseFloat(document.getElementById('invoice-tax')?.value || 0) || 0,
+        notes: document.getElementById('invoice-notes')?.value || '',
+        payment_instructions: document.getElementById('invoice-payment-instructions')?.value || ''
     };
 
     const isEdit = isEditingInvoice && currentInvoiceId;
@@ -312,8 +340,10 @@ async function editInvoice() {
         window.hasUnsavedDraft = true;
 
         // Update form header & button
-        document.querySelector('#invoice-form-container h3').textContent = `Edit Invoice #${invoice.id}`;
-        document.querySelector('#create-invoice-form button[type="submit"]').textContent = '💾 Save Changes';
+        const titleEl = document.querySelector('#invoice-form-container h3');
+        const submitBtn = document.querySelector('#create-invoice-form button[type="submit"]');
+        if (titleEl) titleEl.textContent = `Edit Invoice #${invoice.id}`;
+        if (submitBtn) submitBtn.textContent = '💾 Save Changes';
 
         // Load clients then select the right one
         const select = document.getElementById('invoice-client-select');
@@ -351,9 +381,12 @@ async function editInvoice() {
         calculateInvoiceTotal();
 
         // Show form, hide detail
-        document.getElementById('invoice-form-container').style.display = 'block';
-        document.getElementById('invoice-detail-section').style.display = 'none';
-        document.getElementById('invoices-list').style.display = 'none';
+        const formCont = document.getElementById('invoice-form-container');
+        const detailSec = document.getElementById('invoice-detail-section');
+        const invList = document.getElementById('invoices-list');
+        if (formCont) formCont.style.display = 'block';
+        if (detailSec) detailSec.style.display = 'none';
+        if (invList) invList.style.display = 'none';
 
     } catch (error) {
         console.error('Error loading invoice for edit:', error);
@@ -471,9 +504,12 @@ async function openInvoiceDetail(id) {
 
         updateInvoiceActions(invoice);
 
-        document.getElementById('invoice-detail-section').style.display = 'block';
-        document.getElementById('invoices-list').style.display = 'none';
-        document.getElementById('invoice-form-container').style.display = 'none';
+        const detailSec = document.getElementById('invoice-detail-section');
+        const invList = document.getElementById('invoices-list');
+        const formCont = document.getElementById('invoice-form-container');
+        if (detailSec) detailSec.style.display = 'block';
+        if (invList) invList.style.display = 'none';
+        if (formCont) formCont.style.display = 'none';
 
     } catch (error) {
         console.error('Error loading invoice:', error);
@@ -523,7 +559,7 @@ function updateInvoiceActions(invoice) {
         html += '<button onclick="deleteInvoice()" class="inv-action-delete">🗑 Delete</button>';
     }
 
-    actions.innerHTML = html;
+    if (actions) actions.innerHTML = html;
 }
 
 async function markAsPaid() {

@@ -1,9 +1,11 @@
 function showClientForm() {
-    document.getElementById('client-form').style.display = 'block';
+    const el = document.getElementById('client-form');
+    if (el) el.style.display = 'block';
 }
 
 function hideClientForm() {
-    document.getElementById('client-form').style.display = 'none';
+    const el = document.getElementById('client-form');
+    if (el) el.style.display = 'none';
     if (typeof resetClientFormLink === 'function') resetClientFormLink();
     if (typeof resetCreateBizTags === 'function') resetCreateBizTags();
 }
@@ -32,6 +34,7 @@ async function loadClients(statusFilter = null) {
 function displayClients(clients) {
     const container = document.getElementById('clients-list');
 
+    if (!container) return;
     if (clients.length === 0) {
         container.innerHTML = '<p class="empty-state">No clients yet.</p>';
         return;
@@ -180,48 +183,61 @@ async function openClientProfile(clientId) {
         currentProfileId = clientId;
 
         // Populate View Mode
-        document.getElementById('detail-name').textContent = client.name;
-        document.getElementById('detail-company').textContent = client.company || 'No Company';
+        const nameEl = document.getElementById('detail-name');
+        const companyEl = document.getElementById('detail-company');
+        if (nameEl) nameEl.textContent = client.name;
+        if (companyEl) companyEl.textContent = client.company || 'No Company';
         // Email — link to Gmail compose
         const emailEl = document.getElementById('detail-email');
-        const emailVal = client.email || '';
-        emailEl.textContent = emailVal || '-';
-        emailEl.href = emailVal
-            ? `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(emailVal)}`
-            : '#';
-        emailEl.style.pointerEvents = emailVal ? '' : 'none';
+        if (emailEl) {
+            const emailVal = client.email || '';
+            emailEl.textContent = emailVal || '-';
+            emailEl.href = emailVal
+                ? `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(emailVal)}`
+                : '#';
+            emailEl.style.pointerEvents = emailVal ? '' : 'none';
+        }
 
         // Phone — click toggles Call / SMS action buttons
         const phoneEl = document.getElementById('detail-phone');
         const phoneActions = document.getElementById('phone-actions');
-        const phoneVal = client.phone || '';
-        const phoneDigits = phoneVal.replace(/\D/g, '');
-        phoneEl.textContent = formatPhone(phoneVal) || '-';
-        if (phoneDigits) {
-            phoneEl.href = '#';
-            phoneEl.style.pointerEvents = '';
-            phoneEl.onclick = (e) => {
-                e.preventDefault();
-                const shown = phoneActions.style.display !== 'none' && phoneActions.style.display !== '';
-                phoneActions.style.display = shown ? 'none' : 'inline-flex';
-            };
-            document.getElementById('phone-call-link').href =
-                `https://voice.google.com/calls?a=nc,+1${phoneDigits}`;
-            document.getElementById('phone-sms-link').href =
-                `https://voice.google.com/messages?a=nc,+1${phoneDigits}`;
-        } else {
-            phoneEl.href = '#';
-            phoneEl.style.pointerEvents = 'none';
-            phoneActions.style.display = 'none';
+        if (phoneEl) {
+            const phoneVal = client.phone || '';
+            const phoneDigits = phoneVal.replace(/\D/g, '');
+            phoneEl.textContent = formatPhone(phoneVal) || '-';
+            if (phoneDigits) {
+                phoneEl.href = '#';
+                phoneEl.style.pointerEvents = '';
+                phoneEl.onclick = (e) => {
+                    e.preventDefault();
+                    if (phoneActions) {
+                        const shown = phoneActions.style.display !== 'none' && phoneActions.style.display !== '';
+                        phoneActions.style.display = shown ? 'none' : 'inline-flex';
+                    }
+                };
+                const callLink = document.getElementById('phone-call-link');
+                const smsLink = document.getElementById('phone-sms-link');
+                if (callLink) callLink.href = `https://voice.google.com/calls?a=nc,+1${phoneDigits}`;
+                if (smsLink) smsLink.href = `https://voice.google.com/messages?a=nc,+1${phoneDigits}`;
+            } else {
+                phoneEl.href = '#';
+                phoneEl.style.pointerEvents = 'none';
+                if (phoneActions) phoneActions.style.display = 'none';
+            }
         }
 
-        document.getElementById('detail-status').className = `status-badge status-${client.status}`;
-        document.getElementById('detail-status').textContent = client.status;
+        const statusEl = document.getElementById('detail-status');
+        if (statusEl) {
+            statusEl.className = `status-badge status-${client.status}`;
+            statusEl.textContent = client.status;
+        }
 
         const names = client.name.split(' ');
         const initials = names.length > 1 ? names[0][0] + names[names.length - 1][0] : names[0][0];
-        document.getElementById('detail-avatar').textContent = initials;
-        document.getElementById('edit-avatar-preview').textContent = initials;
+        const detailAvatar = document.getElementById('detail-avatar');
+        const editAvatar = document.getElementById('edit-avatar-preview');
+        if (detailAvatar) detailAvatar.textContent = initials;
+        if (editAvatar) editAvatar.textContent = initials;
 
         // Drive Logic (Initial Setup)
         const driveLink = document.getElementById('detail-drive-link');
@@ -298,26 +314,45 @@ async function openClientProfile(clientId) {
         // Populate Edit Form (Pre-fill)
         // No need to redeclare variables or re-parse logic as it's already done above.
 
-        document.getElementById('edit-first-name').value = fName;
-        document.getElementById('edit-last-name').value = lName;
-        document.getElementById('edit-birthday').value = client.birthday || '';
-        document.getElementById('edit-company').value = client.company || '';
-        document.getElementById('edit-email').value = client.email || '';
-        document.getElementById('edit-phone').value = formatPhone(client.phone || '');
-        document.getElementById('edit-status').value = client.status;
-        document.getElementById('edit-google-drive-folder').value = client.google_drive_folder_id || '';
+        const editFirstName = document.getElementById('edit-first-name');
+        const editLastName = document.getElementById('edit-last-name');
+        const editBirthday = document.getElementById('edit-birthday');
+        const editCompany = document.getElementById('edit-company');
+        const editEmail = document.getElementById('edit-email');
+        const editPhone = document.getElementById('edit-phone');
+        const editStatus = document.getElementById('edit-status');
+        const editDrive = document.getElementById('edit-google-drive-folder');
+
+        if (editFirstName) editFirstName.value = fName;
+        if (editLastName) editLastName.value = lName;
+        if (editBirthday) editBirthday.value = client.birthday || '';
+        if (editCompany) editCompany.value = client.company || '';
+        if (editEmail) editEmail.value = client.email || '';
+        if (editPhone) editPhone.value = formatPhone(client.phone || '');
+        if (editStatus) editStatus.value = client.status;
+        if (editDrive) editDrive.value = client.google_drive_folder_id || '';
 
         // Pre-fill Socials
-        document.getElementById('edit-instagram').value = client.social_instagram || '';
-        document.getElementById('edit-linkedin').value = client.social_linkedin || '';
-        document.getElementById('edit-twitter').value = client.social_twitter || '';
-        document.getElementById('edit-facebook').value = client.social_facebook || '';
+        const editInsta = document.getElementById('edit-instagram');
+        const editLinked = document.getElementById('edit-linkedin');
+        const editTwitter = document.getElementById('edit-twitter');
+        const editFB = document.getElementById('edit-facebook');
+
+        if (editInsta) editInsta.value = client.social_instagram || '';
+        if (editLinked) editLinked.value = client.social_linkedin || '';
+        if (editTwitter) editTwitter.value = client.social_twitter || '';
+        if (editFB) editFB.value = client.social_facebook || '';
 
         // Reset View
-        document.getElementById('profile-view-mode').style.display = 'flex';
-        document.getElementById('profile-edit-mode').style.display = 'none';
-        document.getElementById('toggle-edit-btn').style.display = 'block';
-        document.getElementById('toggle-edit-btn').textContent = 'EDIT PROFILE';
+        const viewModeEl = document.getElementById('profile-view-mode');
+        const editModeEl = document.getElementById('profile-edit-mode');
+        const toggleEditEl = document.getElementById('toggle-edit-btn');
+        if (viewModeEl) viewModeEl.style.display = 'flex';
+        if (editModeEl) editModeEl.style.display = 'none';
+        if (toggleEditEl) {
+            toggleEditEl.style.display = 'block';
+            toggleEditEl.textContent = 'EDIT PROFILE';
+        }
 
         // Activity Doc Link
         const docLink = document.getElementById('activity-doc-link');
@@ -769,22 +804,35 @@ async function saveClientProfile(event) {
     event.preventDefault();
     if (!currentProfileId) return;
 
-    const folderInput = document.getElementById('edit-google-drive-folder').value;
+    const folderEl = document.getElementById('edit-google-drive-folder');
+    const folderInput = folderEl ? folderEl.value : '';
     const folderId = extractFolderId(folderInput);
 
+    const editFirstName = document.getElementById('edit-first-name');
+    const editLastName = document.getElementById('edit-last-name');
+    const editBirthday = document.getElementById('edit-birthday');
+    const editEmail = document.getElementById('edit-email');
+    const editPhone = document.getElementById('edit-phone');
+    const editCompany = document.getElementById('edit-company');
+    const editStatus = document.getElementById('edit-status');
+    const editInsta = document.getElementById('edit-instagram');
+    const editLinked = document.getElementById('edit-linkedin');
+    const editTwitter = document.getElementById('edit-twitter');
+    const editFB = document.getElementById('edit-facebook');
+
     const client = {
-        first_name: document.getElementById('edit-first-name').value,
-        last_name: document.getElementById('edit-last-name').value,
-        birthday: document.getElementById('edit-birthday').value,
-        email: document.getElementById('edit-email').value,
-        phone: document.getElementById('edit-phone').value,
-        company: document.getElementById('edit-company').value,
-        status: document.getElementById('edit-status').value,
+        first_name: editFirstName ? editFirstName.value : '',
+        last_name: editLastName ? editLastName.value : '',
+        birthday: editBirthday ? editBirthday.value : '',
+        email: editEmail ? editEmail.value : '',
+        phone: editPhone ? editPhone.value : '',
+        company: editCompany ? editCompany.value : '',
+        status: editStatus ? editStatus.value : 'lead',
         google_drive_folder_id: folderId,
-        social_instagram: document.getElementById('edit-instagram').value,
-        social_linkedin: document.getElementById('edit-linkedin').value,
-        social_twitter: document.getElementById('edit-twitter').value,
-        social_facebook: document.getElementById('edit-facebook').value
+        social_instagram: editInsta ? editInsta.value : '',
+        social_linkedin: editLinked ? editLinked.value : '',
+        social_twitter: editTwitter ? editTwitter.value : '',
+        social_facebook: editFB ? editFB.value : ''
     };
 
     if (client.email && !validateEmail(client.email)) {
@@ -888,7 +936,8 @@ async function deleteNote(event, id) {
             });
 
             if (response.ok) {
-                document.getElementById(`note-${id}`).remove();
+                const noteEl = document.getElementById(`note-${id}`);
+                if (noteEl) noteEl.remove();
                 showToast('Note deleted');
             } else {
                 showToast('Failed to delete note', 'error');
@@ -903,13 +952,20 @@ async function deleteNote(event, id) {
 async function updateClient(event, clientId) {
     event.preventDefault();
 
+    const nameEl = document.getElementById('client-name');
+    const emailEl = document.getElementById('client-email');
+    const phoneEl = document.getElementById('client-phone');
+    const companyEl = document.getElementById('client-company');
+    const statusEl = document.getElementById('client-status');
+    const notesEl = document.getElementById('client-notes');
+
     const client = {
-        name: document.getElementById('client-name').value,
-        email: document.getElementById('client-email').value,
-        phone: document.getElementById('client-phone').value,
-        company: document.getElementById('client-company').value,
-        status: document.getElementById('client-status').value,
-        notes: document.getElementById('client-notes').value
+        name: nameEl ? nameEl.value : '',
+        email: emailEl ? emailEl.value : '',
+        phone: phoneEl ? phoneEl.value : '',
+        company: companyEl ? companyEl.value : '',
+        status: statusEl ? statusEl.value : 'lead',
+        notes: notesEl ? notesEl.value : ''
     };
 
     try {
@@ -937,28 +993,32 @@ async function updateClient(event, clientId) {
 
 function resetClientFormLink() {
     const form = document.querySelector('#client-form form');
-    form.onsubmit = createClient;
-    document.querySelector('#client-form h3').textContent = 'Add Client';
-    document.querySelector('#client-form button[type="submit"]').textContent = 'Add Client';
-    document.querySelector('#client-form form').reset();
+    if (form) {
+        form.onsubmit = createClient;
+        form.reset();
+    }
+    const h3 = document.querySelector('#client-form h3');
+    if (h3) h3.textContent = 'Add Client';
+    const submitBtn = document.querySelector('#client-form button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = 'Add Client';
 }
 
 async function createClient(event) {
     event.preventDefault();
 
     const client = {
-        first_name: document.getElementById('client-first-name').value,
-        last_name: document.getElementById('client-last-name').value,
-        birthday: document.getElementById('client-birthday').value,
-        email: document.getElementById('client-email').value,
-        phone: document.getElementById('client-phone').value,
-        company: document.getElementById('client-company').value,
-        status: document.getElementById('client-status').value,
-        social_instagram: document.getElementById('client-instagram').value,
-        social_linkedin: document.getElementById('client-linkedin').value,
-        social_twitter: document.getElementById('client-twitter').value,
-        social_facebook: document.getElementById('client-facebook').value,
-        notes: document.getElementById('client-notes').value
+        first_name: document.getElementById('client-first-name')?.value || '',
+        last_name: document.getElementById('client-last-name')?.value || '',
+        birthday: document.getElementById('client-birthday')?.value || '',
+        email: document.getElementById('client-email')?.value || '',
+        phone: document.getElementById('client-phone')?.value || '',
+        company: document.getElementById('client-company')?.value || '',
+        status: document.getElementById('client-status')?.value || 'lead',
+        social_instagram: document.getElementById('client-instagram')?.value || '',
+        social_linkedin: document.getElementById('client-linkedin')?.value || '',
+        social_twitter: document.getElementById('client-twitter')?.value || '',
+        social_facebook: document.getElementById('client-facebook')?.value || '',
+        notes: document.getElementById('client-notes')?.value || ''
     };
 
     if (client.email && !validateEmail(client.email)) {
@@ -1138,7 +1198,7 @@ let editingProjectId = null;
 
 async function loadProjects(clientId) {
     const list = document.getElementById('proj-list');
-    list.innerHTML = '<p style="color:rgba(255,255,255,0.3); font-size:13px; padding:12px 0;">Loading...</p>';
+    if (list) list.innerHTML = '<p style="color:rgba(255,255,255,0.3); font-size:13px; padding:12px 0;">Loading...</p>';
     try {
         const res = await fetch(`${API_BASE}/crm/clients/${clientId}/projects`);
         const projects = await res.json();
@@ -1150,6 +1210,7 @@ async function loadProjects(clientId) {
 
 function renderProjects(projects) {
     const list = document.getElementById('proj-list');
+    if (!list) return;
     if (!projects.length) {
         list.innerHTML = '<p class="empty-state" style="font-size:13px; padding:20px 0; text-align:center;">No projects yet.<br><span style="font-size:11px; opacity:0.5;">Click + Add to create one</span></p>';
         return;
@@ -1189,33 +1250,53 @@ function renderProjects(projects) {
 
 function showAddProjectForm() {
     editingProjectId = null;
-    document.getElementById('proj-name-input').value = '';
-    document.getElementById('proj-status-input').value = 'active';
-    document.getElementById('proj-payment-input').value = 'unpaid';
-    document.getElementById('proj-budget-input').value = '';
-    document.getElementById('proj-deadline-input').value = '';
-    document.getElementById('proj-notes-input').value = '';
-    document.getElementById('proj-form-title').textContent = 'New Project';
-    document.getElementById('proj-add-form').style.display = 'flex';
-    document.getElementById('proj-name-input').focus();
+    const nameInput = document.getElementById('proj-name-input');
+    const statusInput = document.getElementById('proj-status-input');
+    const paymentInput = document.getElementById('proj-payment-input');
+    const budgetInput = document.getElementById('proj-budget-input');
+    const deadlineInput = document.getElementById('proj-deadline-input');
+    const notesInput = document.getElementById('proj-notes-input');
+    const title = document.getElementById('proj-form-title');
+    const form = document.getElementById('proj-add-form');
+
+    if (nameInput) nameInput.value = '';
+    if (statusInput) statusInput.value = 'active';
+    if (paymentInput) paymentInput.value = 'unpaid';
+    if (budgetInput) budgetInput.value = '';
+    if (deadlineInput) deadlineInput.value = '';
+    if (notesInput) notesInput.value = '';
+    if (title) title.textContent = 'New Project';
+    if (form) form.style.display = 'flex';
+    if (nameInput) nameInput.focus();
 }
 
 function cancelProjectForm() {
     editingProjectId = null;
-    document.getElementById('proj-add-form').style.display = 'none';
+    const form = document.getElementById('proj-add-form');
+    if (form) form.style.display = 'none';
 }
 
 function startEditProject(id, project) {
     editingProjectId = id;
-    document.getElementById('proj-name-input').value = project.name || '';
-    document.getElementById('proj-status-input').value = project.status || 'active';
-    document.getElementById('proj-budget-input').value = project.budget || '';
-    document.getElementById('proj-deadline-input').value = project.deadline || '';
-    document.getElementById('proj-notes-input').value = project.notes || '';
-    document.getElementById('proj-form-title').textContent = 'Edit Project';
-    document.getElementById('proj-add-form').style.display = 'flex';
-    document.getElementById('proj-name-input').focus();
-    document.getElementById('proj-add-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const nameInput = document.getElementById('proj-name-input');
+    const statusInput = document.getElementById('proj-status-input');
+    const budgetInput = document.getElementById('proj-budget-input');
+    const deadlineInput = document.getElementById('proj-deadline-input');
+    const notesInput = document.getElementById('proj-notes-input');
+    const title = document.getElementById('proj-form-title');
+    const form = document.getElementById('proj-add-form');
+
+    if (nameInput) nameInput.value = project.name || '';
+    if (statusInput) statusInput.value = project.status || 'active';
+    if (budgetInput) budgetInput.value = project.budget || '';
+    if (deadlineInput) deadlineInput.value = project.deadline || '';
+    if (notesInput) notesInput.value = project.notes || '';
+    if (title) title.textContent = 'Edit Project';
+    if (form) {
+        form.style.display = 'flex';
+        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    if (nameInput) nameInput.focus();
 }
 
 async function saveProject() {
@@ -1225,11 +1306,11 @@ async function saveProject() {
     const payload = {
         client_id: currentProfileId,
         name,
-        status: document.getElementById('proj-status-input').value,
-        payment_status: document.getElementById('proj-payment-input').value,
-        budget: parseFloat(document.getElementById('proj-budget-input').value) || null,
-        deadline: document.getElementById('proj-deadline-input').value || null,
-        notes: document.getElementById('proj-notes-input').value.trim() || null
+        status: document.getElementById('proj-status-input')?.value || 'active',
+        payment_status: document.getElementById('proj-payment-input')?.value || 'unpaid',
+        budget: parseFloat(document.getElementById('proj-budget-input')?.value) || null,
+        deadline: document.getElementById('proj-deadline-input')?.value || null,
+        notes: document.getElementById('proj-notes-input')?.value?.trim() || null
     };
 
     try {
@@ -1297,24 +1378,32 @@ window.saveModalEdit = saveModalEdit;
 
 // ── Inline Modal Edit ────────────────────────────────────────────────────
 function openModalEdit(project) {
-    // Populate edit fields from the project object
-    document.getElementById('proj-edit-name').value = project.name || '';
-    document.getElementById('proj-edit-status').value = project.status || 'active';
-    document.getElementById('proj-edit-payment').value = project.payment_status || 'unpaid';
-    document.getElementById('proj-edit-budget').value = project.budget || '';
-    document.getElementById('proj-edit-deadline').value = project.deadline || '';
-    document.getElementById('proj-edit-notes').value = project.notes || '';
+    const nameInput = document.getElementById('proj-edit-name');
+    const statusInput = document.getElementById('proj-edit-status');
+    const paymentInput = document.getElementById('proj-edit-payment');
+    const budgetInput = document.getElementById('proj-edit-budget');
+    const deadlineInput = document.getElementById('proj-edit-deadline');
+    const notesInput = document.getElementById('proj-edit-notes');
+    const viewPanel = document.getElementById('proj-modal-view');
+    const editPanel = document.getElementById('proj-modal-edit');
 
-    // Swap panels
-    document.getElementById('proj-modal-view').style.display = 'none';
-    document.getElementById('proj-modal-edit').style.display = '';
-    document.getElementById('proj-edit-name').focus();
+    if (nameInput) nameInput.value = project.name || '';
+    if (statusInput) statusInput.value = project.status || 'active';
+    if (paymentInput) paymentInput.value = project.payment_status || 'unpaid';
+    if (budgetInput) budgetInput.value = project.budget || '';
+    if (deadlineInput) deadlineInput.value = project.deadline || '';
+    if (notesInput) notesInput.value = project.notes || '';
+
+    if (viewPanel) viewPanel.style.display = 'none';
+    if (editPanel) editPanel.style.display = '';
+    if (nameInput) nameInput.focus();
 }
 
 function closeModalEdit() {
-    // Swap back to view panel
-    document.getElementById('proj-modal-edit').style.display = 'none';
-    document.getElementById('proj-modal-view').style.display = '';
+    const viewPanel = document.getElementById('proj-modal-view');
+    const editPanel = document.getElementById('proj-modal-edit');
+    if (editPanel) editPanel.style.display = 'none';
+    if (viewPanel) viewPanel.style.display = '';
 }
 
 async function saveModalEdit() {
@@ -1324,11 +1413,11 @@ async function saveModalEdit() {
     const payload = {
         client_id: currentProfileId,
         name,
-        status: document.getElementById('proj-edit-status').value,
-        payment_status: document.getElementById('proj-edit-payment').value,
-        budget: parseFloat(document.getElementById('proj-edit-budget').value) || null,
-        deadline: document.getElementById('proj-edit-deadline').value || null,
-        notes: document.getElementById('proj-edit-notes').value.trim() || null
+        status: document.getElementById('proj-edit-status')?.value || 'active',
+        payment_status: document.getElementById('proj-edit-payment')?.value || 'unpaid',
+        budget: parseFloat(document.getElementById('proj-edit-budget')?.value) || null,
+        deadline: document.getElementById('proj-edit-deadline')?.value || null,
+        notes: document.getElementById('proj-edit-notes')?.value?.trim() || null
     };
 
     try {
@@ -1390,14 +1479,18 @@ async function openProjectModal(projectId) {
     document.getElementById('proj-modal-notes').textContent = p.notes || 'No notes.';
 
     // Wire modal action buttons to this project
-    document.getElementById('proj-modal-edit-btn').onclick = () => openModalEdit(p);
-    document.getElementById('proj-modal-delete-btn').onclick = () => {
+    const editBtn = document.getElementById('proj-modal-edit-btn');
+    if (editBtn) editBtn.onclick = () => openModalEdit(p);
+    const delBtn = document.getElementById('proj-modal-delete-btn');
+    if (delBtn) delBtn.onclick = () => {
         closeProjectModal();
         deleteProject(p.id);
     };
     // Status chip cycles status from modal
-    document.getElementById('proj-modal-status-chip').onclick = () => cycleProjectStatus(p.id, p.status);
-    document.getElementById('proj-modal-status-chip').title = 'Click to cycle status';
+    if (chip) {
+        chip.onclick = () => cycleProjectStatus(p.id, p.status);
+        chip.title = 'Click to cycle status';
+    }
 
     // Drive folder link
     const folderLink = document.getElementById('proj-modal-folder-link');
@@ -1410,8 +1503,10 @@ async function openProjectModal(projectId) {
 
     // Show modal
     const modal = document.getElementById('proj-detail-modal');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
 
     // Load linked invoices
     await loadProjectInvoices(projectId);
@@ -1422,6 +1517,7 @@ async function openProjectModal(projectId) {
 
 async function loadProjectInvoices(projectId) {
     const container = document.getElementById('proj-modal-invoices');
+    if (!container) return;
     try {
         const res = await fetch(`${API_BASE}/crm/projects/${projectId}/invoices`);
         const invoices = await res.json();
@@ -1474,11 +1570,14 @@ async function loadProjectInvoices(projectId) {
 window.loadProjectInvoices = loadProjectInvoices;
 
 function closeProjectModal() {
-    document.getElementById('proj-detail-modal').style.display = 'none';
+    const modal = document.getElementById('proj-detail-modal');
+    const editPanel = document.getElementById('proj-modal-edit');
+    const viewPanel = document.getElementById('proj-modal-view');
+    if (modal) modal.style.display = 'none';
     document.body.style.overflow = '';
     // Always reset to view panel for next open
-    document.getElementById('proj-modal-edit').style.display = 'none';
-    document.getElementById('proj-modal-view').style.display = '';
+    if (editPanel) editPanel.style.display = 'none';
+    if (viewPanel) viewPanel.style.display = '';
     _modalProjectId = null;
     _carouselAttachments = [];
     _carouselPage = 0;
@@ -1493,9 +1592,12 @@ function closeProjectModal() {
 
 // Close on backdrop click
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('proj-detail-modal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('proj-detail-modal')) closeProjectModal();
-    });
+    const modal = document.getElementById('proj-detail-modal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeProjectModal();
+        });
+    }
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeProjectModal();
     });
@@ -1503,7 +1605,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadAttachments(projectId) {
     const carousel = document.getElementById('proj-carousel');
-    carousel.innerHTML = '<p style="color:rgba(255,255,255,0.3); font-size:13px; padding:20px 0; text-align:center; width:100%;">Loading...</p>';
+    if (carousel) carousel.innerHTML = '<p style="color:rgba(255,255,255,0.3); font-size:13px; padding:20px 0; text-align:center; width:100%;">Loading...</p>';
     try {
         const res = await fetch(`${API_BASE}/crm/projects/${projectId}/attachments`);
         _carouselAttachments = await res.json();
@@ -1530,13 +1632,16 @@ function getAttachmentIcon(mimeType) {
 function renderCarousel() {
     const carousel = document.getElementById('proj-carousel');
     const dotsEl = document.getElementById('proj-carousel-dots');
+    if (!carousel) return;
     const attachments = _carouselAttachments;
 
     if (!attachments.length) {
         carousel.innerHTML = '<p class="empty-state" style="font-size:13px; padding:30px 0; text-align:center; width:100%;">No attachments yet. Upload files above.</p>';
-        dotsEl.innerHTML = '';
-        document.getElementById('proj-carousel-prev').disabled = true;
-        document.getElementById('proj-carousel-next').disabled = true;
+        if (dotsEl) dotsEl.innerHTML = '';
+        const prev = document.getElementById('proj-carousel-prev');
+        const next = document.getElementById('proj-carousel-next');
+        if (prev) prev.disabled = true;
+        if (next) next.disabled = true;
         return;
     }
 
@@ -1565,12 +1670,16 @@ function renderCarousel() {
     }).join('');
 
     // Dots
-    dotsEl.innerHTML = Array.from({ length: totalPages }, (_, i) =>
-        `<span class="proj-carousel-dot ${i === _carouselPage ? 'active' : ''}" onclick="carouselGoTo(${i})"></span>`
-    ).join('');
+    if (dotsEl) {
+        dotsEl.innerHTML = Array.from({ length: totalPages }, (_, i) =>
+            `<span class="proj-carousel-dot ${i === _carouselPage ? 'active' : ''}" onclick="carouselGoTo(${i})"></span>`
+        ).join('');
+    }
 
-    document.getElementById('proj-carousel-prev').disabled = _carouselPage === 0;
-    document.getElementById('proj-carousel-next').disabled = _carouselPage >= totalPages - 1;
+    const prev = document.getElementById('proj-carousel-prev');
+    const next = document.getElementById('proj-carousel-next');
+    if (prev) prev.disabled = _carouselPage === 0;
+    if (next) next.disabled = _carouselPage >= totalPages - 1;
 
     // Update folder link if project now has a folder
     // (folder may have been created during upload)
@@ -1630,8 +1739,10 @@ async function uploadProjectAttachments(input) {
         const proj = projs.find(p => p.id === _modalProjectId);
         if (proj && proj.project_folder_id) {
             const fl = document.getElementById('proj-modal-folder-link');
-            fl.href = `https://drive.google.com/drive/folders/${proj.project_folder_id}`;
-            fl.style.display = '';
+            if (fl) {
+                fl.href = `https://drive.google.com/drive/folders/${proj.project_folder_id}`;
+                fl.style.display = '';
+            }
         }
     }
 }
@@ -1705,8 +1816,10 @@ async function performClientSearch(query) {
         renderSearchResults(clients, query);
     } catch (err) {
         console.error('Search error:', err);
-        results.innerHTML = '<div class="search-empty"><span>⚠️</span>Search error</div>';
-        results.classList.add('active');
+        if (results) {
+            results.innerHTML = '<div class="search-empty"><span>⚠️</span>Search error</div>';
+            results.classList.add('active');
+        }
     }
 }
 
@@ -1714,12 +1827,14 @@ function renderSearchResults(clients, query) {
     const results = document.getElementById('client-search-results');
 
     if (clients.length === 0) {
-        results.innerHTML = `
-            <div class="search-empty">
-                <span>🔍</span>
-                No clients match "<strong>${query}</strong>"
-            </div>`;
-        results.classList.add('active');
+        if (results) {
+            results.innerHTML = `
+                <div class="search-empty">
+                    <span>🔍</span>
+                    No clients match "<strong>${query}</strong>"
+                </div>`;
+            results.classList.add('active');
+        }
         return;
     }
 
@@ -1729,36 +1844,38 @@ function renderSearchResults(clients, query) {
         past: '#94a3b8'
     };
 
-    results.innerHTML = clients.map(client => {
-        const names = (client.name || '').split(' ');
-        const initials = names.length > 1 ? names[0][0] + names[names.length - 1][0] : (names[0] ? names[0][0] : '?');
-        const dotColor = statusColors[client.status] || '#94a3b8';
+    if (results) {
+        results.innerHTML = clients.map(client => {
+            const names = (client.name || '').split(' ');
+            const initials = names.length > 1 ? names[0][0] + names[names.length - 1][0] : (names[0] ? names[0][0] : '?');
+            const dotColor = statusColors[client.status] || '#94a3b8';
 
-        // Build meta line: company + business tags
-        let meta = [];
-        if (client.company) meta.push(client.company);
-        if (client.email) meta.push(client.email);
+            // Build meta line: company + business tags
+            let meta = [];
+            if (client.company) meta.push(client.company);
+            if (client.email) meta.push(client.email);
 
-        const bizNames = client.business_names ? client.business_names.split(',') : [];
-        const bizTags = bizNames.map(b => `<span class="biz-tag">${b.trim()}</span>`).join('');
+            const bizNames = client.business_names ? client.business_names.split(',') : [];
+            const bizTags = bizNames.map(b => `<span class="biz-tag">${b.trim()}</span>`).join('');
 
-        return `
-        <div class="search-result-item" 
-             onclick="openClientProfile(${client.id}); document.getElementById('client-search-results').classList.remove('active'); document.getElementById('client-search-input').value = '';"
-             oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${client.name.replace(/'/g, "\\'")}')"
-             data-context="client">
-            <div class="search-result-avatar">${initials}</div>
-            <div class="search-result-info">
-                <div class="search-result-name">
-                    ${client.name}
-                    <span class="status-dot" style="background:${dotColor}; box-shadow: 0 0 6px ${dotColor};"></span>
+            return `
+            <div class="search-result-item" 
+                 onclick="openClientProfile(${client.id}); document.getElementById('client-search-results').classList.remove('active'); document.getElementById('client-search-input').value = '';"
+                 oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${client.name.replace(/'/g, "\\'")}')"
+                 data-context="client">
+                <div class="search-result-avatar">${initials}</div>
+                <div class="search-result-info">
+                    <div class="search-result-name">
+                        ${client.name}
+                        <span class="status-dot" style="background:${dotColor}; box-shadow: 0 0 6px ${dotColor};"></span>
+                    </div>
+                    <div class="search-result-meta">${meta.join(' · ')}${bizTags ? ' ' + bizTags : ''}</div>
                 </div>
-                <div class="search-result-meta">${meta.join(' · ')}${bizTags ? ' ' + bizTags : ''}</div>
-            </div>
-        </div>`;
-    }).join('');
+            </div>`;
+        }).join('');
 
-    results.classList.add('active');
+        results.classList.add('active');
+    }
 }
 
 // Initialize search when DOM is ready
@@ -1848,11 +1965,15 @@ function toggleAddBusinessForm() {
     const isVisible = form.style.display !== 'none';
     form.style.display = isVisible ? 'none' : 'block';
     if (!isVisible) {
-        document.getElementById('biz-name-input').value = '';
-        document.getElementById('biz-role-input').value = '';
-        document.getElementById('biz-industry-input').value = '';
-        document.getElementById('biz-website-input').value = '';
-        document.getElementById('biz-name-input').focus();
+        const nameIn = document.getElementById('biz-name-input');
+        const roleIn = document.getElementById('biz-role-input');
+        const indIn = document.getElementById('biz-industry-input');
+        const webIn = document.getElementById('biz-website-input');
+        if (nameIn) nameIn.value = '';
+        if (roleIn) roleIn.value = '';
+        if (indIn) indIn.value = '';
+        if (webIn) webIn.value = '';
+        if (nameIn) nameIn.focus();
     }
 }
 
@@ -1864,9 +1985,9 @@ async function saveBusiness() {
 
     const payload = {
         name,
-        role: document.getElementById('biz-role-input').value.trim() || null,
-        industry: document.getElementById('biz-industry-input').value.trim() || null,
-        website: document.getElementById('biz-website-input').value.trim() || null,
+        role: document.getElementById('biz-role-input')?.value?.trim() || null,
+        industry: document.getElementById('biz-industry-input')?.value?.trim() || null,
+        website: document.getElementById('biz-website-input')?.value?.trim() || null,
     };
 
     try {
@@ -1951,11 +2072,15 @@ function toggleEditBizRow() {
     const showing = row.style.display !== 'none';
     row.style.display = showing ? 'none' : 'block';
     if (!showing) {
-        document.getElementById('edit-biz-name').value = '';
-        document.getElementById('edit-biz-role').value = '';
-        document.getElementById('edit-biz-industry').value = '';
-        document.getElementById('edit-biz-website').value = '';
-        document.getElementById('edit-biz-name').focus();
+        const nameIn = document.getElementById('edit-biz-name');
+        const roleIn = document.getElementById('edit-biz-role');
+        const indIn = document.getElementById('edit-biz-industry');
+        const webIn = document.getElementById('edit-biz-website');
+        if (nameIn) nameIn.value = '';
+        if (roleIn) roleIn.value = '';
+        if (indIn) indIn.value = '';
+        if (webIn) webIn.value = '';
+        if (nameIn) nameIn.focus();
     }
 }
 
@@ -1966,9 +2091,9 @@ async function saveEditBusiness() {
 
     const payload = {
         name,
-        role: document.getElementById('edit-biz-role').value.trim() || null,
-        industry: document.getElementById('edit-biz-industry').value.trim() || null,
-        website: document.getElementById('edit-biz-website').value.trim() || null,
+        role: document.getElementById('edit-biz-role')?.value?.trim() || null,
+        industry: document.getElementById('edit-biz-industry')?.value?.trim() || null,
+        website: document.getElementById('edit-biz-website')?.value?.trim() || null,
     };
 
     try {
@@ -2027,11 +2152,15 @@ function toggleCreateBizRow() {
     const showing = row.style.display !== 'none';
     row.style.display = showing ? 'none' : 'block';
     if (!showing) {
-        document.getElementById('create-biz-name').value = '';
-        document.getElementById('create-biz-role').value = '';
-        document.getElementById('create-biz-industry').value = '';
-        document.getElementById('create-biz-website').value = '';
-        document.getElementById('create-biz-name').focus();
+        const nameIn = document.getElementById('create-biz-name');
+        const roleIn = document.getElementById('create-biz-role');
+        const indIn = document.getElementById('create-biz-industry');
+        const webIn = document.getElementById('create-biz-website');
+        if (nameIn) nameIn.value = '';
+        if (roleIn) roleIn.value = '';
+        if (indIn) indIn.value = '';
+        if (webIn) webIn.value = '';
+        if (nameIn) nameIn.focus();
     }
 }
 
@@ -2041,9 +2170,9 @@ function addCreateBizTag() {
 
     _pendingBizTags.push({
         name,
-        role: document.getElementById('create-biz-role').value.trim() || null,
-        industry: document.getElementById('create-biz-industry').value.trim() || null,
-        website: document.getElementById('create-biz-website').value.trim() || null,
+        role: document.getElementById('create-biz-role')?.value?.trim() || null,
+        industry: document.getElementById('create-biz-industry')?.value?.trim() || null,
+        website: document.getElementById('create-biz-website')?.value?.trim() || null,
     });
     renderCreateBizCards();
     toggleCreateBizRow();

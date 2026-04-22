@@ -1,10 +1,13 @@
 async function loadDashboard() {
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    const dateEl = document.getElementById('current-date');
+    if (dateEl) {
+        dateEl.textContent = new Date().toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
 
     try {
         const [clientsRes, tasksRes, meetingsRes, projectsRes, invoicesRes, subscriptionsRes] = await Promise.all([
@@ -42,7 +45,8 @@ async function loadDashboard() {
         // Meetings Today
         const today = new Date().toISOString().split('T')[0];
         const todaysMeetings = meetings.filter(m => m.start_time.startsWith(today)).length;
-        document.getElementById('stat-meetings').textContent = todaysMeetings;
+        const meetingsStat = document.getElementById('stat-meetings');
+        if (meetingsStat) meetingsStat.textContent = todaysMeetings;
 
         // Financials — account for partial payments
         const totalRevenue = invoices
@@ -63,9 +67,13 @@ async function loadDashboard() {
             .filter(p => ['active', 'in-progress'].includes(p.status))
             .reduce((sum, p) => sum + (parseFloat(p.budget) || 0), 0);
 
-        document.getElementById('stat-revenue').textContent = `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-        document.getElementById('stat-pending-invoices').textContent = `$${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-        document.getElementById('stat-projected').textContent = `$${projectedRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        const revStat = document.getElementById('stat-revenue');
+        const pendingStat = document.getElementById('stat-pending-invoices');
+        const projectedStat = document.getElementById('stat-projected');
+
+        if (revStat) revStat.textContent = `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        if (pendingStat) pendingStat.textContent = `$${pendingRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        if (projectedStat) projectedStat.textContent = `$${projectedRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
         // Upcoming Deadlines (Tasks)
         const upcomingTasks = tasks
@@ -74,14 +82,16 @@ async function loadDashboard() {
             .slice(0, 5);
 
         const deadlineList = document.getElementById('deadline-list');
-        deadlineList.innerHTML = upcomingTasks.map(t => `
-      <li oncontextmenu="ContextMenu.attach(event, 'task', ${t.id}, '${t.title.replace(/'/g, "\\'")}')" data-context="task" style="cursor:pointer;">
-        <span>${t.title}</span>
-        <span class="due-date" style="color: ${getDueDateColor(t.due_date)}">
-          ${new Date(t.due_date).toLocaleDateString()}
-        </span>
-      </li>
-    `).join('') || '<li>No upcoming deadlines</li>';
+        if (deadlineList) {
+            deadlineList.innerHTML = upcomingTasks.map(t => `
+          <li oncontextmenu="ContextMenu.attach(event, 'task', ${t.id}, '${t.title.replace(/'/g, "\\'")}')" data-context="task" style="cursor:pointer;">
+            <span>${t.title}</span>
+            <span class="due-date" style="color: ${getDueDateColor(t.due_date)}">
+              ${new Date(t.due_date).toLocaleDateString()}
+            </span>
+          </li>
+        `).join('') || '<li>No upcoming deadlines</li>';
+        }
 
         // Recent Activity
         const combinedActivity = [
@@ -91,12 +101,14 @@ async function loadDashboard() {
         ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
         const activityList = document.getElementById('activity-feed');
-        activityList.innerHTML = combinedActivity.map(item => `
-        <li oncontextmenu="ContextMenu.attach(event, '${item.type.toLowerCase()}', ${item.id}, '${item.title.replace(/'/g, "\\'")}')" data-context="${item.type.toLowerCase()}" style="cursor:pointer;">
-            <span>New ${item.type}: <strong>${item.title}</strong></span>
-            <small>${new Date(item.date).toLocaleDateString()}</small>
-        </li>
-    `).join('') || '<li>No recent activity</li>';
+        if (activityList) {
+            activityList.innerHTML = combinedActivity.map(item => `
+            <li oncontextmenu="ContextMenu.attach(event, '${item.type.toLowerCase()}', ${item.id}, '${item.title.replace(/'/g, "\\'")}')" data-context="${item.type.toLowerCase()}" style="cursor:pointer;">
+                <span>New ${item.type}: <strong>${item.title}</strong></span>
+                <small>${new Date(item.date).toLocaleDateString()}</small>
+            </li>
+        `).join('') || '<li>No recent activity</li>';
+        }
 
     } catch (error) {
         console.error('Error loading dashboard:', error);
@@ -240,7 +252,8 @@ async function loadRevenueForecast() {
         if (!res.ok) throw new Error("Failed to load forecast");
         const data = await res.json();
         
-        document.getElementById('avg-payment-cycle-badge').innerText = `Avg Cycle: ${data.avgPaymentCycle} days`;
+        const badge = document.getElementById('avg-payment-cycle-badge');
+        if (badge) badge.innerText = `Avg Cycle: ${data.avgPaymentCycle} days`;
 
         // Render Outstanding Buckets
         const oCtx = document.getElementById('outstanding-chart');
@@ -304,11 +317,14 @@ async function checkUnbilledHours() {
         const unbilled = await res.json();
         
         const banner = document.getElementById('unbilled-banner');
-        if (unbilled.length > 0) {
-            banner.style.display = 'flex';
-            document.getElementById('unbilled-banner-text').innerText = `You have ${unbilled.length} client(s) with unbilled hours waiting to be invoiced.`;
-        } else {
-            banner.style.display = 'none';
+        const bannerText = document.getElementById('unbilled-banner-text');
+        if (banner) {
+            if (unbilled.length > 0) {
+                banner.style.display = 'flex';
+                if (bannerText) bannerText.innerText = `You have ${unbilled.length} client(s) with unbilled hours waiting to be invoiced.`;
+            } else {
+                banner.style.display = 'none';
+            }
         }
     } catch (e) {
         console.error("Unbilled check error:", e);

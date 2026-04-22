@@ -32,21 +32,27 @@ async function showTaskForm(isEdit = false) {
     }
 
     if (isEdit) {
-        title.textContent = 'Edit Task';
-        submitBtn.textContent = 'Save Changes';
+        if (title) title.textContent = 'Edit Task';
+        if (submitBtn) submitBtn.textContent = 'Save Changes';
     } else {
-        title.textContent = 'Create Task';
-        submitBtn.textContent = 'Create Task';
+        if (title) title.textContent = 'Create Task';
+        if (submitBtn) submitBtn.textContent = 'Create Task';
         currentEditingTaskId = null;
-        document.getElementById('task-form').querySelector('form').reset();
-        clientSelect.value = ''; // Reset client selection
+        const form = document.getElementById('task-form')?.querySelector('form');
+        if (form) form.reset();
+        if (clientSelect) clientSelect.value = ''; // Reset client selection
     }
-    document.getElementById('task-form').style.display = 'block';
+    const taskForm = document.getElementById('task-form');
+    if (taskForm) taskForm.style.display = 'block';
 }
 
 function hideTaskForm() {
-    document.getElementById('task-form').style.display = 'none';
-    document.getElementById('task-form').querySelector('form').reset();
+    const taskForm = document.getElementById('task-form');
+    if (taskForm) {
+        taskForm.style.display = 'none';
+        const form = taskForm.querySelector('form');
+        if (form) form.reset();
+    }
     currentEditingTaskId = null;
     // Reset staff dropdown if it exists
     const staffSelect = document.getElementById('task-staff-select');
@@ -67,9 +73,12 @@ async function loadTasks() {
 // Display tasks in Kanban columns
 function displayTasks(tasks) {
     // Clear columns
-    document.getElementById('list-todo').innerHTML = '';
-    document.getElementById('list-in-progress').innerHTML = '';
-    document.getElementById('list-done').innerHTML = '';
+    const listTodo = document.getElementById('list-todo');
+    const listProgress = document.getElementById('list-in-progress');
+    const listDone = document.getElementById('list-done');
+    if (listTodo) listTodo.innerHTML = '';
+    if (listProgress) listProgress.innerHTML = '';
+    if (listDone) listDone.innerHTML = '';
 
     // Counters
     let counts = { todo: 0, 'in-progress': 0, done: 0 };
@@ -115,13 +124,16 @@ function displayTasks(tasks) {
       </div>
     `;
 
-        container.appendChild(card);
+        if (container) container.appendChild(card);
     });
 
     // Update badges
-    document.getElementById('count-todo').textContent = counts.todo;
-    document.getElementById('count-in-progress').textContent = counts['in-progress'];
-    document.getElementById('count-done').textContent = counts.done;
+    const countTodo = document.getElementById('count-todo');
+    const countProgress = document.getElementById('count-in-progress');
+    const countDone = document.getElementById('count-done');
+    if (countTodo) countTodo.textContent = counts.todo;
+    if (countProgress) countProgress.textContent = counts['in-progress'];
+    if (countDone) countDone.textContent = counts.done;
 }
 
 // Edit Task Function
@@ -138,15 +150,22 @@ async function editTask(taskId) {
         // Open form firsts to populate select
         await showTaskForm(true);
 
-        document.getElementById('task-title').value = task.title;
-        document.getElementById('task-description').value = task.description || '';
-        document.getElementById('task-status').value = task.status;
-        document.getElementById('task-priority').value = task.priority;
-        document.getElementById('task-due-date').value = task.due_date || '';
-        if (task.client_id) document.getElementById('task-client-select').value = task.client_id;
-        if (task.assigned_to) {
+        if (taskForm) {
+            const taskTitle = document.getElementById('task-title');
+            const taskDesc = document.getElementById('task-description');
+            const taskStatus = document.getElementById('task-status');
+            const taskPriority = document.getElementById('task-priority');
+            const taskDue = document.getElementById('task-due-date');
+            const taskClient = document.getElementById('task-client-select');
             const staffSelect = document.getElementById('task-staff-select');
-            if (staffSelect) staffSelect.value = task.assigned_to;
+
+            if (taskTitle) taskTitle.value = task.title;
+            if (taskDesc) taskDesc.value = task.description || '';
+            if (taskStatus) taskStatus.value = task.status;
+            if (taskPriority) taskPriority.value = task.priority;
+            if (taskDue) taskDue.value = task.due_date || '';
+            if (taskClient && task.client_id) taskClient.value = task.client_id;
+            if (staffSelect && task.assigned_to) staffSelect.value = task.assigned_to;
         }
 
     } catch (error) {
@@ -212,12 +231,12 @@ async function createTask(event) {
     event.preventDefault();
 
     const task = {
-        title: document.getElementById('task-title').value,
-        description: document.getElementById('task-description').value,
-        status: document.getElementById('task-status').value,
-        priority: document.getElementById('task-priority').value,
-        due_date: document.getElementById('task-due-date').value,
-        client_id: document.getElementById('task-client-select').value,
+        title: document.getElementById('task-title')?.value || '',
+        description: document.getElementById('task-description')?.value || '',
+        status: document.getElementById('task-status')?.value || 'todo',
+        priority: document.getElementById('task-priority')?.value || 'low',
+        due_date: document.getElementById('task-due-date')?.value || '',
+        client_id: document.getElementById('task-client-select')?.value || '',
         assigned_to: document.getElementById('task-staff-select')?.value || null
     };
 

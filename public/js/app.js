@@ -18,7 +18,7 @@ function showToast(message, type = 'success') {
         <span class="toast-message">${message}</span>
     `;
 
-    container.appendChild(toast);
+    if (container) container.appendChild(toast);
 
     // Remove after 3 seconds
     setTimeout(() => {
