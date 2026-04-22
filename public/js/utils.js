@@ -103,11 +103,13 @@ function formatPhone(phoneStr) {
 
 window.formatPhone = formatPhone;
 
-// Auth guard - stub until login system is built
+// Auth guard - stub until login system is built.
+// Non-blocking: the localhost dev bypass in server/utils/auth.js handles auth
+// during development, and production login redirects via the 401 interceptor
+// in index.html. Gate the log behind window.DEBUG_AUTH to avoid console noise.
 function checkGlobalAuth() {
     const session = localStorage.getItem('mlo_session');
-    if (!session) {
-        // Not blocking yet - just log for now
+    if (!session && window.DEBUG_AUTH) {
         console.info('Auth check: no session found (non-blocking)');
     }
 }

@@ -174,17 +174,19 @@ window.initKeyboardShortcuts = function() {
 
         // ─── SEARCH SHORTCUTS ───────────────────────────
         if (cmdOrCtrl && e.key.toLowerCase() === 'k') {
-            if (searchInput && searchInput.offsetParent !== null) {
-                e.preventDefault();
-                // If not in CRM, switch to it
-                if (!document.getElementById('crm-section').classList.contains('active')) {
-                    navigateTo('crm');
-                }
-                setTimeout(() => {
-                    searchInput.focus();
-                    searchInput.select();
-                }, 10);
+            e.preventDefault();
+            // Always navigate to CRM first (the only section with a search input).
+            // Previously this only worked when #client-search was already visible,
+            // which meant Cmd+K silently did nothing outside CRM.
+            const crmSection = document.getElementById('crm-section');
+            if (crmSection && !crmSection.classList.contains('active')) {
+                navigateTo('crm');
             }
+            // Wait for the section swap to finish before focusing.
+            setTimeout(() => {
+                const s = document.getElementById('client-search');
+                if (s) { s.focus(); s.select(); }
+            }, 60);
         }
 
         if (e.key === '/') {
