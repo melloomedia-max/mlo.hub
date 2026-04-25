@@ -1,2 +1,21 @@
 node_modules
 .env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime / logs
+*.log
+server.log
+sync_debug.log
+
+# Runtime DBs (keep agency.db only)
+agency_hub.db
+database.sqlite
+server/agency.db
+server/database.sqlite
+
+# Multer upload tempdir (runtime only)
+uploads/*
+!uploads/.gitkeep

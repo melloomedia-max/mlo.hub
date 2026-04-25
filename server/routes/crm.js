@@ -853,32 +853,7 @@ router.delete('/attachments/:id', (req, res) => {
 });
 
 
-// Manual Schema Fix Route (for debugging/repair)
-router.get('/fix-schema', (req, res) => {
-    const queries = [
-        "ALTER TABLE clients ADD COLUMN first_name TEXT",
-        "ALTER TABLE clients ADD COLUMN last_name TEXT",
-        "ALTER TABLE clients ADD COLUMN birthday TEXT"
-    ];
-
-    let executed = 0;
-    let errors = [];
-
-    queries.forEach(q => {
-        db.run(q, (err) => {
-            executed++;
-            if (err) errors.push(err.message);
-
-            if (executed === queries.length) {
-                res.json({
-                    message: 'Schema patch attempt finished',
-                    errors: errors,
-                    note: 'Errors are expected if columns already exist.'
-                });
-            }
-        });
-    });
-});
+// (Removed: GET /fix-schema — one-shot migration that already ran.)
 
 // Helper for Promisified DB
 function dbAll(query, params = []) {
