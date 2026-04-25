@@ -11,42 +11,48 @@ const { google } = require('googleapis');
 console.log("[BOOT] Initializing database connection...");
 const db = require('./database');
 console.log("[BOOT] Loading route modules...");
-// Admin Account Audit
-db.get("SELECT email, role, status, password FROM staff WHERE email = 'melloomedia@gmail.com'", (err, row) => {
-    console.log("[BOOT-AUDIT] Admin account check for melloomedia@gmail.com:");
-    console.log(` - Admin exists: ${!!row ? 'YES' : 'NO'}`);
-    if (row) {
-        console.log(` - Admin active: ${row.status === 'active' ? 'YES' : 'NO'}`);
-        console.log(` - Admin role: ${row.role}`);
-        console.log(` - Password hash present: ${!!row.password ? 'YES' : 'NO'}`);
-    }
-});
 
-// --- FORCE ADMIN SYNC ---
-// This ensures that even if migrations or manual steps failed, the admin account is ready.
+// --- Admin Bootstrap (env-driven, runs once if no admin exists) ---
+// Set ADMIN_EMAIL + ADMIN_PASSWORD in Railway to seed the initial admin.
+// On subsequent boots this is a no-op. Passwords must be changed via the
+// Settings UI or a future password-reset flow — never hard-coded.
 setTimeout(() => {
-    const email = 'melloomedia@gmail.com';
-    const pass = 'melloo';
+    const adminEmail = process.env.ADMIN_EMAIL || 'melloomedia@gmail.com';
+    const adminPass = process.env.ADMIN_PASSWORD || process.env.APP_PASSWORD;
+
+    if (!adminPass) {
+        console.warn("[BOOT] No ADMIN_PASSWORD/APP_PASSWORD set — skipping admin bootstrap.");
+        return;
+    }
+
     const { hashPassword } = require('./utils/auth');
-    const hashed = hashPassword(pass);
-    
-    db.get("SELECT id FROM staff WHERE email = ?", [email], (err, row) => {
-        if (err) return console.error("[BOOT-SYNC] Error checking admin:", err.message);
-        
+
+    db.get("SELECT id FROM staff WHERE email = ?", [adminEmail], (err, row) => {
+        if (err) return console.error("[BOOT] Admin lookup error:", err.message);
         if (row) {
-            db.run("UPDATE staff SET password = ?, role = 'admin', status = 'active' WHERE id = ?", [hashed, row.id], (updErr) => {
-                if (!updErr) console.log(`[BOOT-SYNC] Successfully UPDATED admin account: ${email}`);
-                else console.error("[BOOT-SYNC] Update failed:", updErr.message);
-            });
-        } else {
-            db.run("INSERT INTO staff (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)", 
-                ['Admin', email, hashed, 'admin', 'active'], (insErr) => {
-                if (!insErr) console.log(`[BOOT-SYNC] Successfully CREATED admin account: ${email}`);
-                else console.error("[BOOT-SYNC] Insert failed:", insErr.message);
-            });
+            // Admin already exists — do NOT overwrite the password. Just make
+            // sure the role/status are right (in case someone disabled them).
+            db.run(
+                "UPDATE staff SET role = 'admin', status = 'active' WHERE id = ? AND (role != 'admin' OR status != 'active')",
+                [row.id],
+                (updErr) => {
+                    if (updErr) console.error("[BOOT] Admin role/status fix failed:", updErr.message);
+                }
+            );
+            return;
         }
+        // No admin yet — seed one from env.
+        const hashed = hashPassword(adminPass);
+        db.run(
+            "INSERT INTO staff (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)",
+            ['Admin', adminEmail, hashed, 'admin', 'active'],
+            (insErr) => {
+                if (insErr) console.error("[BOOT] Admin seed failed:", insErr.message);
+                else console.log(`[BOOT] Seeded initial admin: ${adminEmail}`);
+            }
+        );
     });
-}, 2000); // Small delay to ensure DB is fully ready
+}, 2000);
 
 
 const tasksRoutes = require('./routes/tasks');
@@ -72,11 +78,11 @@ const PORT = process.env.PORT || 3000;
 
 app.set('trust proxy', 1);
 
-if (!process.env.APP_PASSWORD || !process.env.SESSION_SECRET) {
+if ((!process.env.APP_PASSWORD && !process.env.ADMIN_PASSWORD) || !process.env.SESSION_SECRET) {
     console.warn("\n=======================================================");
-    console.warn("⚠️  WARNING: APP_PASSWORD or SESSION_SECRET is missing!");
+    console.warn("⚠️  WARNING: ADMIN_PASSWORD/APP_PASSWORD or SESSION_SECRET is missing!");
     console.warn("   Your Agency Hub login is unsecured or unstable.");
-    console.warn("   Please define both variables in your Railway env.");
+    console.warn("   Set ADMIN_EMAIL, ADMIN_PASSWORD, and SESSION_SECRET in Railway.");
     console.warn("=======================================================\n");
 }
 
@@ -110,17 +116,6 @@ app.use((req, res, next) => {
 
 // --- Pure Server Auth Middleware ---
 app.get('/login', (req, res) => {
-    // Migration: Create initial admin if none exists
-    db.get('SELECT id FROM staff WHERE role = "admin" LIMIT 1', (err, row) => {
-        if (!row && process.env.APP_PASSWORD) {
-            const hashed = hashPassword(process.env.APP_PASSWORD);
-            db.run('INSERT INTO staff (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)', 
-                ['Admin', 'melloomedia@gmail.com', hashed, 'admin', 'active'], (err) => {
-                    if (!err) console.log('[AUTH] Created initial admin: melloomedia@gmail.com');
-                });
-        }
-    });
-
     const loginPath = path.join(__dirname, '../public/login.html');
     res.sendFile(loginPath);
 });
