@@ -30,8 +30,23 @@ setTimeout(() => {
     db.get("SELECT id FROM staff WHERE email = ?", [adminEmail], (err, row) => {
         if (err) return console.error("[BOOT] Admin lookup error:", err.message);
         if (row) {
-            // Admin already exists — do NOT overwrite the password. Just make
-            // sure the role/status are right (in case someone disabled them).
+            // Admin already exists — by default we do NOT overwrite the password.
+            // Exception: if FORCE_ADMIN_ROTATE=1 is set, hash ADMIN_PASSWORD and
+            // overwrite the row's password ONCE, then log a clear reminder to
+            // unset the env var. Use this for one-shot rotations only.
+            if (process.env.FORCE_ADMIN_ROTATE === '1' || process.env.FORCE_ADMIN_ROTATE === 'true') {
+                const hashed = hashPassword(adminPass);
+                db.run(
+                    "UPDATE staff SET password = ?, role = 'admin', status = 'active' WHERE id = ?",
+                    [hashed, row.id],
+                    (rotErr) => {
+                        if (rotErr) console.error("[BOOT] FORCE rotation failed:", rotErr.message);
+                        else console.log(`[BOOT] FORCE_ADMIN_ROTATE: rotated password for ${adminEmail}. ⚠️  UNSET FORCE_ADMIN_ROTATE in Railway now.`);
+                    }
+                );
+                return;
+            }
+            // Normal path: just make sure role/status are right.
             db.run(
                 "UPDATE staff SET role = 'admin', status = 'active' WHERE id = ? AND (role != 'admin' OR status != 'active')",
                 [row.id],
