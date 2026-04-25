@@ -767,15 +767,7 @@ async function sendReceiptEmail(invoiceId) {
 // Make sure to export sendReceiptEmail or include it if I move logic out. 
 // For now, it's a local helper in this file.
 
-// Schema Fix Route
-router.get('/fix-schema', (req, res) => {
-    db.run("ALTER TABLE invoices ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP", (err) => {
-        if (err) {
-            return res.json({ message: 'Migration run (might have failed if exists)', error: err.message });
-        }
-        res.json({ message: 'Added updated_at column' });
-    });
-});
+// (Removed: GET /fix-schema — one-shot migration that already ran.)
 
 // ========= PARTIAL PAYMENTS =========
 
