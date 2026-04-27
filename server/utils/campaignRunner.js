@@ -1,16 +1,8 @@
 const path = require('path');
 const db = require('../database');
 const gemini = require('./geminiHelpers');
-const nodemailer = require('nodemailer');
 const { sendSMS } = require('./emailService');
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const { sendMail } = require('./mailService');
 
 function dbAll(query, params = []) {
     return new Promise((resolve, reject) => {
@@ -189,18 +181,12 @@ async function sendCampaignEmail(enr, templateId, customSubject, customBody) {
 
     if (enr.email) {
         const htmlBody = wrapInMellooTemplate(subject, body, enr.first_name || 'there');
-        await transporter.sendMail({
-            from: `"Melloo Media" <${process.env.EMAIL_USER}>`,
+        await sendMail({
             to: enr.email,
             subject: subject,
             html: htmlBody,
-            attachments: [
-                {
-                    filename: 'logo.png',
-                    path: path.join(__dirname, '../../public/img/logo-full.png'),
-                    cid: 'melloologo'
-                }
-            ]
+            relatedKind: 'campaign',
+            relatedId: enr.id || enr.campaign_id || null,
         });
 
         await dbRun("INSERT INTO campaign_sends (campaign_id, enrollment_id, client_id, type, template_id) VALUES (?, ?, ?, 'email', ?)",

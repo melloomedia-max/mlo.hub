@@ -1,13 +1,5 @@
-const nodemailer = require('nodemailer');
 const { sendSMS } = require('./emailService');
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const { sendMail } = require('./mailService');
 
 /**
  * Sends portal link via email and/or SMS
@@ -49,11 +41,12 @@ async function sendPortalLinkNotify(client, url, method = 'email') {
                     </div>
                 `;
 
-                await transporter.sendMail({
-                    from: `"Melloo Media" <${process.env.EMAIL_USER}>`,
+                await sendMail({
                     to: client.email,
                     subject: `Your Personalized Client Portal Access`,
-                    html: htmlBody
+                    html: htmlBody,
+                    relatedKind: 'portal_link',
+                    relatedId: client.id,
                 });
                 results.email.success = true;
                 console.log(`[PORTAL-LOG] email notification success for ${client.email}`);
@@ -110,11 +103,13 @@ async function sendPortalRequestNotify(client, message) {
             </div>
         `;
 
-        await transporter.sendMail({
-            from: `"Melloo Portal" <${process.env.EMAIL_USER}>`,
+        await sendMail({
+            from: `Melloo Portal <noreply@melloo.media>`,
             to: adminEmail,
             subject: `🚨 New Request from ${client.name}`,
-            html: htmlBody
+            html: htmlBody,
+            relatedKind: 'portal_request',
+            relatedId: client.id,
         });
 
         // Also try SMS if phone exists in env or we can fetch from staff

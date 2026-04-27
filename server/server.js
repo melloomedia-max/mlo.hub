@@ -71,6 +71,7 @@ setTimeout(() => {
 
 
 const tasksRoutes = require('./routes/tasks');
+const emailRoutes = require('./routes/email');
 const meetingsRoutes = require('./routes/meetings');
 const crmRoutes = require('./routes/crm');
 const timeRoutes = require('./routes/time');
@@ -308,6 +309,7 @@ app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/archives', archivesRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/email', emailRoutes);
 
 // Alias for testing
 app.get('/api/email-templates', async (req, res) => {
