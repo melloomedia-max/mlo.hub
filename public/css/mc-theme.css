@@ -1,0 +1,606 @@
+/* mc-theme.css — Melloo Hub adopts the Mission Control design system.
+ * Loaded LAST so it overrides existing rules. Pure visual layer.
+ * Functionality, IDs, and JS hooks are untouched.
+ */
+
+:root {
+  /* Map Hub tokens onto Mission Control palette */
+  --melloo-red: #4d8bff;
+  --melloo-red-dark: #2f6cdc;
+  --melloo-gradient: linear-gradient(135deg, #4d8bff 0%, #b07bff 100%);
+
+  --glass-bg: rgba(22, 30, 52, 0.55);
+  --glass-bg-strong: rgba(30, 40, 68, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-border-hi: rgba(255, 255, 255, 0.14);
+  --glass-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 18px 40px rgba(0, 0, 0, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.35);
+  --glass-shadow-lg:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 26px 60px rgba(0, 0, 0, 0.55),
+    0 8px 18px rgba(0, 0, 0, 0.4);
+  --glass-reflection: linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 50%);
+  --blur: blur(22px) saturate(140%);
+  --blur-sm: blur(14px) saturate(140%);
+
+  --accent: #4d8bff;
+  --accent-2: #b07bff;
+  --accent-glow: rgba(77, 139, 255, 0.25);
+
+  --teal: #5dd6d6;
+  --rose: #ff6b7a;
+  --amber: #ffc44d;
+  --green: #4ed28a;
+  --purple: #b07bff;
+  --orange: #ff974d;
+
+  --text-primary: #e7ecf6;
+  --text-secondary: rgba(231, 236, 246, 0.62);
+  --text-tertiary: rgba(231, 236, 246, 0.32);
+
+  --bg: #07090f;
+  --bg-2: #0c1220;
+  --panel: rgba(22, 30, 52, 0.55);
+  --panel-2: rgba(30, 40, 68, 0.48);
+  --panel-bd: rgba(255, 255, 255, 0.07);
+  --panel-bd-strong: rgba(255, 255, 255, 0.14);
+
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+
+  /* Hub's app uses --bg-card variable */
+  --bg-card: rgba(22, 30, 52, 0.55);
+  --border-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Background tone */
+html, body {
+  background:
+    radial-gradient(1100px 700px at 12% -10%, rgba(54, 92, 198, 0.32), transparent 60%),
+    radial-gradient(900px 600px at 92% 110%, rgba(120, 76, 198, 0.22), transparent 60%),
+    linear-gradient(180deg, #050811 0%, #04060d 100%) !important;
+  background-attachment: fixed !important;
+  color: var(--text-primary);
+  font-family: -apple-system, "SF Pro Display", "Inter", system-ui, Segoe UI, Roboto, Arial, sans-serif !important;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* macOS title bar (injected by theme.js) */
+.mc-titlebar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 38px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 14px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 70%),
+    linear-gradient(180deg, rgba(20,26,40,.85), rgba(12,16,28,.85));
+  border-bottom: 1px solid var(--panel-bd);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.05) inset;
+}
+.mc-titlebar .traffic { display: flex; gap: 8px; }
+.mc-titlebar .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.25); }
+.mc-titlebar .dot-red { background: #ff5f57; }
+.mc-titlebar .dot-yellow { background: #febc2e; }
+.mc-titlebar .dot-green { background: #28c840; }
+.mc-titlebar .title { font-size: 13px; color: var(--text-secondary); letter-spacing: .3px; }
+.mc-titlebar .title-right { justify-self: end; color: var(--text-tertiary); font-size: 12px; }
+
+/* Layout: container becomes sidebar + main grid */
+body > .container {
+  display: grid !important;
+  grid-template-columns: 250px 1fr !important;
+  max-width: none !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: calc(100vh - 38px);
+  align-items: stretch;
+}
+
+/* The existing header → becomes the sidebar (column 1) */
+body > .container > header {
+  position: sticky;
+  top: 38px;
+  align-self: stretch;
+  height: calc(100vh - 38px);
+  display: flex !important;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 14px !important;
+  border-right: 1px solid var(--panel-bd);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0) 30%),
+    linear-gradient(180deg, rgba(12,16,28,.55), rgba(8,10,20,.55));
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  overflow-y: auto;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Brand block in sidebar */
+body > .container > header .brand {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 11px;
+  border: 1px solid var(--panel-bd);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0) 50%),
+    var(--panel);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 6px 14px rgba(0,0,0,.22);
+}
+body > .container > header .brand h1 {
+  font-size: 14px !important;
+  margin: 0 !important;
+  line-height: 1.15;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body > .container > header .brand h1 span {
+  background: linear-gradient(135deg, #4d8bff 0%, #b07bff 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  font-style: normal !important;
+}
+body > .container > header .brand lottie-player {
+  width: 30px !important; height: 30px !important;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #4d8bff 0%, #b07bff 100%);
+  padding: 4px;
+}
+
+/* Convert top nav → vertical sidebar nav */
+body > .container > header > nav {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  margin-top: 8px;
+  width: 100% !important;
+  border: none !important;
+}
+body > .container > header > nav > div { display: none; } /* old separator */
+body > .container > header > nav button,
+body > .container > header > nav a {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left !important;
+  justify-content: flex-start !important;
+  padding: 9px 11px !important;
+  border-radius: 9px !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+  font-weight: 500;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: background .12s var(--ease), color .12s var(--ease);
+  box-shadow: none !important;
+}
+body > .container > header > nav button:hover,
+body > .container > header > nav a:hover {
+  background: rgba(255,255,255,.05) !important;
+  color: var(--text-primary) !important;
+}
+body > .container > header > nav button.active {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0) 50%),
+    linear-gradient(180deg, rgba(77,139,255,.28), rgba(77,139,255,.10)) !important;
+  color: white !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(120,170,255,.4),
+    0 1px 0 rgba(255,255,255,.10) inset,
+    0 4px 12px rgba(60, 110, 220, .25) !important;
+}
+
+/* Auth pill — moves into the sidebar bottom */
+body > .container > header > .auth-status-pill,
+body > .container > header > #global-auth-status {
+  margin-top: auto;
+  padding: 8px 10px !important;
+  border-top: 1px solid var(--panel-bd);
+  font-size: 12px !important;
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border-radius: 0 !important;
+  width: 100% !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+}
+
+/* Main content area (column 2) */
+body > .container > main,
+body > .container > section,
+body > .container > .section,
+body > .container > div:not(header):not(.section) {
+  /* fall back: anything sibling of header that's a section will live in col 2 */
+}
+body > .container > section.section {
+  grid-column: 2;
+  padding: 24px clamp(20px, 3vw, 36px);
+  margin: 0;
+  min-width: 0;
+  animation: viewIn .28s var(--ease);
+}
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Section headers */
+.section-header,
+.section > .section-header,
+.section > h2:first-child {
+  margin-bottom: 18px !important;
+}
+.section-header h2,
+.section > h2:first-child {
+  font-family: -apple-system, "SF Pro Display", system-ui, sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.1 !important;
+  color: var(--text-primary) !important;
+}
+
+/* Stat cards — KPI tiles */
+.stat-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 32%),
+    var(--panel) !important;
+  border: 1px solid var(--panel-bd) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 16px 18px !important;
+  box-shadow: var(--glass-shadow) !important;
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease) !important;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 55%;
+  background: linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,0) 80%);
+  pointer-events: none;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-lg) !important;
+  border-color: var(--panel-bd-strong) !important;
+}
+.stat-card .stat-label,
+.stat-card h3,
+.stat-card .label {
+  font-size: 10.5px !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+}
+.stat-card .stat-value,
+.stat-card .value,
+.stat-card h2,
+.stat-card .number {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.015em !important;
+  color: var(--text-primary) !important;
+  font-feature-settings: 'tnum';
+}
+.stat-card .stat-icon,
+.stat-card .icon {
+  font-size: 18px !important;
+}
+
+/* Generic cards */
+.card,
+.client-card,
+.task-card,
+.invoice-card,
+.meeting-card,
+.proj-form-card,
+.proj-modal-card,
+.pr-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 28%),
+    var(--panel) !important;
+  border: 1px solid var(--panel-bd) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--glass-shadow) !important;
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease) !important;
+}
+.card:hover,
+.client-card:hover,
+.task-card:hover,
+.invoice-card:hover,
+.meeting-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--panel-bd-strong) !important;
+  box-shadow: var(--glass-shadow-lg) !important;
+}
+
+/* Client avatar tiles in CRM grid */
+.client-card .client-avatar,
+.client-avatar {
+  background: linear-gradient(135deg, #4d8bff 0%, #b07bff 100%) !important;
+  color: white !important;
+}
+
+/* Buttons — glass capsules */
+button,
+.btn,
+input[type="submit"],
+input[type="button"] {
+  font-family: inherit;
+  border: 1px solid var(--panel-bd-strong);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02)),
+    rgba(255,255,255,.03);
+  color: var(--text-primary);
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.08) inset,
+    0 0 0 1px rgba(255,255,255,.04) inset,
+    0 4px 10px rgba(0,0,0,.25);
+  transition: transform .15s var(--ease), background .15s var(--ease), box-shadow .2s var(--ease), border-color .15s var(--ease);
+}
+button:hover,
+.btn:hover {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.04)),
+    rgba(255,255,255,.05);
+  transform: translateY(-1px);
+}
+button:active, .btn:active { transform: translateY(0); }
+
+/* Primary button — make it the MC blue gradient */
+button.primary,
+.btn-primary,
+button[type="submit"],
+input[type="submit"] {
+  background: linear-gradient(180deg, #5d9bff, #2f6cdc) !important;
+  border-color: rgba(120,170,255,.6) !important;
+  color: white !important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.18) inset,
+    0 0 0 1px rgba(255,255,255,.10) inset,
+    0 6px 16px rgba(60, 110, 220, .35) !important;
+}
+button.primary:hover, .btn-primary:hover, button[type="submit"]:hover {
+  filter: brightness(1.06);
+}
+button.danger, .btn-danger {
+  background: linear-gradient(180deg, #ff8090, #d2415c) !important;
+  border-color: rgba(255, 140, 160, .55) !important;
+  color: white !important;
+}
+
+/* Existing nav buttons should NOT be blue gradient when in sidebar */
+body > .container > header > nav button,
+body > .container > header > nav button[type="submit"] {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  color: var(--text-secondary) !important;
+}
+body > .container > header > nav button.active {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0) 50%),
+    linear-gradient(180deg, rgba(77,139,255,.28), rgba(77,139,255,.10)) !important;
+  color: white !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(120,170,255,.4),
+    0 1px 0 rgba(255,255,255,.10) inset,
+    0 4px 12px rgba(60, 110, 220, .25) !important;
+}
+
+/* Inputs */
+input[type="text"], input[type="email"], input[type="password"], input[type="search"],
+input[type="tel"], input[type="url"], input[type="number"], input[type="date"],
+textarea, select {
+  background: rgba(255,255,255,.04) !important;
+  border: 1px solid var(--panel-bd-strong) !important;
+  color: var(--text-primary) !important;
+  border-radius: 9px !important;
+  padding: 9px 11px !important;
+  font-family: inherit !important;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  border-color: rgba(77,139,255,.7) !important;
+  box-shadow: 0 0 0 3px rgba(77,139,255,.15) !important;
+}
+
+/* Modals */
+.modal, .modal-content, .pr-modal, .proj-modal-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0) 28%),
+    linear-gradient(180deg, rgba(34,42,68,.92), rgba(18,24,44,.92)) !important;
+  border: 1px solid var(--panel-bd-strong) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.10) inset,
+    0 0 0 1px rgba(255,255,255,.04) inset,
+    0 40px 100px rgba(0,0,0,.65),
+    0 8px 24px rgba(0,0,0,.4) !important;
+  backdrop-filter: blur(30px) saturate(150%);
+  -webkit-backdrop-filter: blur(30px) saturate(150%);
+}
+
+/* Tables */
+table { border-collapse: collapse; }
+th { font-size: 11px !important; text-transform: uppercase; letter-spacing: .12em; color: var(--text-tertiary) !important; font-weight: 500 !important; }
+td, th { border-bottom: 1px solid var(--panel-bd) !important; padding: 10px 12px !important; }
+tr:hover td { background: rgba(255,255,255,.02); }
+
+/* Chips / pills */
+.chip, .badge, .pill, .status-badge {
+  background: rgba(255,255,255,.06) !important;
+  color: var(--text-secondary) !important;
+  border-radius: var(--radius-pill) !important;
+  padding: 3px 9px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+/* Ensure Hub's existing "header" full-width-row hint doesn't still apply */
+header { background: transparent !important; }
+
+/* When section-header has inline buttons, give them spacing */
+.section-header { display: flex !important; align-items: end; justify-content: space-between; gap: 16px; }
+
+/* Login page — a centered glass card */
+body.login-page,
+body:has(form#login-form) {
+  display: grid !important;
+  place-items: center !important;
+  min-height: 100vh;
+}
+body:has(form#login-form) > .login-container,
+body:has(form#login-form) > div:first-child {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0) 30%),
+    var(--panel) !important;
+  border: 1px solid var(--panel-bd-strong) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--glass-shadow-lg) !important;
+  backdrop-filter: blur(30px) saturate(150%);
+  -webkit-backdrop-filter: blur(30px) saturate(150%);
+  padding: 40px 36px !important;
+  max-width: 380px !important;
+  width: calc(100% - 40px) !important;
+}
+
+/* Hide some Hub elements that don't fit the new layout */
+.profile-sidebar-large {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 28%),
+    var(--panel) !important;
+  border: 1px solid var(--panel-bd) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+/* Mobile responsive: collapse sidebar */
+@media (max-width: 900px) {
+  body > .container { grid-template-columns: 1fr !important; }
+  body > .container > header {
+    position: static !important;
+    height: auto !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--panel-bd);
+    padding: 14px !important;
+  }
+  body > .container > header > nav {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    overflow-x: auto;
+  }
+  body > .container > section.section { padding: 18px; }
+}
+
+/* Settings page (separate layout) */
+body.settings-body, body[data-page="settings"] {
+  /* Inherits the same dark background; leave structure alone for now */
+}
+
+/* Money status pill at the bottom of the sidebar (injected by mc-theme.js) */
+.mc-money-pill {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--panel-bd);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 50%),
+    var(--panel);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 6px 14px rgba(0,0,0,.22);
+}
+.mc-money-pill.has-pending {
+  border-color: rgba(255, 200, 77, 0.35);
+  background:
+    linear-gradient(180deg, rgba(255,200,77,.06), rgba(255,200,77,0) 60%),
+    var(--panel);
+}
+.mc-money-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+}
+.mc-money-label {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 500;
+}
+.mc-money-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-feature-settings: 'tnum';
+  font-size: 12.5px;
+}
+.mc-money-pill.has-pending .mc-money-row:nth-child(2) .mc-money-value {
+  color: var(--amber);
+}
+
+/* Tasks header — Sync Google was floating in the middle. Pull it back inline. */
+#tasks-section .section-header,
+#tasks-section > h2:first-of-type + * {
+  /* leave at its position; the header alignment comes from .section-header flex */
+}
+#tasks-section #sync-google-btn,
+#tasks-section button[onclick*="syncGoogleTasks"] {
+  position: static !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+/* Login page — tighten brand block to one line */
+body:has(form#login-form) .brand-row,
+body:has(form#login-form) .login-brand,
+body:has(form#login-form) h1 {
+  white-space: nowrap;
+  font-size: 22px !important;
+  text-align: center;
+}
+
