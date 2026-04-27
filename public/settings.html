@@ -719,6 +719,9 @@
           <button class="settings-sidebar-item" onclick="showSettingsPanel('integrations')">
             <span class="sidebar-icon">🔗</span> Integrations
           </button>
+          <button class="settings-sidebar-item" onclick="showSettingsPanel('email')">
+            <span class="sidebar-icon">✉️</span> Email (Resend)
+          </button>
           <button class="settings-sidebar-item" onclick="showSettingsPanel('notifications')">
             <span class="sidebar-icon">🔔</span> Notifications
           </button>
@@ -1265,6 +1268,52 @@
             </div>
           </div>
 
+          <!-- ═══ EMAIL (Resend) ═══ -->
+          <div id="panel-email" class="settings-panel">
+            <div class="settings-panel-header">
+              <h2>✉️ Email — Resend</h2>
+              <p>Transactional & marketing email transport. Resend is the primary, Gmail SMTP is a fallback.</p>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Provider Status</div>
+              <div class="settings-card-desc" id="email-status-desc">—</div>
+              <div id="email-status-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 16px;">
+                <!-- Filled by JS -->
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Send a Test</div>
+              <div class="settings-card-desc">Sends a styled test email to confirm the pipeline. Will use whichever provider is currently active.</div>
+              <div style="display: flex; gap: 10px; align-items: center; margin-top: 16px; flex-wrap: wrap;">
+                <input type="email" class="settings-input" id="email-test-to" placeholder="recipient@example.com" style="flex: 1; min-width: 240px;">
+                <button class="settings-btn settings-btn-primary" onclick="sendEmailTest()">⏵ Send Test</button>
+              </div>
+              <div id="email-test-result" style="margin-top: 12px; font-size: 13px;"></div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Recent Sends</div>
+              <div class="settings-card-desc">Last 50 emails sent through the Hub. Status updates from Resend webhooks (delivered, bounced, opened) appear here automatically.</div>
+              <div id="email-log" style="margin-top: 16px;">
+                <p style="color: var(--text-secondary); font-style: italic;">Loading…</p>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">Setup Notes</div>
+              <div class="settings-card-desc">
+                <ol style="padding-left: 18px; line-height: 1.8;">
+                  <li>Add <code>RESEND_API_KEY</code> on Railway under Variables.</li>
+                  <li>Verify <code>melloo.media</code> on Resend (DNS: DKIM TXT, SPF TXT, MX for bounces).</li>
+                  <li>Optional: set <code>RESEND_WEBHOOK_SECRET</code> + add <code>https://hub.melloo.media/api/email/webhook/resend</code> as a webhook in Resend.</li>
+                  <li>Set <code>MAIL_FORCE_FALLBACK=1</code> to revert to Gmail in an incident.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
           <!-- ═══ NOTIFICATIONS ═══ -->
           <div id="panel-notifications" class="settings-panel">
             <div class="settings-panel-header">
@@ -1702,6 +1751,97 @@
       if (btn) btn.classList.add('active');
 
       if (panelName === 'staff') loadStaffList();
+      if (panelName === 'email') loadEmailPanel();
+    }
+
+    // Email (Resend) panel
+    async function loadEmailPanel() {
+      try {
+        const [s, log, stats] = await Promise.all([
+          fetch('/api/email/status').then(r => r.json()),
+          fetch('/api/email/log?limit=50').then(r => r.json()),
+          fetch('/api/email/stats').then(r => r.json()),
+        ]);
+        const grid = document.getElementById('email-status-grid');
+        const desc = document.getElementById('email-status-desc');
+        const fmt = (k, v, accent) => `
+          <div style="padding: 14px 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;">
+            <div style="font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.5);">${k}</div>
+            <div style="font-size: 16px; font-weight: 600; margin-top: 4px; color: ${accent || 'inherit'}">${v}</div>
+          </div>`;
+        const activeColor = s.active === 'resend' ? '#4ed28a' : (s.active === 'gmail' ? '#ffc44d' : '#ff6b7a');
+        grid.innerHTML = [
+          fmt('Active Provider', String(s.active||'').toUpperCase(), activeColor),
+          fmt('From', s.from || '—'),
+          fmt('Reply-To', s.replyTo || '—'),
+          fmt('Last 30d Sent', stats.sent || 0, '#4ed28a'),
+          fmt('Last 30d Failed', stats.failed || 0, (stats.failed||0) > 0 ? '#ff6b7a' : 'inherit'),
+          fmt('Resend Configured', s.resendConfigured ? 'YES' : 'NO', s.resendConfigured ? '#4ed28a' : '#ff6b7a'),
+        ].join('');
+        desc.textContent = s.active === 'resend'
+          ? 'Resend is the active transport.'
+          : (s.active === 'gmail' ? 'Falling back to Gmail SMTP. Resend will pick up once configured.' : 'No email transport is configured. Add RESEND_API_KEY in Railway env.');
+
+        const logEl = document.getElementById('email-log');
+        const items = (log.items || []);
+        if (items.length === 0) {
+          logEl.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">No sends yet.</p>';
+        } else {
+          logEl.innerHTML = `
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+              <thead>
+                <tr style="text-align: left; color: rgba(255,255,255,0.4); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;">
+                  <th style="padding: 8px 10px;">Time</th>
+                  <th style="padding: 8px 10px;">Provider</th>
+                  <th style="padding: 8px 10px;">To</th>
+                  <th style="padding: 8px 10px;">Subject</th>
+                  <th style="padding: 8px 10px;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items.map(i => {
+                  const tone = (i.status === 'sent' || i.status === 'delivered') ? '#4ed28a'
+                    : (i.status === 'opened' || i.status === 'clicked') ? '#9ec0ff'
+                    : (i.status === 'failed' || i.status === 'bounced' || i.status === 'complained') ? '#ff6b7a'
+                    : 'rgba(255,255,255,0.6)';
+                  const errorAttr = (i.error||'').replace(/"/g,'&quot;');
+                  return `
+                    <tr style="border-top: 1px solid rgba(255,255,255,0.06);" title="${errorAttr}">
+                      <td style="padding: 10px;">${new Date(i.ts).toLocaleString()}</td>
+                      <td style="padding: 10px; color: rgba(255,255,255,0.6);">${i.provider}</td>
+                      <td style="padding: 10px; font-family: ui-monospace, Menlo, monospace; font-size: 12px;">${i.to_addr || ''}</td>
+                      <td style="padding: 10px; color: rgba(255,255,255,0.6);">${(i.subject||'').slice(0,60)}</td>
+                      <td style="padding: 10px; color: ${tone}; text-transform: uppercase; font-weight: 600; font-size: 11px;">${i.status}</td>
+                    </tr>`;
+                }).join('')}
+              </tbody>
+            </table>`;
+        }
+      } catch (e) {
+        document.getElementById('email-log').innerHTML = `<p style="color: #ff6b7a;">Failed to load: ${e.message}</p>`;
+      }
+    }
+
+    async function sendEmailTest() {
+      const to = document.getElementById('email-test-to').value.trim();
+      const result = document.getElementById('email-test-result');
+      result.innerHTML = '<span style="color: rgba(255,255,255,0.6);">Sending…</span>';
+      try {
+        const r = await fetch('/api/email/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(to ? { to } : {}),
+        });
+        const j = await r.json();
+        if (j.ok) {
+          result.innerHTML = `<span style="color: #4ed28a;">✓ Sent via ${j.provider}${j.id ? ' (id: ' + j.id + ')' : ''}</span>`;
+        } else {
+          result.innerHTML = `<span style="color: #ff6b7a;">Failed: ${j.error}</span>`;
+        }
+        loadEmailPanel();
+      } catch (e) {
+        result.innerHTML = `<span style="color: #ff6b7a;">Error: ${e.message}</span>`;
+      }
     }
 
     // ─── Init ────────────────────────────────────────────

@@ -416,7 +416,7 @@ router.delete('/:id', (req, res) => {
 // SEND invoice via Gmail
 router.post('/:id/send', async (req, res) => {
     const id = req.params.id;
-    const nodemailer = require('nodemailer');
+    const { sendMail } = require('../utils/mailService');
 
     // 1. Fetch invoice + client
     const invoiceSql = `
@@ -566,29 +566,20 @@ router.post('/:id/send', async (req, res) => {
 </body>
 </html>`;
 
-            // 4. Send via Gmail
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                }
-            });
-
-            const mailOptions = {
-                from: `"Melloo Media" <${process.env.EMAIL_USER}>`,
-                to: invoice.client_email,
-                subject: `Invoice #${id} from Melloo Media – ${currencySymbol}${(invoice.total_amount || 0).toFixed(2)} Due`,
-                html: htmlBody,
-                attachments: [{
-                    filename: `Invoice_${id}_MellooMedia.pdf`,
-                    content: pdfBuffer,
-                    contentType: 'application/pdf'
-                }]
-            };
-
+            // 4. Send via mailService (Resend primary, Gmail fallback)
             try {
-                await transporter.sendMail(mailOptions);
+                await sendMail({
+                    to: invoice.client_email,
+                    subject: `Invoice #${id} from Melloo Media – ${currencySymbol}${(invoice.total_amount || 0).toFixed(2)} Due`,
+                    html: htmlBody,
+                    attachments: [{
+                        filename: `Invoice_${id}_MellooMedia.pdf`,
+                        content: pdfBuffer,
+                        contentType: 'application/pdf'
+                    }],
+                    relatedKind: 'invoice',
+                    relatedId: id,
+                });
                 console.log(`[Email] Invoice #${id} sent to ${invoice.client_email}`);
 
                 // 5. Mark as sent + sync project
@@ -616,7 +607,7 @@ router.post('/:id/send', async (req, res) => {
 
 // Helper to send receipt email
 async function sendReceiptEmail(invoiceId) {
-    const nodemailer = require('nodemailer');
+    const { sendMail } = require('../utils/mailService');
 
     // 1. Fetch invoice + client
     const invoiceSql = `
@@ -729,16 +720,12 @@ async function sendReceiptEmail(invoiceId) {
 </body>
 </html>`;
 
-                    const transporter = nodemailer.createTransport({
-                        service: 'gmail',
-                        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-                    });
-
                     const mailOptions = {
-                        from: `"Melloo Media" <${process.env.EMAIL_USER}>`,
                         to: invoice.client_email,
                         subject: `Payment Receipt: Invoice #${invoiceId}`,
                         html: htmlBody,
+                        relatedKind: 'invoice_receipt',
+                        relatedId: invoiceId,
                         attachments: [{
                             filename: `Receipt_Invoice_${invoiceId}.pdf`,
                             content: pdfBuffer,
@@ -746,16 +733,13 @@ async function sendReceiptEmail(invoiceId) {
                         }]
                     };
 
-                    transporter.sendMail(mailOptions, (err, info) => {
-                        if (err) {
-                            console.error('Receipt Email Error:', err);
-                        } else {
-                            console.log(`[Email] Receipt for #${invoiceId} sent to ${invoice.client_email}`);
-                            db.run("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)", 
-                                [invoice.client_id, 'invoice', 'email', `Sent Payment Receipt for Invoice #${invoiceId} (${currencySymbol}${(invoice.total_amount || 0).toFixed(2)})`]);
-                        }
-                        resolve();
-                    });
+                    sendMail(mailOptions).then(() => {
+                        console.log(`[Email] Receipt for #${invoiceId} sent to ${invoice.client_email}`);
+                        db.run("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)",
+                            [invoice.client_id, 'invoice', 'email', `Sent Payment Receipt for Invoice #${invoiceId} (${currencySymbol}${(invoice.total_amount || 0).toFixed(2)})`]);
+                    }).catch((err) => {
+                        console.error('Receipt Email Error:', err);
+                    }).finally(() => resolve());
                 } else {
                     resolve();
                 }
@@ -852,7 +836,7 @@ router.get('/:id/payments', (req, res) => {
 // POST send updated invoice requesting remaining balance
 router.post('/:id/send-remaining', async (req, res) => {
     const id = req.params.id;
-    const nodemailer = require('nodemailer');
+    const { sendMail } = require('../utils/mailService');
 
     const invoiceSql = `
         SELECT invoices.*, clients.name as client_name, clients.company as client_company,
@@ -935,16 +919,12 @@ router.post('/:id/send-remaining', async (req, res) => {
 </html>`;
 
         try {
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-            });
-
-            await transporter.sendMail({
-                from: `"Melloo Media" <${process.env.EMAIL_USER}>`,
+            await sendMail({
                 to: invoice.client_email,
                 subject: `Payment Reminder: Invoice #${id} – ${currencySymbol}${remaining.toFixed(2)} Remaining`,
-                html: htmlBody
+                html: htmlBody,
+                relatedKind: 'invoice_reminder',
+                relatedId: id,
             });
 
             console.log(`[Email] Remaining balance request for #${id} sent to ${invoice.client_email}`);

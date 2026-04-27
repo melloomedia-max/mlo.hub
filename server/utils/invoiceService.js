@@ -1,5 +1,6 @@
 const PDFDocument = require('pdfkit');
 const nodemailer = require('nodemailer');
+const { sendMail } = require('./mailService');
 const db = require('../database');
 const path = require('path');
 
@@ -237,13 +238,7 @@ async function sendInvoiceEmail(invoiceId) {
 </body>
 </html>`;
 
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-                });
-
-                const mailOptions = {
-                    from: `"Melloo Media" <${process.env.EMAIL_USER}>`,
+                sendMail({
                     to: invoice.client_email,
                     subject: `[Recurring] Invoice #${invoiceId} from Melloo Media`,
                     html: htmlBody,
@@ -252,25 +247,17 @@ async function sendInvoiceEmail(invoiceId) {
                             filename: `Invoice_${invoiceId}.pdf`,
                             content: pdfBuffer,
                             contentType: 'application/pdf'
-                        },
-                        {
-                            filename: 'logo.png',
-                            path: path.join(__dirname, '../../public/img/logo-full.png'),
-                            cid: 'melloologo'
                         }
-                    ]
-                };
-
-                transporter.sendMail(mailOptions, (err, info) => {
-                    if (err) return reject(err);
-                    
+                    ],
+                    relatedKind: 'invoice',
+                    relatedId: invoiceId,
+                }).then((info) => {
                     db.run(`UPDATE invoices SET status = 'sent' WHERE id = ?`, [invoiceId]);
-                    db.run("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, 'invoice', 'email', ?)", 
+                    db.run("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, 'invoice', 'email', ?)",
                         [invoice.client_id, `Sent automated recurring invoice #${invoiceId}`]);
-                    
                     console.log(`[InvoiceService] Email sent for invoice #${invoiceId} to ${invoice.client_email}`);
                     resolve(info);
-                });
+                }).catch((err) => reject(err));
             });
         });
     });
@@ -284,11 +271,6 @@ async function sendSubscriptionCancellationEmail(clientId, subscriptionName) {
         db.get("SELECT name, email FROM clients WHERE id = ?", [clientId], (err, client) => {
             if (err || !client || !client.email) return resolve();
 
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-            });
-
             const htmlBody = `
                 <div style="font-family: sans-serif; padding: 20px; color: #333;">
                     <h2>Subscription Cancelled</h2>
@@ -300,15 +282,15 @@ async function sendSubscriptionCancellationEmail(clientId, subscriptionName) {
                 </div>
             `;
 
-            transporter.sendMail({
-                from: `"Melloo Media" <${process.env.EMAIL_USER}>`,
+            sendMail({
                 to: client.email,
                 subject: `Subscription Cancelled: ${subscriptionName}`,
-                html: htmlBody
-            }, (err) => {
-                if (err) console.error('Cancellation Email Error:', err);
-                resolve();
-            });
+                html: htmlBody,
+                relatedKind: 'subscription_cancel',
+                relatedId: clientId,
+            }).catch((err) => {
+                console.error('Cancellation Email Error:', err);
+            }).finally(() => resolve());
         });
     });
 }
@@ -327,11 +309,6 @@ async function sendLatePaymentWarningEmail(invoiceId) {
         db.get(sql, [invoiceId], (err, invoice) => {
             if (err || !invoice || !invoice.client_email) return reject(new Error('Invoice or client email not found'));
 
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-            });
-
             const htmlBody = `
                 <div style="font-family: sans-serif; padding: 24px; border: 2px solid #ef4444; border-radius: 12px; color: #333;">
                     <h2 style="color: #dc2626;">⚠️ URGENT: Payment Overdue</h2>
@@ -347,19 +324,18 @@ async function sendLatePaymentWarningEmail(invoiceId) {
                 </div>
             `;
 
-            transporter.sendMail({
-                from: `"Melloo Media Finance" <${process.env.EMAIL_USER}>`,
+            sendMail({
+                from: 'Melloo Media Finance <noreply@melloo.media>',
                 to: invoice.client_email,
                 subject: `URGENT: Overdue Payment Warning (Invoice #${invoiceId})`,
-                html: htmlBody
-            }, (err) => {
-                if (err) return reject(err);
-                
-                db.run("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, 'invoice', 'email', ?)", 
+                html: htmlBody,
+                relatedKind: 'invoice_late',
+                relatedId: invoiceId,
+            }).then(() => {
+                db.run("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, 'invoice', 'email', ?)",
                     [invoice.client_id, `Sent LATE PAYMENT WARNING for Invoice #${invoiceId}`]);
-                
                 resolve();
-            });
+            }).catch((err) => reject(err));
         });
     });
 }
