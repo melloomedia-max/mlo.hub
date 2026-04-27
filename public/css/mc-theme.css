@@ -353,7 +353,11 @@ body > .container > section.section {
   color: white !important;
 }
 
-/* Buttons — glass capsules */
+/* Buttons — glass capsules.
+ * IMPORTANT: do NOT use !important on layout/sizing properties (padding,
+ * font-size, width, height, gap). Many Hub buttons have inline styles for
+ * compact toolbars (Media Hub, Drive, etc) and inline styles must win there.
+ * !important is reserved for color/background only. */
 button,
 .btn,
 input[type="submit"],
@@ -378,6 +382,15 @@ input[type="button"] {
     0 4px 10px rgba(0,0,0,.25);
   transition: transform .15s var(--ease), background .15s var(--ease), box-shadow .2s var(--ease), border-color .15s var(--ease);
 }
+/* Inline-styled buttons: respect inline padding/font-size/background. The
+ * theme should NOT bulk up these compact toolbar buttons. */
+button[style*="padding"],
+button[style*="font-size"],
+button[style*="background"],
+label[style*="padding"][style*="cursor"] {
+  /* Strip the heavy theme box-shadow + transition delays that fight tight layouts */
+  box-shadow: none;
+}
 button:hover,
 .btn:hover {
   background:
@@ -387,26 +400,31 @@ button:hover,
 }
 button:active, .btn:active { transform: translateY(0); }
 
-/* Primary button — make it the MC blue gradient */
-button.primary,
-.btn-primary,
-button[type="submit"],
-input[type="submit"] {
-  background: linear-gradient(180deg, #5d9bff, #2f6cdc) !important;
-  border-color: rgba(120,170,255,.6) !important;
-  color: white !important;
+/* Primary button — only when explicitly marked .primary or [type=submit]
+ * AND there's no inline background already set (so we don't fight Hub's
+ * accent buttons that have their own colors). */
+button.primary:not([style*="background"]),
+.btn-primary:not([style*="background"]),
+button[type="submit"]:not([style*="background"]),
+input[type="submit"]:not([style*="background"]) {
+  background: linear-gradient(180deg, #5d9bff, #2f6cdc);
+  border-color: rgba(120,170,255,.6);
+  color: white;
   box-shadow:
     0 1px 0 rgba(255,255,255,.18) inset,
     0 0 0 1px rgba(255,255,255,.10) inset,
-    0 6px 16px rgba(60, 110, 220, .35) !important;
+    0 6px 16px rgba(60, 110, 220, .35);
 }
-button.primary:hover, .btn-primary:hover, button[type="submit"]:hover {
+button.primary:not([style*="background"]):hover,
+.btn-primary:not([style*="background"]):hover,
+button[type="submit"]:not([style*="background"]):hover {
   filter: brightness(1.06);
 }
-button.danger, .btn-danger {
-  background: linear-gradient(180deg, #ff8090, #d2415c) !important;
-  border-color: rgba(255, 140, 160, .55) !important;
-  color: white !important;
+button.danger:not([style*="background"]),
+.btn-danger:not([style*="background"]) {
+  background: linear-gradient(180deg, #ff8090, #d2415c);
+  border-color: rgba(255, 140, 160, .55);
+  color: white;
 }
 
 /* Existing nav buttons should NOT be blue gradient when in sidebar */
@@ -581,6 +599,21 @@ body.settings-body, body[data-page="settings"] {
 }
 .mc-money-pill.has-pending .mc-money-row:nth-child(2) .mc-money-value {
   color: var(--amber);
+}
+
+/* Media Hub toolbar in the CRM client detail — keep tight, allow wrap */
+#media-preview-section > div:first-child {
+  flex-wrap: wrap;
+  gap: 8px !important;
+  align-items: center !important;
+}
+#media-preview-section > div:first-child > h3 {
+  white-space: nowrap;
+  margin: 0;
+}
+#media-preview-section > div:first-child > div {
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* Tasks header — Sync Google was floating in the middle. Pull it back inline. */
