@@ -391,6 +391,38 @@ label[style*="padding"][style*="cursor"] {
   /* Strip the heavy theme box-shadow + transition delays that fight tight layouts */
   box-shadow: none;
 }
+
+/* Tiny icon-only buttons: when an inline width is set (typically 22-28px,
+ * indicating an icon button), turn off ALL of the theme's button visual
+ * weight including hover lift. */
+button[style*="width:22"],
+button[style*="width: 22"],
+button[style*="width:24"],
+button[style*="width: 24"],
+button[style*="width:26"],
+button[style*="width: 26"],
+button[style*="width:28"],
+button[style*="width: 28"] {
+  box-shadow: none !important;
+  transform: none !important;
+  transition: none !important;
+  display: inline-grid !important;
+  place-items: center;
+  line-height: 1;
+}
+button[style*="width:22"]:hover,
+button[style*="width: 22"]:hover,
+button[style*="width:24"]:hover,
+button[style*="width: 24"]:hover,
+button[style*="width:26"]:hover,
+button[style*="width: 26"]:hover,
+button[style*="width:28"]:hover,
+button[style*="width: 28"]:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  /* Let the inline background's natural lighten happen if any */
+  filter: brightness(1.15);
+}
 button:hover,
 .btn:hover {
   background:
@@ -599,6 +631,37 @@ body.settings-body, body[data-page="settings"] {
 }
 .mc-money-pill.has-pending .mc-money-row:nth-child(2) .mc-money-value {
   color: var(--amber);
+}
+
+/* Invoices grid — use auto-fit + slightly smaller min so 4 invoices on a
+ * wide column don't leave a yawning empty 2/3 row. With auto-fit the last
+ * card stretches to fill the row. */
+#invoices-list {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  align-items: stretch;
+}
+#invoices-list > * {
+  min-height: 140px;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Inline-styled accent buttons (e.g., Back to Clients, Edit Profile, +Add)
+ * lose the MC blue gradient because they have an inline background. They
+ * end up as the old purple-pink. Force inline backgrounds to inherit MC
+ * tokens via a CSS-variable rebind. The melloo-gradient var is already
+ * rebound to MC blue→purple at the top of this file, but inline buttons
+ * use specific colors. We override hot-pink/purple/red gradients only. */
+button[style*="6366f1"][style*="a78bfa"],
+button[style*="linear-gradient"][style*="6366f1"],
+button[style*="linear-gradient"][style*="4f46e5"],
+button[style*="linear-gradient"][style*="a78bfa"] {
+  background: linear-gradient(180deg, #5d9bff, #2f6cdc) !important;
+  border-color: rgba(120,170,255,.6) !important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.18) inset,
+    0 6px 16px rgba(60, 110, 220, .35) !important;
 }
 
 /* Media Hub toolbar in the CRM client detail — keep tight, allow wrap */
