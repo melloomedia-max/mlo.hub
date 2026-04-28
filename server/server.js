@@ -30,23 +30,8 @@ setTimeout(() => {
     db.get("SELECT id FROM staff WHERE email = ?", [adminEmail], (err, row) => {
         if (err) return console.error("[BOOT] Admin lookup error:", err.message);
         if (row) {
-            // Admin already exists — by default we do NOT overwrite the password.
-            // Exception: if FORCE_ADMIN_ROTATE=1 is set, hash ADMIN_PASSWORD and
-            // overwrite the row's password ONCE, then log a clear reminder to
-            // unset the env var. Use this for one-shot rotations only.
-            if (process.env.FORCE_ADMIN_ROTATE === '1' || process.env.FORCE_ADMIN_ROTATE === 'true') {
-                const hashed = hashPassword(adminPass);
-                db.run(
-                    "UPDATE staff SET password = ?, role = 'admin', status = 'active' WHERE id = ?",
-                    [hashed, row.id],
-                    (rotErr) => {
-                        if (rotErr) console.error("[BOOT] FORCE rotation failed:", rotErr.message);
-                        else console.log(`[BOOT] FORCE_ADMIN_ROTATE: rotated password for ${adminEmail}. ⚠️  UNSET FORCE_ADMIN_ROTATE in Railway now.`);
-                    }
-                );
-                return;
-            }
-            // Normal path: just make sure role/status are right.
+            // Admin already exists — ensure role/status are correct but never rotate password at boot.
+            // Password changes must go through Settings UI or a proper password-reset flow.
             db.run(
                 "UPDATE staff SET role = 'admin', status = 'active' WHERE id = ? AND (role != 'admin' OR status != 'active')",
                 [row.id],
@@ -176,12 +161,7 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
                 }
             }
 
-            // Legacy Fallback
-            if (!email && password === adminPass) {
-                req.session.isAuthenticated = true;
-                req.session.user = { id: 0, name: 'Legacy Admin', role: 'admin', email: 'legacy@agency.com' };
-                return req.session.save(() => res.redirect('/'));
-            }
+            // Legacy fallback removed for security — all logins must go through staff table.
 
             res.redirect('/login?error=invalid');
         });
