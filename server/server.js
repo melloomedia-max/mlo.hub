@@ -275,6 +275,14 @@ app.use(express.static(path.join(__dirname, '../public'), {
 
 console.log("[BOOT] Registering API routes...");
 
+// Add no-cache headers to all API endpoints to prevent stale dashboard data
+app.use('/api', (req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+});
+
 // Routes
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/meetings', meetingsRoutes);
