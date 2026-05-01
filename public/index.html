@@ -1033,23 +1033,15 @@
     </div>
 
     <!-- Confirmation Modal (shared by all delete actions) -->
-    <div id="confirm-modal" class="modal"
-      style="display:none; z-index:9999; background:rgba(0,0,0,0.65); backdrop-filter:blur(8px);">
-      <div
-        style="background:rgba(20,20,35,0.95); border:1px solid rgba(244,63,94,0.35); border-radius:20px; padding:36px 40px; max-width:420px; width:90%; box-shadow:0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06); text-align:center; margin:auto;">
-        <div id="confirm-icon" style="font-size:40px; margin-bottom:16px;">🗑️</div>
-        <h3 id="confirm-title"
-          style="color:rgba(255,255,255,0.95); font-size:18px; font-weight:700; margin-bottom:10px;">
-          Confirm</h3>
-        <p id="confirm-message"
-          style="color:rgba(255,255,255,0.5); font-size:14px; line-height:1.6; margin-bottom:28px;">
-          Are you sure?</p>
-        <div style="display:flex; gap:12px; justify-content:center;">
-          <button id="confirm-yes-btn"
-            style="flex:1; padding:12px 20px; background:rgba(244,63,94,0.2); border:1px solid rgba(244,63,94,0.45); border-radius:12px; color:#fda4af; font-size:14px; font-weight:700; cursor:pointer;">Yes,
-            Delete</button>
-          <button onclick="closeConfirmModal()"
-            style="flex:1; padding:12px 20px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:12px; color:rgba(255,255,255,0.7); font-size:14px; font-weight:600; cursor:pointer;">Cancel</button>
+    <!-- Confirmation Modal (shared by all delete actions) -->
+    <div id="confirm-modal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:420px; text-align:center;">
+        <div id="confirm-icon" style="font-size:40px; margin:24px 0 16px;">🗑️</div>
+        <h3 id="confirm-title" style="color:rgba(255,255,255,0.95); font-size:18px; font-weight:700; margin-bottom:10px;">Confirm</h3>
+        <p id="confirm-message" style="color:rgba(255,255,255,0.5); font-size:14px; line-height:1.6; margin-bottom:28px; padding:0 24px;">Are you sure?</p>
+        <div style="display:flex; gap:12px; justify-content:center; padding:0 24px 24px;">
+          <button id="confirm-yes-btn" class="delete-btn" style="flex:1; padding:12px 20px; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer;">Yes, Delete</button>
+          <button onclick="closeConfirmModal()" class="secondary-btn" style="flex:1; padding:12px 20px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer;">Cancel</button>
         </div>
       </div>
     </div>
@@ -1524,22 +1516,7 @@
   <!-- Global Toast -->
   <div id="toast-container" class="toast-container"></div>
 
-  <!-- Global Confirm Modal -->
-  <div id="confirm-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="confirm-title">Confirm</h3>
-        <button class="icon-btn" onclick="closeConfirmModal()">✕</button>
-      </div>
-      <div style="padding: 24px;">
-        <p id="confirm-message" style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;"></p>
-        <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
-          <button class="secondary-btn" style="padding: 10px 20px;" onclick="closeConfirmModal()">Cancel</button>
-          <button id="confirm-yes-btn" class="primary-btn" style="padding: 10px 24px;">Confirm</button>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
