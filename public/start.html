@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Start Your Project — Melloo Media</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .intake-container {
+      max-width: 720px;
+      width: 100%;
+      background: rgba(20, 25, 40, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 48px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .intake-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .intake-header h1 {
+      font-size: 36px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff 0%, #a8b2d1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .intake-header p {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.6;
+    }
+
+    .form-group {
+      margin-bottom: 28px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 8px;
+    }
+
+    .form-group label.required::after {
+      content: ' *';
+      color: #f472b6;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      color: white;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #6366f1;
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .checkbox-item label {
+      margin: 0;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 16px 32px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 24px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(99, 102, 241, 0.3);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .success-message {
+      display: none;
+      text-align: center;
+      padding: 32px;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 16px;
+      color: #4ade80;
+    }
+
+    .success-message h2 {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .error-message {
+      display: none;
+      padding: 16px;
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      border-radius: 12px;
+      color: #fda4af;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="intake-container">
+    <div class="intake-header">
+      <h1>Let's Build Something Amazing</h1>
+      <p>Tell us about your project and we'll create a custom proposal for you.</p>
+    </div>
+
+    <div id="error-message" class="error-message"></div>
+
+    <form id="intake-form">
+      <!-- Contact Info -->
+      <div class="form-group">
+        <label class="required">Your Name</label>
+        <input type="text" name="name" required placeholder="John Doe">
+      </div>
+
+      <div class="form-group">
+        <label class="required">Email</label>
+        <input type="email" name="email" required placeholder="john@company.com">
+      </div>
+
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" name="phone" placeholder="+1 (555) 123-4567">
+      </div>
+
+      <div class="form-group">
+        <label>Company</label>
+        <input type="text" name="company" placeholder="Your Company">
+      </div>
+
+      <div class="form-group">
+        <label>Current Website (if any)</label>
+        <input type="url" name="website" placeholder="https://yoursite.com">
+      </div>
+
+      <!-- Project Details -->
+      <div class="form-group">
+        <label>What services are you interested in?</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" name="services" value="Branding" id="service-branding">
+            <label for="service-branding">Branding</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" name="services" value="Website" id="service-website">
+            <label for="service-website">Website</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" name="services" value="Content" id="service-content">
+            <label for="service-content">Content</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" name="services" value="Video" id="service-video">
+            <label for="service-video">Video</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" name="services" value="Marketing" id="service-marketing">
+            <label for="service-marketing">Marketing</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Budget Range</label>
+        <select name="budget_range">
+          <option value="">Select a range...</option>
+          <option value="$2,500-$5,000">$2,500 - $5,000</option>
+          <option value="$5,000-$10,000">$5,000 - $10,000</option>
+          <option value="$10,000-$25,000">$10,000 - $25,000</option>
+          <option value="$25,000+">$25,000+</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Timeline</label>
+        <select name="timeline">
+          <option value="">Select timeline...</option>
+          <option value="ASAP">ASAP</option>
+          <option value="1-2 months">1-2 months</option>
+          <option value="3-6 months">3-6 months</option>
+          <option value="6+ months">6+ months</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>What are you building?</label>
+        <textarea name="what_building" placeholder="Tell us about your project, product, or business..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Who's your audience?</label>
+        <input type="text" name="audience" placeholder="e.g., Tech startups, Small businesses, Creators...">
+      </div>
+
+      <div class="form-group">
+        <label>What's your dream outcome?</label>
+        <textarea name="dream_outcome" placeholder="What does success look like for this project?"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Any brands or websites you love?</label>
+        <input type="text" name="references" placeholder="URLs or brand names...">
+      </div>
+
+      <div class="form-group">
+        <label>How did you find us?</label>
+        <select name="how_found_us">
+          <option value="">Select...</option>
+          <option value="Google">Google</option>
+          <option value="Referral">Referral</option>
+          <option value="Social Media">Social Media</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <button type="submit" class="submit-btn">Submit Project Brief</button>
+    </form>
+
+    <div id="success-message" class="success-message">
+      <h2>✨ Thank You!</h2>
+      <p>We've received your project brief. We'll review it and get back to you within 24 hours with a custom proposal.</p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('intake-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const form = e.target;
+      const formData = new FormData(form);
+      const submitBtn = form.querySelector('.submit-btn');
+      const errorDiv = document.getElementById('error-message');
+      
+      // Collect data
+      const data = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        company: formData.get('company'),
+        website: formData.get('website'),
+        services_interested: formData.getAll('services'),
+        budget_range: formData.get('budget_range'),
+        timeline: formData.get('timeline'),
+        what_building: formData.get('what_building'),
+        audience: formData.get('audience'),
+        dream_outcome: formData.get('dream_outcome'),
+        references: formData.get('references'),
+        how_found_us: formData.get('how_found_us')
+      };
+      
+      // Disable submit
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      errorDiv.style.display = 'none';
+      
+      try {
+        const response = await fetch('/api/intake', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          // Show success
+          form.style.display = 'none';
+          document.getElementById('success-message').style.display = 'block';
+        } else {
+          throw new Error(result.error || 'Failed to submit');
+        }
+      } catch (error) {
+        console.error('Submit error:', error);
+        errorDiv.textContent = error.message;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Project Brief';
+      }
+    });
+  </script>
+</body>
+</html>
