@@ -70,6 +70,7 @@ const staffRoutes = require('./routes/staff');
 const archivesRoutes = require('./routes/archives');
 const settingsRoutes = require('./routes/settings');
 const intakeRoutes = require('./routes/intake');
+const proposalsRoutes = require('./routes/proposals');
 const { verifyPassword, hashPassword, requireAuth, requireAdmin } = require('./utils/auth');
 const { startArchiveScheduler } = require('./jobs/archiveScheduler');
 
@@ -301,6 +302,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/intake', intakeRoutes);
 app.use('/intake', intakeRoutes);  // Also serve /intake/start for public access
+app.use('/api/proposals', proposalsRoutes);
 
 // Alias for testing
 app.get('/api/email-templates', async (req, res) => {
