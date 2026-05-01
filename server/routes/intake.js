@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getDb } = require('../database');
+const { recommendPackage } = require('../utils/package-recommender');
 
 // GET /intake/start - Show intake form (public, no auth required)
 router.get('/start', (req, res) => {
@@ -33,14 +34,17 @@ router.post('/', async (req, res) => {
 
     const db = getDb();
     
+    // Get package recommendation
+    const recommendation = recommendPackage(req.body);
+    
     // Insert into leads table
     const result = await db.run(`
       INSERT INTO leads (
         name, email, phone, company, website,
         services_interested, budget_range, timeline,
         what_building, audience, dream_outcome, references,
-        source, stage, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        source, stage, package_recommended, quoted_amount, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `, [
       name,
       email,
@@ -55,7 +59,9 @@ router.post('/', async (req, res) => {
       dream_outcome || null,
       references || null,
       how_found_us || 'Website Intake Form',
-      'new' // initial stage
+      'new', // initial stage
+      recommendation.package_name, // package_recommended
+      null // quoted_amount (to be set later)
     ]);
 
     // Log stage history
@@ -67,7 +73,13 @@ router.post('/', async (req, res) => {
     res.json({
       success: true,
       leadId: result.lastID,
-      message: 'Thank you! We\'ll be in touch within 24 hours.'
+      message: 'Thank you! We\'ll be in touch within 24 hours.',
+      recommendation: {
+        package: recommendation.package_name,
+        price: recommendation.details.price,
+        timeline: recommendation.details.timeline,
+        confidence: recommendation.confidence
+      }
     });
 
   } catch (error) {
@@ -77,3 +89,20 @@ router.post('/', async (req, res) => {
 });
 
 module.exports = router;
+
+// GET /api/intake/recommend - Get package recommendation for lead data
+router.post('/recommend', async (req, res) => {
+  try {
+    const recommendation = recommendPackage(req.body);
+    res.json(recommendation);
+  } catch (error) {
+    console.error('Recommendation error:', error);
+    res.status(500).json({ error: 'Failed to generate recommendation' });
+  }
+});
+
+// GET /api/intake/packages - List all available packages
+router.get('/packages', (req, res) => {
+  const { PACKAGES } = require('../utils/package-recommender');
+  res.json(PACKAGES);
+});
