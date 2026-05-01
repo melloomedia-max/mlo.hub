@@ -76,15 +76,19 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    flex-shrink: 0;
     transition: all 0.2s var(--spring);
     padding: 0;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
 }
 
 .inv-delete-btn:hover {
     background: rgba(244, 63, 94, 0.25);
     border-color: rgba(244, 63, 94, 0.5);
-    transform: scale(1.1);
+    transform: translateY(-50%) scale(1.1);
 }
 
 /* Delete button in the action bar */
