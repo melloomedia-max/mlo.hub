@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Create Account - Melloo Portal</title>
+  <link rel="icon" type="image/png" href="/img/logo-icon.png">
+  <link rel="apple-touch-icon" href="/img/logo-icon.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      background: radial-gradient(circle at 50% -20%, #201a35, var(--bg-color));
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      font-family: var(--font-family, 'Inter', sans-serif);
+      color: white;
+      padding: 20px;
+    }
+    
+    .signup-container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 50px 40px;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .brand-header h1 {
+      font-family: 'Atkinson Hyperlegible', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      margin: 0 0 10px 0;
+    }
+
+    .brand-header p {
+      color: var(--text-secondary);
+      margin-bottom: 30px;
+      font-size: 15px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      text-align: left;
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      margin-left: 4px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 14px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: white;
+      font-size: 15px;
+      box-sizing: border-box;
+      outline: none;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #6366f1;
+      background: rgba(0,0,0,0.4);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 8px;
+    }
+
+    button[type="submit"]:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .success-msg {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #86efac;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+
+    .success-msg h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+    }
+
+    .error-msg {
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: #fca5a5;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    .login-link {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 14px;
+      color: var(--text-tertiary);
+    }
+
+    .login-link a {
+      color: #a5b4fc;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-link a:hover {
+      color: white;
+    }
+
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .signup-container {
+        padding: 40px 24px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="css/mc-theme.css">
+</head>
+<body>
+
+  <div class="signup-container">
+    <div class="brand-header">
+      <h1>
+        <span style="background: var(--melloo-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Create Account</span>
+      </h1>
+      <p>Get started with Melloo Media</p>
+    </div>
+
+    <form id="signup-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="first-name">First Name *</label>
+          <input type="text" id="first-name" name="first_name" required>
+        </div>
+        <div class="form-group">
+          <label for="last-name">Last Name *</label>
+          <input type="text" id="last-name" name="last_name" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address *</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567">
+      </div>
+
+      <div class="form-group">
+        <label for="company">Company / Business Name</label>
+        <input type="text" id="company" name="company">
+      </div>
+
+      <div class="form-group">
+        <label for="message">What brings you to Melloo? (Optional)</label>
+        <textarea id="message" name="message" placeholder="Tell us about your project or what you're looking for..."></textarea>
+      </div>
+
+      <button type="submit" id="submit-btn">Create Account</button>
+
+      <div id="message-container"></div>
+    </form>
+
+    <div class="login-link">
+      Already have an account? <a href="/login">Sign in</a>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('signup-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const messageContainer = document.getElementById('message-container');
+
+    // Pre-fill from URL params (e.g., from Google OAuth redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('email')) {
+      document.getElementById('email').value = decodeURIComponent(urlParams.get('email'));
+    }
+    if (urlParams.get('name')) {
+      const name = decodeURIComponent(urlParams.get('name'));
+      const parts = name.split(' ');
+      document.getElementById('first-name').value = parts[0] || '';
+      document.getElementById('last-name').value = parts.slice(1).join(' ') || '';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account...';
+      messageContainer.innerHTML = '';
+
+      const formData = {
+        first_name: document.getElementById('first-name').value.trim(),
+        last_name: document.getElementById('last-name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        company: document.getElementById('company').value.trim(),
+        message: document.getElementById('message').value.trim()
+      };
+
+      try {
+        const response = await fetch('/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          form.style.display = 'none';
+          messageContainer.innerHTML = `
+            <div class="success-msg">
+              <h3>✓ Request Submitted!</h3>
+              <p>${data.message}</p>
+              <p style="margin-top: 16px; font-size: 14px;">We'll review your request and send you an email within 24 hours with your portal access details.</p>
+            </div>
+          `;
+        } else {
+          messageContainer.innerHTML = `<div class="error-msg">${data.error}</div>`;
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Create Account';
+        }
+      } catch (error) {
+        console.error('Signup error:', error);
+        messageContainer.innerHTML = `<div class="error-msg">Network error. Please try again.</div>`;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account';
+      }
+    });
+  </script>
+
+</body>
+</html>

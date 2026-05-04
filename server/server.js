@@ -71,6 +71,7 @@ const archivesRoutes = require('./routes/archives');
 const settingsRoutes = require('./routes/settings');
 const intakeRoutes = require('./routes/intake');
 const proposalsRoutes = require('./routes/proposals');
+const clientAuthRoutes = require('./routes/client-auth');
 const { verifyPassword, hashPassword, requireAuth, requireAdmin } = require('./utils/auth');
 const { startArchiveScheduler } = require('./jobs/archiveScheduler');
 
@@ -117,10 +118,47 @@ app.use((req, res, next) => {
     next();
 });
 
+// --- Debug Route (Remove After Confirming) ---
+app.get('/debug/host', (req, res) => {
+    res.json({
+        hostname: req.hostname,
+        host: req.get('host'),
+        'x-forwarded-host': req.get('x-forwarded-host'),
+        'x-original-host': req.get('x-original-host'),
+        headers: req.headers
+    });
+});
+
 // --- Pure Server Auth Middleware ---
 app.get('/login', (req, res) => {
-    const loginPath = path.join(__dirname, '../public/login.html');
-    res.sendFile(loginPath);
+    // Server-side routing based on host header (works behind Railway proxy)
+    const host = req.get('host') || req.hostname || '';
+    const isPortal = host.startsWith('portal.');
+    
+    // Debug logging
+    console.log(`[login] host=${host} hostname=${req.hostname} isPortal=${isPortal}`);
+    
+    // Prevent caching of login page
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    if (isPortal) {
+        // Client portal login (Google OAuth, Magic Link, Password)
+        const clientLoginPath = path.join(__dirname, '../public/login-client.html');
+        console.log(`[login] Serving client login: ${clientLoginPath}`);
+        res.sendFile(clientLoginPath);
+    } else {
+        // Staff hub login (password-only)
+        const staffLoginPath = path.join(__dirname, '../public/login-staff.html');
+        console.log(`[login] Serving staff login: ${staffLoginPath}`);
+        res.sendFile(staffLoginPath);
+    }
+});
+
+app.get('/signup', (req, res) => {
+    const signupPath = path.join(__dirname, '../public/signup.html');
+    res.sendFile(signupPath);
 });
 
 app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
@@ -230,7 +268,7 @@ app.use((req, res, next) => {
     const protectedRoutes = ['/', '/dashboard', '/clients', '/invoices', '/meetings', '/campaigns', '/settings', '/index.html', '/settings.html'];
     
     // Always skip these completely
-    if (route === '/oauth2callback' || route.startsWith('/auth/google') || route === '/login' || route === '/logout') return next();
+    if (route === '/oauth2callback' || route.startsWith('/auth/') || route === '/login' || route === '/logout' || route === '/signup') return next();
     if (route.startsWith('/css/') || route.startsWith('/img/') || route.startsWith('/js/components/')) return next();
 
     // Portal logic: If on portal domain, require auth for almost everything except login
@@ -303,6 +341,7 @@ app.use('/api/email', emailRoutes);
 app.use('/api/intake', intakeRoutes);
 app.use('/intake', intakeRoutes);  // Also serve /intake/start for public access
 app.use('/api/proposals', proposalsRoutes);
+app.use('/auth', clientAuthRoutes);
 
 // Alias for testing
 app.get('/api/email-templates', async (req, res) => {

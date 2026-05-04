@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Agency Hub - Staff Login</title>
+  <link rel="icon" type="image/png" href="/img/logo-icon.png">
+  <link rel="apple-touch-icon" href="/img/logo-icon.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/mobile.css?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+  <style>
+    body {
+      background: radial-gradient(circle at 50% -20%, #201a35, var(--bg-color));
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      font-family: var(--font-family, 'Inter', sans-serif);
+      color: white;
+    }
+    
+    .login-container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 50px 40px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .brand-header h1 {
+      font-family: 'Atkinson Hyperlegible', sans-serif;
+      font-weight: 700;
+      font-size: 26px;
+      margin: 0;
+    }
+
+    .brand-header span {
+      font-style: italic;
+      color: #a5b4fc;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 16px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    input[type="password"] {
+      text-align: center;
+      letter-spacing: 4px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #6366f1;
+      background: rgba(0,0,0,0.3);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+    
+    .error-msg {
+      color: #f43f5e;
+      font-size: 14px;
+      margin-top: 15px;
+      height: 20px;
+    }
+  </style>
+  <link rel="stylesheet" href="css/mc-theme.css">
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="brand-header">
+      <lottie-player src="/img/Siri.json" background="transparent" speed="1" style="width: 50px; height: 50px;" loop autoplay></lottie-player>
+      <h1>
+        <span style="background: var(--melloo-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">melloo</span> 
+        Agency Hub
+      </h1>
+    </div>
+    
+    <p style="color: var(--text-secondary); margin-bottom: 25px; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em;">Staff Authentication</p>
+    
+    <form action="/login" method="POST">
+      <div style="margin-bottom: 16px; text-align: left;">
+        <label for="username" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px;">Email Address</label>
+        <input type="email" name="email" id="username" placeholder="name@melloo.media" autocomplete="email" required>
+      </div>
+
+      <div style="margin-bottom: 24px; text-align: left;">
+        <label for="password" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px;">Password</label>
+        <input type="password" name="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+
+      <button type="submit">Access Hub</button>
+      <div id="error-msg" class="error-msg"></div>
+    </form>
+
+    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border);">
+      <a href="https://melloo.media" style="color: var(--text-tertiary); text-decoration: none; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-tertiary)'">
+        ← Back to Website
+      </a>
+    </div>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    const errorEl = document.getElementById('error-msg');
+    
+    if (error === 'invalid') {
+      errorEl.textContent = 'Invalid credentials';
+    } else if (error === 'portal_access') {
+      errorEl.textContent = 'Please log in with a client account';
+    } else if (error === 'hub_access') {
+      errorEl.textContent = 'Please log in with a staff account';
+    } else if (error === 'portal_not_setup') {
+      errorEl.textContent = 'Portal access not configured. Please contact support.';
+    } else if (error === 'notconfigured') {
+      errorEl.textContent = 'Server not configured';
+    } else if (error === 'session') {
+      errorEl.textContent = 'Session error';
+    } else if (error) {
+      errorEl.textContent = 'Login error';
+    }
+    
+    // clear any legacy localStorage token
+    localStorage.removeItem('agency_admin_token');
+  </script>
+
+</body>
+</html>

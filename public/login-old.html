@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Agency Hub - Login</title>
+  <link rel="icon" type="image/png" href="/img/logo-icon.png">
+  <link rel="apple-touch-icon" href="/img/logo-icon.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/mobile.css?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+  <style>
+    body {
+      background: radial-gradient(circle at 50% -20%, #201a35, var(--bg-color));
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      font-family: var(--font-family, 'Inter', sans-serif);
+      color: white;
+    }
+    
+    .login-container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 50px 40px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .brand-header h1 {
+      font-family: 'Atkinson Hyperlegible', sans-serif;
+      font-weight: 700;
+      font-size: 26px;
+      margin: 0;
+    }
+
+    .brand-header span {
+      font-style: italic;
+      color: #a5b4fc;
+    }
+
+    .auth-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .auth-btn-google {
+      background: white;
+      color: #1f2937;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .auth-btn-google:hover {
+      background: #f9fafb;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .auth-btn-magic {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+    }
+
+    .auth-btn-magic:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 24px 0;
+      color: var(--text-tertiary);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .divider span {
+      padding: 0 12px;
+    }
+
+    .password-form {
+      display: none;
+    }
+
+    .password-form.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .magic-link-form {
+      display: none;
+    }
+
+    .magic-link-form.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 14px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: white;
+      font-size: 15px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+      outline: none;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    input[type="password"] {
+      letter-spacing: 2px;
+    }
+
+    input:focus {
+      border-color: #6366f1;
+      background: rgba(0,0,0,0.4);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button[type="submit"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .back-btn {
+      background: transparent;
+      color: var(--text-tertiary);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 10px;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .back-btn:hover {
+      color: white;
+      border-color: rgba(255,255,255,0.2);
+      transform: none;
+      box-shadow: none;
+    }
+
+    .error-msg,
+    .success-msg {
+      font-size: 14px;
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+
+    .error-msg {
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: #fca5a5;
+    }
+
+    .success-msg {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #86efac;
+    }
+
+    .google-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 40px 24px;
+        margin: 20px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="css/mc-theme.css">
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="brand-header">
+      <lottie-player src="/img/Siri.json" background="transparent" speed="1" style="width: 50px; height: 50px;" loop autoplay></lottie-player>
+      <h1 id="brand-title">
+        <span style="background: var(--melloo-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">melloo</span> 
+        <span id="portal-type">Agency Hub</span>
+      </h1>
+    </div>
+    
+    <p id="auth-type" style="color: var(--text-secondary); margin-bottom: 25px; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em;">Staff Authentication</p>
+    
+    <!-- Auth method selection (portal only) -->
+    <div id="auth-methods" class="auth-methods" style="display: none;">
+      <button class="auth-btn auth-btn-google" onclick="loginWithGoogle()">
+        <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <button class="auth-btn auth-btn-magic" onclick="showMagicLinkForm()">
+        <span>✉️</span>
+        Email me a login link
+      </button>
+
+      <div class="divider"><span>or</span></div>
+
+      <button class="auth-btn" onclick="showPasswordForm()" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1);">
+        Sign in with password
+      </button>
+    </div>
+
+    <!-- Password login form -->
+    <form id="password-form" class="password-form" action="/login" method="POST">
+      <div style="text-align: left;">
+        <label for="email" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px;">Email Address</label>
+        <input type="email" name="email" id="email" placeholder="your@email.com" autocomplete="email" required>
+      </div>
+
+      <div style="text-align: left;">
+        <label for="password" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px;">Password</label>
+        <input type="password" name="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+
+      <button type="submit">Access <span id="submit-text">Hub</span></button>
+      <button type="button" class="back-btn" onclick="showAuthMethods()" id="back-to-methods" style="display: none;">← Back to options</button>
+    </form>
+
+    <!-- Magic link form -->
+    <div id="magic-link-form" class="magic-link-form">
+      <div style="text-align: left;">
+        <label for="magic-email" style="display: block; font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; margin-bottom: 6px; margin-left: 4px;">Email Address</label>
+        <input type="email" id="magic-email" placeholder="your@email.com" autocomplete="email" required>
+      </div>
+
+      <button type="button" onclick="sendMagicLink()">Send Login Link</button>
+      <button type="button" class="back-btn" onclick="showAuthMethods()">← Back to options</button>
+    </div>
+
+    <div id="message"></div>
+
+    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--glass-border);">
+      <a id="website-link" href="https://melloo.media" style="color: var(--text-tertiary); text-decoration: none; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-tertiary)'">
+        ← Back to Website
+      </a>
+    </div>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script>
+    const host = window.location.host;
+    const isPortal = host.startsWith('portal.');
+    const messageEl = document.getElementById('message');
+    
+    // Configure UI based on domain
+    if (isPortal) {
+      document.title = 'Client Portal - Login';
+      document.getElementById('portal-type').textContent = 'Client Portal';
+      document.getElementById('auth-type').textContent = 'Client Authentication';
+      document.getElementById('submit-text').textContent = 'Portal';
+      document.getElementById('auth-methods').style.display = 'flex';
+      document.getElementById('back-to-methods').style.display = 'block';
+    } else {
+      // Staff login - show password form by default
+      document.getElementById('password-form').classList.add('active');
+    }
+
+    // Handle URL errors
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    
+    if (error) {
+      const errors = {
+        'invalid': 'Invalid credentials',
+        'portal_access': 'Please log in with a client account',
+        'hub_access': 'Please log in with a staff account',
+        'portal_not_setup': 'Portal access not configured. Contact support.',
+        'oauth_failed': 'Google sign-in failed. Please try again.',
+        'no_email': 'Could not retrieve email from Google account',
+        'invalid_token': 'Invalid login link',
+        'invalid_or_expired_token': 'This login link has expired or is invalid',
+        'verification_failed': 'Login link verification failed'
+      };
+      
+      showMessage(errors[error] || 'Login error', 'error');
+    }
+
+    function showMessage(text, type = 'error') {
+      messageEl.className = type === 'error' ? 'error-msg' : 'success-msg';
+      messageEl.textContent = text;
+      messageEl.style.display = 'block';
+    }
+
+    function hideMessage() {
+      messageEl.style.display = 'none';
+    }
+
+    function showPasswordForm() {
+      document.getElementById('auth-methods').style.display = 'none';
+      document.getElementById('password-form').classList.add('active');
+      document.getElementById('magic-link-form').classList.remove('active');
+      hideMessage();
+    }
+
+    function showMagicLinkForm() {
+      document.getElementById('auth-methods').style.display = 'none';
+      document.getElementById('password-form').classList.remove('active');
+      document.getElementById('magic-link-form').classList.add('active');
+      hideMessage();
+    }
+
+    function showAuthMethods() {
+      document.getElementById('auth-methods').style.display = 'flex';
+      document.getElementById('password-form').classList.remove('active');
+      document.getElementById('magic-link-form').classList.remove('active');
+      hideMessage();
+    }
+
+    function loginWithGoogle() {
+      window.location.href = '/auth/google';
+    }
+
+    async function sendMagicLink() {
+      const email = document.getElementById('magic-email').value.trim();
+      
+      if (!email) {
+        showMessage('Please enter your email address', 'error');
+        return;
+      }
+
+      const btn = event.target;
+      btn.classList.add('loading');
+      btn.textContent = 'Sending...';
+      hideMessage();
+
+      try {
+        const response = await fetch('/auth/magic-link/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showMessage(data.message || 'Check your email for a login link!', 'success');
+          document.getElementById('magic-email').value = '';
+        } else {
+          showMessage(data.error || 'Failed to send login link', 'error');
+        }
+      } catch (error) {
+        console.error('Magic link error:', error);
+        showMessage('Network error. Please try again.', 'error');
+      } finally {
+        btn.classList.remove('loading');
+        btn.textContent = 'Send Login Link';
+      }
+    }
+
+    // Update website link from config
+    if (window.PORTAL_CONFIG?.PORTAL_BASE_URL) {
+      document.getElementById('website-link').href = window.PORTAL_CONFIG.PORTAL_BASE_URL;
+    }
+
+    // Clear legacy localStorage
+    localStorage.removeItem('agency_admin_token');
+  </script>
+
+</body>
+</html>
