@@ -1063,7 +1063,8 @@ async function createClient(event) {
         social_linkedin: document.getElementById('client-linkedin')?.value || '',
         social_twitter: document.getElementById('client-twitter')?.value || '',
         social_facebook: document.getElementById('client-facebook')?.value || '',
-        notes: document.getElementById('client-notes')?.value || ''
+        notes: document.getElementById('client-notes')?.value || '',
+        portal_access: document.getElementById('client-portal-access')?.checked ? 1 : 0
     };
 
     if (client.email && !validateEmail(client.email)) {
