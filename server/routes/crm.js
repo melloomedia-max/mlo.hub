@@ -327,10 +327,14 @@ router.post('/clients', async (req, res) => {
     // Create Drive folder
     const folderId = await createClientFolder(first_name, last_name);
 
-    const sql = `INSERT INTO clients (first_name, last_name, birthday, name, email, phone, company, status, notes, google_drive_folder_id, social_instagram, social_linkedin, social_twitter, social_facebook) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    // Generate portal token (40-char hex)
+    const crypto = require('crypto');
+    const portalToken = crypto.randomBytes(20).toString('hex').toUpperCase();
 
-    db.run(sql, [first_name, last_name, birthday, name, email, phone, company, status, notes, folderId, social_instagram, social_linkedin, social_twitter, social_facebook], function (err) {
+    const sql = `INSERT INTO clients (first_name, last_name, birthday, name, email, phone, company, status, notes, google_drive_folder_id, social_instagram, social_linkedin, social_twitter, social_facebook, portal_access, portal_token) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    db.run(sql, [first_name, last_name, birthday, name, email, phone, company, status, notes, folderId, social_instagram, social_linkedin, social_twitter, social_facebook, 1, portalToken], function (err) {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
@@ -341,7 +345,7 @@ router.post('/clients', async (req, res) => {
         const { enrollClientInCampaignByTrigger } = require('../utils/campaignRunner');
         enrollClientInCampaignByTrigger(clientId, 'client_onboarded').catch(e => console.error(e));
 
-        res.json({ id: clientId, first_name, last_name, birthday, name, email, phone, company, status, notes, google_drive_folder_id: folderId });
+        res.json({ id: clientId, first_name, last_name, birthday, name, email, phone, company, status, notes, google_drive_folder_id: folderId, portal_access: 1, portal_token: portalToken });
     });
 });
 
@@ -352,7 +356,7 @@ router.put('/clients/:id', (req, res) => {
         'first_name', 'last_name', 'birthday', 'email', 'phone', 'company',
         'status', 'notes', 'google_drive_folder_id',
         'social_instagram', 'social_linkedin', 'social_twitter', 'social_facebook',
-        'password'
+        'password', 'portal_access', 'portal_token'
     ];
 
     const updates = [];
