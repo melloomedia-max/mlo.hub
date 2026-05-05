@@ -189,11 +189,18 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
         });
     } else {
         // Hub Login (Staff)
+        console.log(`[STAFF-LOGIN] Attempt for email: ${email}`);
         db.get('SELECT * FROM staff WHERE email = ?', [email], (err, user) => {
-            if (err) return res.redirect('/login?error=db');
+            if (err) {
+                console.log(`[STAFF-LOGIN] DB Error: ${err.message}`);
+                return res.redirect('/login?error=db');
+            }
 
+            console.log(`[STAFF-LOGIN] User found: ${!!user}, status: ${user?.status}, has password: ${!!user?.password}`);
+            
             if (user) {
                 const match = verifyPassword(password, user.password);
+                console.log(`[STAFF-LOGIN] Password match: ${match}`);
                 if (user.status === 'active' && match) {
                     req.session.isAuthenticated = true;
                     req.session.user = { id: user.id, name: user.name, role: user.role, email: user.email };
@@ -202,7 +209,7 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
             }
 
             // Legacy fallback removed for security — all logins must go through staff table.
-
+            console.log(`[STAFF-LOGIN] Login failed - redirecting to /login?error=invalid`);
             res.redirect('/login?error=invalid');
         });
     }
