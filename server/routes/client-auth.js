@@ -285,4 +285,12 @@ router.post('/signup', (req, res) => {
     );
 });
 
+// TEMPORARY DEBUG - Preview APP_PASSWORD (REMOVE AFTER CHECKING)
+router.get('/debug-app-password', (req, res) => {
+    res.json({ 
+        appPasswordPreview: process.env.APP_PASSWORD?.substring(0, 4) + '****',
+        appPasswordSet: !!process.env.APP_PASSWORD
+    });
+});
+
 module.exports = router;
