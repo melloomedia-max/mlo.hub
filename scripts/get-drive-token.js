@@ -10,7 +10,8 @@ const http = require('http');
 const url = require('url');
 let open;
 try {
-    open = require('open');
+    const openModule = require('open');
+    open = openModule.default || openModule;
 } catch (e) {
     // open package not available, will show URL instead
     open = null;

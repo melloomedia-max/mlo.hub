@@ -468,6 +468,32 @@ db.serialize(() => {
     )
   `);
 
+  console.log("[DB] Setting up file uploads tables...");
+  // Add drive_folder_id to clients table if not exists
+  db.run("ALTER TABLE clients ADD COLUMN drive_folder_id TEXT", (err) => { });
+
+  // Client Files table (for file uploads via portal/staff)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS client_files (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL,
+      file_name TEXT NOT NULL,
+      file_size INTEGER NOT NULL,
+      mime_type TEXT,
+      drive_file_id TEXT NOT NULL,
+      drive_view_link TEXT,
+      drive_download_link TEXT,
+      uploaded_by_type TEXT NOT NULL CHECK(uploaded_by_type IN ('client', 'staff')),
+      uploaded_by_id INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Indexes for faster lookups
+  db.run("CREATE INDEX IF NOT EXISTS idx_client_files_client_id ON client_files(client_id)");
+  db.run("CREATE INDEX IF NOT EXISTS idx_client_files_created_at ON client_files(created_at DESC)");
+
   console.log("[DB] Database initialization scripts queued.");
 });
 
