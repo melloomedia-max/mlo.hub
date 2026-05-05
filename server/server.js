@@ -55,25 +55,28 @@ setTimeout(() => {
 }, 2000);
 
 
-const tasksRoutes = require('./routes/tasks');
-const emailRoutes = require('./routes/email');
-const meetingsRoutes = require('./routes/meetings');
-const crmRoutes = require('./routes/crm');
-const timeRoutes = require('./routes/time');
-const invoicesRoutes = require('./routes/invoices');
-const revenueRoutes = require('./routes/revenue');
-const billingRoutes = require('./routes/billing');
-const portalRoutes = require('./routes/portal');
-const campaignsRoutes = require('./routes/campaigns');
-const subscriptionsRoutes = require('./routes/subscriptions');
-const staffRoutes = require('./routes/staff');
-const archivesRoutes = require('./routes/archives');
-const settingsRoutes = require('./routes/settings');
-const intakeRoutes = require('./routes/intake');
-const proposalsRoutes = require('./routes/proposals');
-const clientAuthRoutes = require('./routes/client-auth');
-const { verifyPassword, hashPassword, requireAuth, requireAdmin } = require('./utils/auth');
-const { startArchiveScheduler } = require('./jobs/archiveScheduler');
+let tasksRoutes, emailRoutes, meetingsRoutes, crmRoutes, timeRoutes, invoicesRoutes, revenueRoutes, billingRoutes, portalRoutes, campaignsRoutes, subscriptionsRoutes, staffRoutes, archivesRoutes, settingsRoutes, intakeRoutes, proposalsRoutes, clientAuthRoutes;
+let verifyPassword, hashPassword, requireAuth, requireAdmin, startArchiveScheduler;
+
+try { tasksRoutes = require('./routes/tasks'); console.log('[BOOT] ✓ tasks'); } catch(e) { console.error('[BOOT] ✗ tasks:', e.message); }
+try { emailRoutes = require('./routes/email'); console.log('[BOOT] ✓ email'); } catch(e) { console.error('[BOOT] ✗ email:', e.message); }
+try { meetingsRoutes = require('./routes/meetings'); console.log('[BOOT] ✓ meetings'); } catch(e) { console.error('[BOOT] ✗ meetings:', e.message); }
+try { crmRoutes = require('./routes/crm'); console.log('[BOOT] ✓ crm'); } catch(e) { console.error('[BOOT] ✗ crm:', e.message); }
+try { timeRoutes = require('./routes/time'); console.log('[BOOT] ✓ time'); } catch(e) { console.error('[BOOT] ✗ time:', e.message); }
+try { invoicesRoutes = require('./routes/invoices'); console.log('[BOOT] ✓ invoices'); } catch(e) { console.error('[BOOT] ✗ invoices:', e.message); }
+try { revenueRoutes = require('./routes/revenue'); console.log('[BOOT] ✓ revenue'); } catch(e) { console.error('[BOOT] ✗ revenue:', e.message); }
+try { billingRoutes = require('./routes/billing'); console.log('[BOOT] ✓ billing'); } catch(e) { console.error('[BOOT] ✗ billing:', e.message); }
+try { portalRoutes = require('./routes/portal'); console.log('[BOOT] ✓ portal'); } catch(e) { console.error('[BOOT] ✗ portal:', e.message); }
+try { campaignsRoutes = require('./routes/campaigns'); console.log('[BOOT] ✓ campaigns'); } catch(e) { console.error('[BOOT] ✗ campaigns:', e.message); }
+try { subscriptionsRoutes = require('./routes/subscriptions'); console.log('[BOOT] ✓ subscriptions'); } catch(e) { console.error('[BOOT] ✗ subscriptions:', e.message); }
+try { staffRoutes = require('./routes/staff'); console.log('[BOOT] ✓ staff'); } catch(e) { console.error('[BOOT] ✗ staff:', e.message); }
+try { archivesRoutes = require('./routes/archives'); console.log('[BOOT] ✓ archives'); } catch(e) { console.error('[BOOT] ✗ archives:', e.message); }
+try { settingsRoutes = require('./routes/settings'); console.log('[BOOT] ✓ settings'); } catch(e) { console.error('[BOOT] ✗ settings:', e.message); }
+try { intakeRoutes = require('./routes/intake'); console.log('[BOOT] ✓ intake'); } catch(e) { console.error('[BOOT] ✗ intake:', e.message); }
+try { proposalsRoutes = require('./routes/proposals'); console.log('[BOOT] ✓ proposals'); } catch(e) { console.error('[BOOT] ✗ proposals:', e.message); }
+try { clientAuthRoutes = require('./routes/client-auth'); console.log('[BOOT] ✓ client-auth'); } catch(e) { console.error('[BOOT] ✗ client-auth:', e.message); }
+try { ({ verifyPassword, hashPassword, requireAuth, requireAdmin } = require('./utils/auth')); console.log('[BOOT] ✓ auth utils'); } catch(e) { console.error('[BOOT] ✗ auth utils:', e.message); }
+try { ({ startArchiveScheduler } = require('./jobs/archiveScheduler')); console.log('[BOOT] ✓ archiveScheduler'); } catch(e) { console.error('[BOOT] ✗ archiveScheduler:', e.message); }
 
 console.log("[BOOT] Creating Express app instance...");
 const app = express();
