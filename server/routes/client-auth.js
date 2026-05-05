@@ -4,7 +4,7 @@ const db = require('../database');
 const { google } = require('googleapis');
 const { hashPassword, verifyPassword } = require('../utils/auth');
 const { createMagicLinkToken, verifyMagicLinkToken } = require('../utils/magicLink');
-const { sendEmail } = require('../utils/mailService');
+const { sendMail } = require('../utils/mailService');
 
 // Google OAuth2 Client for client login (separate from admin OAuth)
 const oauth2ClientForClients = new google.auth.OAuth2(
@@ -176,11 +176,11 @@ router.post('/magic-link/send', async (req, res) => {
                     </div>
                 `;
 
-                await sendEmail(
-                    client.email,
-                    'Sign in to Melloo Portal',
-                    emailBody
-                );
+                await sendMail({
+                    to: client.email,
+                    subject: 'Sign in to Melloo Portal',
+                    html: emailBody
+                });
 
                 console.log(`[magic-link] Sent login link to ${client.email}`);
                 
