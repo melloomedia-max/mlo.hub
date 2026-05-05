@@ -287,9 +287,18 @@ router.post('/signup', (req, res) => {
 
 // TEMPORARY DEBUG - Preview APP_PASSWORD (REMOVE AFTER CHECKING)
 router.get('/debug-app-password', (req, res) => {
+    const testPassword = process.env.APP_PASSWORD;
+    const testHash = hashPassword(testPassword);
+    const testVerify = verifyPassword(testPassword, testHash);
+    
     res.json({ 
-        appPasswordPreview: process.env.APP_PASSWORD?.substring(0, 4) + '****',
-        appPasswordSet: !!process.env.APP_PASSWORD
+        appPasswordPreview: testPassword?.substring(0, 4) + '****',
+        appPasswordSet: !!testPassword,
+        selfTest: {
+            hashGenerated: testHash?.substring(0, 30) + '...',
+            verifyResult: testVerify,
+            message: testVerify ? 'Hash/verify functions work!' : 'Hash/verify BROKEN'
+        }
     });
 });
 
