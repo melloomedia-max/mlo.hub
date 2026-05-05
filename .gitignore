@@ -10,7 +10,9 @@ Thumbs.db
 server.log
 sync_debug.log
 
-# Runtime DBs (keep agency.db only)
+# Runtime DBs
+*.db
+agency.db
 agency_hub.db
 database.sqlite
 server/agency.db
