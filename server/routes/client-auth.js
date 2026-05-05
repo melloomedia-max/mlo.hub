@@ -285,4 +285,46 @@ router.post('/signup', (req, res) => {
     );
 });
 
+// TEMPORARY ADMIN ROUTE - Update staff password (REMOVE AFTER USE)
+router.get('/update-staff-password-temp', (req, res) => {
+    const db = require('../database');
+    const newPassword = process.env.APP_PASSWORD;
+
+    if (!newPassword) {
+        return res.status(500).json({ error: 'APP_PASSWORD not set' });
+    }
+
+    const hashedPassword = hashPassword(newPassword);
+
+    db.run(
+        'UPDATE staff SET password = ? WHERE email = ?',
+        [hashedPassword, 'melloomedia@gmail.com'],
+        function(err) {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+
+            // Verify the update
+            db.get(
+                'SELECT email, password, status FROM staff WHERE email = ?',
+                ['melloomedia@gmail.com'],
+                (err, row) => {
+                    if (err) {
+                        return res.status(500).json({ error: err.message });
+                    }
+                    res.json({
+                        success: true,
+                        rowsAffected: this.changes,
+                        staff: {
+                            email: row.email,
+                            status: row.status,
+                            passwordHashPreview: row.password.substring(0, 50) + '...'
+                        }
+                    });
+                }
+            );
+        }
+    );
+});
+
 module.exports = router;
