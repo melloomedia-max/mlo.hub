@@ -12,10 +12,10 @@ console.log("[BOOT] Initializing database connection...");
 const db = require('./database');
 console.log("[BOOT] Loading route modules...");
 
-// --- Admin Bootstrap (env-driven, runs once if no admin exists) ---
+// --- Admin Bootstrap (env-driven, runs ONCE if NO staff exist) ---
 // Set ADMIN_EMAIL + ADMIN_PASSWORD in Railway to seed the initial admin.
-// On subsequent boots this is a no-op. Passwords must be changed via the
-// Settings UI or a future password-reset flow — never hard-coded.
+// This only runs if the staff table is empty. Passwords must be changed via
+// Settings UI or reset scripts — never hard-coded or rotated at boot.
 setTimeout(() => {
     const adminEmail = process.env.ADMIN_EMAIL || 'melloomedia@gmail.com';
     const adminPass = process.env.ADMIN_PASSWORD || process.env.APP_PASSWORD;
@@ -27,28 +27,32 @@ setTimeout(() => {
 
     const { hashPassword } = require('./utils/auth');
 
-    db.get("SELECT id FROM staff WHERE email = ?", [adminEmail], (err, row) => {
-        if (err) return console.error("[BOOT] Admin lookup error:", err.message);
-        if (row) {
-            // Admin already exists — ensure role/status are correct but never rotate password at boot.
-            // Password changes must go through Settings UI or a proper password-reset flow.
-            db.run(
-                "UPDATE staff SET role = 'admin', status = 'active' WHERE id = ? AND (role != 'admin' OR status != 'active')",
-                [row.id],
-                (updErr) => {
-                    if (updErr) console.error("[BOOT] Admin role/status fix failed:", updErr.message);
-                }
-            );
+    // Check if ANY staff exist first (safer than checking specific email)
+    db.get("SELECT COUNT(*) as count FROM staff", [], (err, result) => {
+        if (err) {
+            console.error("[BOOT] Staff count check failed:", err.message);
             return;
         }
-        // No admin yet — seed one from env.
+
+        if (result.count > 0) {
+            // Staff exist — never touch database at boot
+            console.log(`[BOOT] Staff table has ${result.count} record(s) — skipping admin bootstrap.`);
+            return;
+        }
+
+        // No staff exist — seed initial admin
+        console.log(`[BOOT] No staff found. Seeding initial admin: ${adminEmail}`);
         const hashed = hashPassword(adminPass);
+        
         db.run(
             "INSERT INTO staff (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)",
             ['Admin', adminEmail, hashed, 'admin', 'active'],
             (insErr) => {
-                if (insErr) console.error("[BOOT] Admin seed failed:", insErr.message);
-                else console.log(`[BOOT] Seeded initial admin: ${adminEmail}`);
+                if (insErr) {
+                    console.error("[BOOT] ❌ Admin seed failed:", insErr.message);
+                } else {
+                    console.log(`[BOOT] ✅ Seeded initial admin: ${adminEmail}`);
+                }
             }
         );
     });

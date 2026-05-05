@@ -80,6 +80,13 @@ db.serialize(() => {
   db.run("ALTER TABLE clients ADD COLUMN birthday TEXT", (err) => { });
   db.run("ALTER TABLE clients ADD COLUMN google_drive_folder_id TEXT", (err) => { });
   db.run("ALTER TABLE clients ADD COLUMN password TEXT", (err) => { });
+  
+  // Client authentication columns (for portal login + OAuth)
+  db.run("ALTER TABLE clients ADD COLUMN auth_provider TEXT DEFAULT 'email'", (err) => { });
+  db.run("ALTER TABLE clients ADD COLUMN google_id TEXT", (err) => { });
+  db.run("ALTER TABLE clients ADD COLUMN portal_access INTEGER DEFAULT 0", (err) => { });
+  db.run("ALTER TABLE clients ADD COLUMN portal_token TEXT", (err) => { });
+  db.run("ALTER TABLE clients ADD COLUMN drive_folder_id TEXT", (err) => { });
 
   // Client Notes Thread
   db.run(`
@@ -91,6 +98,22 @@ db.serialize(() => {
       FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
     )
   `);
+
+  // Magic Link Tokens (for passwordless client portal authentication)
+  console.log("[DB] Setting up magic link tokens table...");
+  db.run(`
+    CREATE TABLE IF NOT EXISTS magic_link_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      expires_at DATETIME NOT NULL,
+      used INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+    )
+  `);
+  db.run("CREATE INDEX IF NOT EXISTS idx_magic_link_token ON magic_link_tokens(token)", (err) => { });
+  db.run("CREATE INDEX IF NOT EXISTS idx_magic_link_expires ON magic_link_tokens(expires_at)", (err) => { });
 
   // Projects table (linked to clients)
   db.run(`
