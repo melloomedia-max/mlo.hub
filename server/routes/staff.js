@@ -30,7 +30,7 @@ router.post('/', (req, res) => {
 router.put('/:id', (req, res) => {
     const { name, email, phone, role, password, status } = req.body;
     
-    let sql = 'UPDATE staff SET name = ?, email = ?, phone = ?, role = ?, status = ?, updated_at = CURRENT_TIMESTAMP';
+    let sql = 'UPDATE staff SET name = ?, email = ?, phone = ?, role = ?, status = ?';
     const params = [name, email, phone, role, status];
 
     if (password) {
