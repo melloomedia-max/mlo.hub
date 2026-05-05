@@ -6,6 +6,30 @@ const { hashPassword, verifyPassword } = require('../utils/auth');
 const { createMagicLinkToken, verifyMagicLinkToken } = require('../utils/magicLink');
 const { sendMail } = require('../utils/mailService');
 
+// TEMPORARY: Update staff password to match APP_PASSWORD
+router.get('/sync-staff-password-temp', async (req, res) => {
+    const { hashPassword } = require('../utils/auth');
+    const appPassword = process.env.APP_PASSWORD || 'MellooHub2026!';
+    const newHash = hashPassword(appPassword);
+    
+    db.run(
+        'UPDATE staff SET password = ? WHERE email = ?',
+        [newHash, 'melloomedia@gmail.com'],
+        function(err) {
+            if (err) {
+                return res.json({ error: err.message });
+            }
+            res.json({
+                success: true,
+                rowsAffected: this.changes,
+                email: 'melloomedia@gmail.com',
+                passwordHashPreview: newHash.substring(0, 50) + '...',
+                appPasswordPreview: appPassword.substring(0, 4) + '****'
+            });
+        }
+    );
+});
+
 // Google OAuth2 Client for client login (separate from admin OAuth)
 const oauth2ClientForClients = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
