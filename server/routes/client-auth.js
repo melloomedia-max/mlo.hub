@@ -17,6 +17,7 @@ const oauth2ClientForClients = new google.auth.OAuth2(
  * Initiate Google OAuth for client login
  */
 router.get('/google', (req, res) => {
+    console.log('[client-auth] Initiating Google OAuth for client login');
     const url = oauth2ClientForClients.generateAuthUrl({
         access_type: 'online',
         scope: [
@@ -25,6 +26,7 @@ router.get('/google', (req, res) => {
         ],
         prompt: 'select_account'
     });
+    console.log('[client-auth] Redirecting to:', url);
     res.redirect(url);
 });
 
@@ -32,6 +34,7 @@ router.get('/google', (req, res) => {
  * Google OAuth callback for clients
  */
 router.get('/google/callback', async (req, res) => {
+    console.log('[client-auth] Google OAuth callback hit, query:', req.query);
     const { code, error } = req.query;
     
     if (error) {
@@ -64,24 +67,32 @@ router.get('/google/callback', async (req, res) => {
                     return res.redirect('/login?error=db');
                 }
 
+                console.log('[client-auth] Client lookup result:', { found: !!client, email, googleId });
+                
                 if (!client) {
                     // No account found - redirect to signup with Google data
+                    console.log('[client-auth] No client found, redirecting to signup');
                     return res.redirect(`/signup?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name || '')}&provider=google`);
                 }
 
+                console.log('[client-auth] Client found:', { id: client.id, email: client.email, portal_access: client.portal_access, has_token: !!client.portal_token });
+
                 // Update google_id if not set
                 if (!client.google_id) {
+                    console.log('[client-auth] Updating google_id for client:', client.id);
                     db.run(
                         `UPDATE clients SET google_id = ?, auth_provider = 'google' WHERE id = ?`,
                         [googleId, client.id],
                         (updateErr) => {
                             if (updateErr) console.error('[client-auth] Failed to update google_id:', updateErr);
+                            else console.log('[client-auth] google_id updated successfully');
                         }
                     );
                 }
 
                 // Check if client has portal access
                 if (!client.portal_access || client.portal_token === 'N/A' || !client.portal_token) {
+                    console.log('[client-auth] Portal access check failed:', { portal_access: client.portal_access, portal_token: client.portal_token });
                     return res.redirect('/login?error=portal_not_setup');
                 }
 
