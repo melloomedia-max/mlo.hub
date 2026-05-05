@@ -15,6 +15,11 @@ router.get('/', (req, res) => {
 
 // Create staff member
 router.post('/', (req, res) => {
+    console.log('[STAFF-CREATE] Session check:', {
+        isAuthenticated: req.session?.isAuthenticated,
+        userEmail: req.session?.user?.email,
+        newStaffEmail: req.body.email
+    });
     const { name, email, phone, role, password } = req.body;
     if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password are required' });
 
