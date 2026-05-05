@@ -8,7 +8,13 @@ require('dotenv').config();
 const { google } = require('googleapis');
 const http = require('http');
 const url = require('url');
-const open = require('open');
+let open;
+try {
+    open = require('open');
+} catch (e) {
+    // open package not available, will show URL instead
+    open = null;
+}
 
 // Scopes needed for file uploads to Google Drive
 const SCOPES = [
@@ -92,7 +98,11 @@ server.listen(3000, () => {
     console.log('\n');
 
     // Open the browser
-    open(authUrl, { wait: false }).catch(() => {
-        console.log('Could not open browser automatically. Please copy the URL above manually.');
-    });
+    if (open) {
+        open(authUrl, { wait: false }).catch(() => {
+            console.log('Could not open browser automatically. Please copy the URL above manually.');
+        });
+    } else {
+        console.log('Please copy the URL above and paste it into your browser.');
+    }
 });
