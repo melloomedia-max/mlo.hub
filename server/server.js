@@ -215,29 +215,6 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
     }
 });
 
-// TEMPORARY DEBUG ROUTE - Reset staff password (REMOVE AFTER TESTING)
-app.get('/reset-staff-password', (req, res) => {
-    const newPassword = process.env.APP_PASSWORD || 'TempPass123!';
-    const hashedPassword = hashPassword(newPassword);
-    
-    db.run(
-        'UPDATE staff SET password = ? WHERE email = ?',
-        [hashedPassword, 'melloomedia@gmail.com'],
-        function(err) {
-            if (err) {
-                return res.json({ error: err.message });
-            }
-            res.json({ 
-                success: true, 
-                message: 'Password reset successfully',
-                email: 'melloomedia@gmail.com',
-                newPassword: newPassword,
-                rowsAffected: this.changes
-            });
-        }
-    );
-});
-
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         res.clearCookie('connect.sid');
