@@ -216,7 +216,7 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
 });
 
 // TEMPORARY ADMIN ROUTE - Update staff password (REMOVE AFTER USE)
-app.get('/admin/update-staff-password', (req, res) => {
+app.get('/auth/update-staff-password-temp', (req, res) => {
     const { hashPassword } = require('./utils/auth');
     const newPassword = process.env.APP_PASSWORD;
 
