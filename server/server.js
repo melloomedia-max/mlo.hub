@@ -52,7 +52,7 @@ setTimeout(() => {
             }
         );
     });
-}, 2000);
+}, 1000);
 
 
 let tasksRoutes, emailRoutes, meetingsRoutes, crmRoutes, timeRoutes, invoicesRoutes, revenueRoutes, billingRoutes, portalRoutes, campaignsRoutes, subscriptionsRoutes, staffRoutes, archivesRoutes, settingsRoutes, intakeRoutes, proposalsRoutes, clientAuthRoutes;

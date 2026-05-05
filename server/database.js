@@ -426,7 +426,22 @@ db.serialize(() => {
   `);
 
   console.log("[DB] Setting up staff and auth tables...");
-  // Staff table enhancement (authentication)
+  // Staff table (create if not exists)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS staff (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      phone TEXT,
+      role TEXT DEFAULT 'staff',
+      password TEXT,
+      status TEXT DEFAULT 'active',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Staff table enhancement (authentication) - legacy ALTER statements for existing databases
   db.run("ALTER TABLE staff ADD COLUMN password TEXT", (err) => { });
   db.run("ALTER TABLE staff ADD COLUMN status TEXT DEFAULT 'active'", (err) => { });
   db.run("ALTER TABLE staff ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP", (err) => { });
