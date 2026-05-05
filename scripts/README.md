@@ -1,17 +1,42 @@
-# scripts/
+# Scripts Directory
 
-One-off utilities. Not part of the running app — invoke manually with `node scripts/<file>.js`.
+## Available Scripts
 
-## migrations/
-Schema/data migrations that have already been run against production. Kept here as history. Re-running should be safe (idempotent / no-op on second run) but verify before touching live data.
+### `get-drive-token.js`
+**Purpose:** One-time setup script to generate a Google OAuth refresh token with Drive scopes.
 
-- `backfill-invoices-folders.js` — backfills `google_drive_file_id` / Drive folder IDs onto existing invoices.
-- `migrate-activity-logs.js` — creates per-client Activity Log Google Docs and links via `clients.activity_doc_id`.
-- `migrate-meeting-folders.js` — creates per-meeting Drive subfolders and links via `meetings.meet_space_name`.
-- `seed-campaigns.js` — seeds default email/SMS campaign templates.
+**When to use:** Before implementing file upload features that require Google Drive access.
 
-## Drive utilities
-- `test-drive.js` — Drive API smoke test.
-- `create_event.js` — manual Google Calendar event creation.
-- `organize_crm_folders.js` — bulk CRM Drive folder cleanup.
-- `split_archives.js` — split large archive exports.
+**Instructions:** See `DRIVE_TOKEN_SETUP.md` for complete setup guide.
+
+**Quick start:**
+```bash
+node scripts/get-drive-token.js
+```
+
+---
+
+### `add-client-auth.sql`
+**Purpose:** Database migration to add Google OAuth and magic link authentication columns to the `clients` table.
+
+**Status:** Already run. This was part of the initial authentication enhancement.
+
+---
+
+### `reset-staff-password.js`
+**Purpose:** Generate a fresh PBKDF2 password hash for staff login troubleshooting.
+
+**When to use:** When staff login becomes desynced from Railway `APP_PASSWORD` environment variable.
+
+**Usage:**
+```bash
+node scripts/reset-staff-password.js <email> <new-password>
+```
+
+---
+
+## Adding New Scripts
+
+1. Create the script in this directory
+2. Add a brief description here
+3. If it requires setup, create a companion `.md` file with detailed instructions
