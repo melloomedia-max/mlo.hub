@@ -56,6 +56,7 @@ module.exports = function(app, db, requireAdmin) {
                 let inserted = 0;
                 let skipped = 0;
                 let errors = 0;
+                let firstError = null;
 
                 for (const row of data[tableName]) {
                     try {
@@ -80,7 +81,11 @@ module.exports = function(app, db, requireAdmin) {
                             skipped++;
                         }
                     } catch (err) {
-                        console.error(`[RESTORE] Error inserting row into ${tableName}:`, err.message);
+                        console.error(`[RESTORE] ${tableName} insert error:`, err.message);
+                        console.error(`[RESTORE] ${tableName} SQL:`, `INSERT INTO ${tableName} (${Object.keys(row).join(', ')})`);
+                        if (!firstError) {
+                            firstError = err.message;
+                        }
                         errors++;
                     }
                 }
@@ -99,7 +104,7 @@ module.exports = function(app, db, requireAdmin) {
                     console.error(`[RESTORE] Error updating sequence for ${tableName}:`, err.message);
                 }
 
-                results[tableName] = { inserted, skipped, errors };
+                results[tableName] = { inserted, skipped, errors, firstError };
             }
 
             console.log('[RESTORE] Data restore complete');
