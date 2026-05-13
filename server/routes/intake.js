@@ -44,7 +44,7 @@ router.post('/', async (req, res) => {
         services_interested, budget_range, timeline,
         what_building, audience, dream_outcome, references,
         source, stage, package_recommended, quoted_amount, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `, [
       name,
       email,
@@ -67,7 +67,7 @@ router.post('/', async (req, res) => {
     // Log stage history
     await db.run(`
       INSERT INTO lead_stage_history (lead_id, from_stage, to_stage, changed_at, note)
-      VALUES (?, ?, ?, datetime('now'), ?)
+      VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)
     `, [result.lastID, null, 'new', 'Lead created via intake form']);
 
     res.json({

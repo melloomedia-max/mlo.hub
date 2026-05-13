@@ -26,7 +26,7 @@ router.post('/generate', async (req, res) => {
     const result = await db.run(`
       INSERT INTO proposals (
         lead_id, proposal_number, content, status, created_at, expires_at
-      ) VALUES (?, ?, ?, ?, datetime('now'), ?)
+      ) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
     `, [
       leadId,
       proposal.meta.proposalNumber,
@@ -96,7 +96,7 @@ router.post('/:id/send', async (req, res) => {
     
     await db.run(`
       UPDATE proposals 
-      SET status = 'sent', sent_at = datetime('now')
+      SET status = 'sent', sent_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [req.params.id]);
     
@@ -105,7 +105,7 @@ router.post('/:id/send', async (req, res) => {
     if (proposal) {
       await db.run(`
         UPDATE leads
-        SET proposal_sent_at = datetime('now'), stage = 'proposal'
+        SET proposal_sent_at = CURRENT_TIMESTAMP, stage = 'proposal'
         WHERE id = ?
       `, [proposal.lead_id]);
     }
