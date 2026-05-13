@@ -46,7 +46,7 @@ router.get('/clients/search', (req, res) => {
     const like = `%${q}%`;
     const sql = `
         SELECT DISTINCT c.*,
-            GROUP_CONCAT(DISTINCT cb.name) as business_names
+            STRING_AGG(DISTINCT cb.name::text, ',') as business_names
         FROM clients c
         LEFT JOIN client_businesses cb ON cb.client_id = c.id
         WHERE c.name LIKE ? OR c.email LIKE ? OR c.company LIKE ? OR c.phone LIKE ?
@@ -154,7 +154,7 @@ router.get('/clients', (req, res) => {
     console.log('[CRM] /clients hit');
     const sql = `
         SELECT c.*,
-            GROUP_CONCAT(DISTINCT cb.name) as business_names,
+            STRING_AGG(DISTINCT cb.name::text, ',') as business_names,
             (SELECT SUM(total_amount - amount_paid) FROM invoices WHERE invoices.client_id = c.id AND invoices.status IN ('sent', 'finalized', 'overdue')) as total_balance
         FROM clients c
         LEFT JOIN client_businesses cb ON cb.client_id = c.id
@@ -175,7 +175,7 @@ router.get('/clients', (req, res) => {
 router.get('/clients/:id', (req, res) => {
     const sql = `
         SELECT c.*,
-            GROUP_CONCAT(DISTINCT cb.name) as business_names,
+            STRING_AGG(DISTINCT cb.name::text, ',') as business_names,
             (SELECT SUM(total_amount - amount_paid) FROM invoices WHERE invoices.client_id = c.id AND invoices.status IN ('sent', 'finalized', 'overdue')) as total_balance
         FROM clients c
         LEFT JOIN client_businesses cb ON cb.client_id = c.id
@@ -669,7 +669,7 @@ router.get('/clients/:id/projects', (req, res) => {
     const sql = `
         SELECT p.*,
             (SELECT COUNT(*) FROM invoices WHERE invoices.project_id = p.id) as invoice_count,
-            (SELECT GROUP_CONCAT(DISTINCT invoices.status) FROM invoices WHERE invoices.project_id = p.id) as invoice_statuses,
+            (SELECT STRING_AGG(DISTINCT invoices.status::text, ',') FROM invoices WHERE invoices.project_id = p.id) as invoice_statuses,
             (SELECT SUM(invoices.total_amount) FROM invoices WHERE invoices.project_id = p.id AND invoices.status = 'paid') as paid_amount,
             (SELECT SUM(invoices.total_amount) FROM invoices WHERE invoices.project_id = p.id AND invoices.status IN ('sent','finalized')) as pending_amount
         FROM projects p

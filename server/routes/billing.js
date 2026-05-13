@@ -23,7 +23,7 @@ function dbRun(query, params = []) {
 router.get('/unbilled', async (req, res) => {
     try {
         const rows = await dbAll(`
-            SELECT c.id, c.name, SUM(tl.duration) as total_mins, GROUP_CONCAT(tl.id) as log_ids
+            SELECT c.id, c.name, SUM(tl.duration) as total_mins, STRING_AGG(tl.id::text, ',') as log_ids
             FROM time_logs tl 
             JOIN tasks t ON tl.task_id = t.id 
             JOIN clients c ON t.client_id = c.id

@@ -5,7 +5,7 @@ const db = require('../database');
 // Helper: Sync a project's payment_status based on its linked invoices
 function syncProjectPaymentStatus(projectId) {
     if (!projectId) return;
-    const sql = `SELECT GROUP_CONCAT(DISTINCT status) as statuses FROM invoices WHERE project_id = $1`;
+    const sql = `SELECT STRING_AGG(DISTINCT status::text, ',') as statuses FROM invoices WHERE project_id = $1`;
     db.get(sql, [projectId], (err, row) => {
         if (err || !row || !row.statuses) return;
         const statuses = row.statuses.split(',');
