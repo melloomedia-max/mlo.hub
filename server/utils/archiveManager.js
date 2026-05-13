@@ -532,9 +532,15 @@ Last updated: ${new Date().toISOString()}
         for (const record of archiveData.daily_records) {
             await new Promise((resolve, reject) => {
                 db.run(`
-                    INSERT OR REPLACE INTO campaign_analytics (
+                    INSERT INTO campaign_analytics (
                         campaign_id, date, sends, opens, clicks, conversions, revenue
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    ON CONFLICT (campaign_id, date) DO UPDATE SET
+                        sends = EXCLUDED.sends,
+                        opens = EXCLUDED.opens,
+                        clicks = EXCLUDED.clicks,
+                        conversions = EXCLUDED.conversions,
+                        revenue = EXCLUDED.revenue
                 `, [
                     record.campaign_id, record.date, record.sends, record.opens, record.clicks, record.conversions, record.revenue
                 ], (err) => {

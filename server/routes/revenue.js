@@ -60,7 +60,7 @@ router.get('/forecast', async (req, res) => {
 
         // 3. Avg payment cycle
         const cycleData = await dbGet(`
-            SELECT AVG(julianday(ip.created_at) - julianday(i.issue_date)) as avgDays
+            SELECT AVG(EXTRACT(EPOCH FROM (ip.created_at - i.issue_date::TIMESTAMP)) / 86400) as avgDays
             FROM invoice_payments ip
             JOIN invoices i ON ip.invoice_id = i.id
         `);
