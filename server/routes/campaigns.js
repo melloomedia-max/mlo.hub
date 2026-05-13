@@ -57,7 +57,7 @@ router.get('/templates', async (req, res) => {
 // Get single campaign
 router.get('/:id', async (req, res) => {
     try {
-        const campaign = await dbGet('SELECT * FROM campaigns WHERE id = ?', [req.params.id]);
+        const campaign = await dbGet('SELECT * FROM campaigns WHERE id = $1', [req.params.id]);
         if (campaign) {
             campaign.steps = JSON.parse(campaign.steps || '[]');
             campaign.flow_data = JSON.parse(campaign.flow_data || 'null');
@@ -74,7 +74,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     const { name, description, trigger, flow_data, steps } = req.body;
     try {
-        const id = await dbRun('INSERT INTO campaigns (name, description, trigger, flow_data, steps, status) VALUES (?, ?, ?, ?, ?, ?)', 
+        const id = await dbRun('INSERT INTO campaigns (name, description, trigger, flow_data, steps, status) VALUES ($1, $2, $3, $4, $5, $6)', 
             [name, description, trigger, JSON.stringify(flow_data || null), JSON.stringify(steps || []), 'draft']);
         res.json({ id, name, trigger });
     } catch (e) {
@@ -86,7 +86,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     const { name, description, trigger, flow_data, steps, status } = req.body;
     try {
-        await dbRun('UPDATE campaigns SET name = ?, description = ?, trigger = ?, flow_data = ?, steps = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', 
+        await dbRun('UPDATE campaigns SET name = $1, description = $2, trigger = $3, flow_data = $4, steps = $5, status = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7', 
             [name, description, trigger, JSON.stringify(flow_data || null), JSON.stringify(steps || []), status || 'draft', req.params.id]);
         res.json({ message: 'Campaign updated' });
     } catch (e) {
@@ -107,7 +107,7 @@ router.get('/templates/email', async (req, res) => {
 router.post('/templates/email', async (req, res) => {
     const { name, subject, body, category } = req.body;
     try {
-        const id = await dbRun('INSERT INTO email_templates (name, subject, body, category) VALUES (?, ?, ?, ?)', 
+        const id = await dbRun('INSERT INTO email_templates (name, subject, body, category) VALUES ($1, $2, $3, $4)', 
             [name, subject, body, category]);
         res.json({ id, name });
     } catch (e) {
@@ -118,7 +118,7 @@ router.post('/templates/email', async (req, res) => {
 router.put('/templates/email/:id', async (req, res) => {
     const { name, subject, body, category } = req.body;
     try {
-        await dbRun('UPDATE email_templates SET name = ?, subject = ?, body = ?, category = ? WHERE id = ?', 
+        await dbRun('UPDATE email_templates SET name = $1, subject = $2, body = $3, category = $4 WHERE id = $5', 
             [name, subject, body, category, req.params.id]);
         res.json({ message: 'Template updated' });
     } catch (e) {
@@ -128,7 +128,7 @@ router.put('/templates/email/:id', async (req, res) => {
 
 router.delete('/templates/email/:id', async (req, res) => {
     try {
-        await dbRun('DELETE FROM email_templates WHERE id = ?', [req.params.id]);
+        await dbRun('DELETE FROM email_templates WHERE id = $1', [req.params.id]);
         res.json({ message: 'Template deleted' });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -148,7 +148,7 @@ router.get('/templates/sms', async (req, res) => {
 router.post('/templates/sms', async (req, res) => {
     const { name, body } = req.body;
     try {
-        const id = await dbRun('INSERT INTO sms_templates (name, body) VALUES (?, ?)', 
+        const id = await dbRun('INSERT INTO sms_templates (name, body) VALUES ($1, $2)', 
             [name, body]);
         res.json({ id, name });
     } catch (e) {
@@ -159,7 +159,7 @@ router.post('/templates/sms', async (req, res) => {
 router.put('/templates/sms/:id', async (req, res) => {
     const { name, body } = req.body;
     try {
-        await dbRun('UPDATE sms_templates SET name = ?, body = ? WHERE id = ?', 
+        await dbRun('UPDATE sms_templates SET name = $1, body = $2 WHERE id = $3', 
             [name, body, req.params.id]);
         res.json({ message: 'Template updated' });
     } catch (e) {
@@ -169,7 +169,7 @@ router.put('/templates/sms/:id', async (req, res) => {
 
 router.delete('/templates/sms/:id', async (req, res) => {
     try {
-        await dbRun('DELETE FROM sms_templates WHERE id = ?', [req.params.id]);
+        await dbRun('DELETE FROM sms_templates WHERE id = $1', [req.params.id]);
         res.json({ message: 'Template deleted' });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -179,8 +179,8 @@ router.delete('/templates/sms/:id', async (req, res) => {
 // Analytics
 router.get('/:id/analytics', async (req, res) => {
     try {
-        const analytics = await dbAll('SELECT * FROM campaign_analytics WHERE campaign_id = ? ORDER BY date DESC LIMIT 30', [req.params.id]);
-        const sends = await dbAll('SELECT * FROM campaign_sends WHERE campaign_id = ? ORDER BY sent_at DESC LIMIT 100', [req.params.id]);
+        const analytics = await dbAll('SELECT * FROM campaign_analytics WHERE campaign_id = $1 ORDER BY date DESC LIMIT 30', [req.params.id]);
+        const sends = await dbAll('SELECT * FROM campaign_sends WHERE campaign_id = $1 ORDER BY sent_at DESC LIMIT 100', [req.params.id]);
         res.json({ daily: analytics, recent_sends: sends });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -190,8 +190,8 @@ router.get('/:id/analytics', async (req, res) => {
 // Delete campaign
 router.delete('/:id', async (req, res) => {
     try {
-        await dbRun('DELETE FROM campaigns WHERE id = ?', [req.params.id]);
-        await dbRun('DELETE FROM campaign_enrollments WHERE campaign_id = ?', [req.params.id]);
+        await dbRun('DELETE FROM campaigns WHERE id = $1', [req.params.id]);
+        await dbRun('DELETE FROM campaign_enrollments WHERE campaign_id = $1', [req.params.id]);
         res.json({ message: 'Campaign and enrollments deleted' });
     } catch (e) {
         res.status(500).json({ error: e.message });

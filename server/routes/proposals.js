@@ -13,7 +13,7 @@ router.post('/generate', async (req, res) => {
     }
     
     const db = getDb();
-    const lead = await db.get('SELECT * FROM leads WHERE id = ?', [leadId]);
+    const lead = await db.get('SELECT * FROM leads WHERE id = $1', [leadId]);
     
     if (!lead) {
       return res.status(404).json({ error: 'Lead not found' });
@@ -51,7 +51,7 @@ router.post('/generate', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const db = getDb();
-    const proposal = await db.get('SELECT * FROM proposals WHERE id = ?', [req.params.id]);
+    const proposal = await db.get('SELECT * FROM proposals WHERE id = $1', [req.params.id]);
     
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
@@ -72,7 +72,7 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/markdown', async (req, res) => {
   try {
     const db = getDb();
-    const proposal = await db.get('SELECT content FROM proposals WHERE id = ?', [req.params.id]);
+    const proposal = await db.get('SELECT content FROM proposals WHERE id = $1', [req.params.id]);
     
     if (!proposal) {
       return res.status(404).json({ error: 'Proposal not found' });
@@ -101,7 +101,7 @@ router.post('/:id/send', async (req, res) => {
     `, [req.params.id]);
     
     // Update lead with proposal_sent_at
-    const proposal = await db.get('SELECT lead_id FROM proposals WHERE id = ?', [req.params.id]);
+    const proposal = await db.get('SELECT lead_id FROM proposals WHERE id = $1', [req.params.id]);
     if (proposal) {
       await db.run(`
         UPDATE leads

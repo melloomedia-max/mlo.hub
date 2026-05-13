@@ -107,14 +107,14 @@ router.post('/create-invoice', async (req, res) => {
 
         // 1. Create Invoice
         const invoiceId = await dbRun(
-            "INSERT INTO invoices (client_id, issue_date, due_date, status, total_amount, notes) VALUES (?, ?, ?, 'draft', ?, ?)",
+            "INSERT INTO invoices (client_id, issue_date, due_date, status, total_amount, notes) VALUES ($1, $2, $3, 'draft', $4, $5)",
             [clientId, iDate, dDate, totalAmount, notes || "Auto-generated from time logs"]
         );
 
         // 2. Insert Items
         for (const item of items) {
             await dbRun(
-                "INSERT INTO invoice_items (invoice_id, description, quantity, rate, amount) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO invoice_items (invoice_id, description, quantity, rate, amount) VALUES ($1, $2, $3, $4, $5)",
                 [invoiceId, item.description, item.quantity, item.rate, item.amount]
             );
         }

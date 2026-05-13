@@ -143,7 +143,7 @@ router.patch('/portal-requests/:id', (req, res) => {
     if (!fields.length) return res.status(400).json({ error: 'Nothing to update' });
     fields.push('updated_at = CURRENT_TIMESTAMP');
     vals.push(req.params.id);
-    db.run(`UPDATE portal_requests SET ${fields.join(', ')} WHERE id = ?`, vals, function(err) {
+    db.run(`UPDATE portal_requests SET ${fields.join(', ')} WHERE id = $1`, vals, function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });
@@ -197,7 +197,7 @@ router.post('/clients/:id/portal-link', async (req, res) => {
     try {
         // 1. Find Client
         const client = await new Promise((resolve, reject) => {
-            db.get("SELECT id, name, email, phone, portal_token FROM clients WHERE id = ?", [clientId], (err, row) => {
+            db.get("SELECT id, name, email, phone, portal_token FROM clients WHERE id = $1", [clientId], (err, row) => {
                 if (err) reject(err); else resolve(row);
             });
         });
@@ -213,7 +213,7 @@ router.post('/clients/:id/portal-link', async (req, res) => {
         if (!token) {
             token = require('crypto').randomBytes(16).toString('hex');
             await new Promise((resolve, reject) => {
-                db.run("UPDATE clients SET portal_token = ? WHERE id = ?", [token, clientId], (err) => {
+                db.run("UPDATE clients SET portal_token = $1 WHERE id = $2", [token, clientId], (err) => {
                     if (err) reject(err); else resolve();
                 });
             });
@@ -225,7 +225,7 @@ router.post('/clients/:id/portal-link', async (req, res) => {
         // 3. Save to portal_links table
         const linkId = await new Promise((resolve, reject) => {
             db.run(
-                "INSERT INTO portal_links (client_id, token, url, notification_method, notification_status) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO portal_links (client_id, token, url, notification_method, notification_status) VALUES ($1, $2, $3, $4, $5)",
                 [clientId, token, portalUrl, method, 'pending'],
                 function(err) { if (err) reject(err); else resolve(this.lastID); }
             );
@@ -235,7 +235,7 @@ router.post('/clients/:id/portal-link', async (req, res) => {
         // 4. Attach to CRM activity log (client_communications)
         await new Promise((resolve, reject) => {
             db.run(
-                "INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)",
+                "INSERT INTO client_communications (client_id, type, method, description) VALUES ($1, $2, $3, $4)",
                 [clientId, 'note', 'system', `Generated and sent portal access link via ${method}`],
                 (err) => { if (err) reject(err); else resolve(); }
             );
@@ -251,7 +251,7 @@ router.post('/clients/:id/portal-link', async (req, res) => {
             // Update status in db
             const combinedStatus = (noteStatus.email?.success || noteStatus.sms?.success) ? 'sent' : 'failed';
             await new Promise((resolve) => {
-                db.run("UPDATE portal_links SET notification_status = ? WHERE id = ?", [combinedStatus, linkId], resolve);
+                db.run("UPDATE portal_links SET notification_status = $1 WHERE id = $2", [combinedStatus, linkId], resolve);
             });
             console.log(`[PORTAL-LOG] notification status updated in DB: ${combinedStatus}`);
         }
@@ -273,7 +273,7 @@ router.post('/clients/:id/portal-link', async (req, res) => {
 // ── Client Businesses CRUD ───────────────────────────────────────────────
 // Get businesses for a client
 router.get('/clients/:id/businesses', (req, res) => {
-    db.all('SELECT * FROM client_businesses WHERE client_id = ? ORDER BY created_at ASC',
+    db.all('SELECT * FROM client_businesses WHERE client_id = $1 ORDER BY created_at ASC',
         [req.params.id], (err, rows) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json(rows);
@@ -286,7 +286,7 @@ router.post('/clients/:id/businesses', (req, res) => {
     if (!name || !name.trim()) return res.status(400).json({ error: 'Business name is required' });
 
     db.run(
-        'INSERT INTO client_businesses (client_id, name, role, industry, website) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO client_businesses (client_id, name, role, industry, website) VALUES ($1, $2, $3, $4, $5)',
         [req.params.id, name.trim(), role || null, industry || null, website || null],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
@@ -301,7 +301,7 @@ router.put('/businesses/:id', (req, res) => {
     if (!name || !name.trim()) return res.status(400).json({ error: 'Business name is required' });
 
     db.run(
-        'UPDATE client_businesses SET name = ?, role = ?, industry = ?, website = ? WHERE id = ?',
+        'UPDATE client_businesses SET name = $1, role = $2, industry = $3, website = $4 WHERE id = $5',
         [name.trim(), role || null, industry || null, website || null, req.params.id],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
@@ -312,7 +312,7 @@ router.put('/businesses/:id', (req, res) => {
 
 // Delete business
 router.delete('/businesses/:id', (req, res) => {
-    db.run('DELETE FROM client_businesses WHERE id = ?', [req.params.id], function (err) {
+    db.run('DELETE FROM client_businesses WHERE id = $1', [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Business deleted' });
     });
@@ -332,7 +332,7 @@ router.post('/clients', async (req, res) => {
     const portalToken = crypto.randomBytes(20).toString('hex').toUpperCase();
 
     const sql = `INSERT INTO clients (first_name, last_name, birthday, name, email, phone, company, status, notes, google_drive_folder_id, social_instagram, social_linkedin, social_twitter, social_facebook, portal_access, portal_token) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`;
 
     db.run(sql, [first_name, last_name, birthday, name, email, phone, company, status, notes, folderId, social_instagram, social_linkedin, social_twitter, social_facebook, 1, portalToken], function (err) {
         if (err) {
@@ -398,9 +398,9 @@ router.put('/clients/:id', (req, res) => {
     updates.push('updated_at = CURRENT_TIMESTAMP');
     params.push(req.params.id);
 
-    const sql = `UPDATE clients SET ${updates.join(', ')} WHERE id = ?`;
+    const sql = `UPDATE clients SET ${updates.join(', ')} WHERE id = $1`;
 
-    db.get('SELECT status FROM clients WHERE id = ?', [req.params.id], (err, row) => {
+    db.get('SELECT status FROM clients WHERE id = $1', [req.params.id], (err, row) => {
         if (err || !row) return res.status(500).json({ error: err ? err.message : 'Client not found' });
         const oldStatus = row.status;
 
@@ -429,7 +429,7 @@ router.get('/clients/:id/drive/files', async (req, res) => {
         if (!drive) return res.status(401).json({ error: 'Google Drive connection required' });
 
         // Get folder ID from DB
-        db.get('SELECT google_drive_folder_id FROM clients WHERE id = ?', [req.params.id], async (err, row) => {
+        db.get('SELECT google_drive_folder_id FROM clients WHERE id = $1', [req.params.id], async (err, row) => {
             if (err) return res.status(500).json({ error: err.message });
             if (!row || !row.google_drive_folder_id) return res.json([]);
 
@@ -454,7 +454,7 @@ router.get('/clients/:id/drive/files', async (req, res) => {
 // Create folder (and Activity Doc) for existing client
 router.post('/clients/:id/drive/folder', async (req, res) => {
     try {
-        db.get('SELECT first_name, last_name, google_drive_folder_id, activity_doc_id FROM clients WHERE id = ?', [req.params.id], async (err, client) => {
+        db.get('SELECT first_name, last_name, google_drive_folder_id, activity_doc_id FROM clients WHERE id = $1', [req.params.id], async (err, client) => {
             if (err) return res.status(500).json({ error: err.message });
             if (!client) return res.status(404).json({ error: 'Client not found' });
 
@@ -468,7 +468,7 @@ router.post('/clients/:id/drive/folder', async (req, res) => {
                 if (folderId) {
                     changesMade = true;
                     // Save immediately in case next step fails
-                    db.run('UPDATE clients SET google_drive_folder_id = ? WHERE id = ?', [folderId, req.params.id]);
+                    db.run('UPDATE clients SET google_drive_folder_id = $1 WHERE id = $2', [folderId, req.params.id]);
                 } else {
                     return res.status(500).json({ error: 'Failed to create Drive folder' });
                 }
@@ -480,7 +480,7 @@ router.post('/clients/:id/drive/folder', async (req, res) => {
                 if (doc) {
                     docId = doc.id;
                     changesMade = true;
-                    db.run('UPDATE clients SET activity_doc_id = ? WHERE id = ?', [docId, req.params.id]);
+                    db.run('UPDATE clients SET activity_doc_id = $1 WHERE id = $2', [docId, req.params.id]);
                 }
             }
 
@@ -506,7 +506,7 @@ router.post('/clients/:id/drive/upload', upload.single('file'), async (req, res)
         if (!drive) return res.status(401).json({ error: 'Google Drive not connected' });
 
         const client = await new Promise((resolve, reject) => {
-            db.get("SELECT google_drive_folder_id FROM clients WHERE id = ?", [req.params.id], (err, row) => {
+            db.get("SELECT google_drive_folder_id FROM clients WHERE id = $1", [req.params.id], (err, row) => {
                 if (err) reject(err);
                 else resolve(row);
             });
@@ -581,7 +581,7 @@ router.get('/drive/proxy/:fileId', async (req, res) => {
 
 // Delete client
 router.delete('/clients/:id', (req, res) => {
-    db.run('DELETE FROM clients WHERE id = ?', [req.params.id], function (err) {
+    db.run('DELETE FROM clients WHERE id = $1', [req.params.id], function (err) {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
@@ -592,7 +592,7 @@ router.delete('/clients/:id', (req, res) => {
 
 // Get notes for a client
 router.get('/clients/:id/notes', (req, res) => {
-    db.all('SELECT * FROM client_notes WHERE client_id = ? ORDER BY created_at DESC', [req.params.id], (err, rows) => {
+    db.all('SELECT * FROM client_notes WHERE client_id = $1 ORDER BY created_at DESC', [req.params.id], (err, rows) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
@@ -606,21 +606,21 @@ router.post('/clients/:id/notes', (req, res) => {
     const { content } = req.body;
     const client_id = req.params.id;
 
-    db.run('INSERT INTO client_notes (client_id, content) VALUES (?, ?)', [client_id, content], function (err) {
+    db.run('INSERT INTO client_notes (client_id, content) VALUES ($1, $2)', [client_id, content], function (err) {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
         }
 
         // Sync to Doc (fire and forget)
-        db.get('SELECT activity_doc_id FROM clients WHERE id = ?', [client_id], (err, client) => {
+        db.get('SELECT activity_doc_id FROM clients WHERE id = $1', [client_id], (err, client) => {
             if (client && client.activity_doc_id) {
                 appendNoteToDoc(client.activity_doc_id, content, 'User');
             }
         });
 
         // Return the new note
-        db.get('SELECT * FROM client_notes WHERE id = ?', [this.lastID], (err, row) => {
+        db.get('SELECT * FROM client_notes WHERE id = $1', [this.lastID], (err, row) => {
             res.json(row);
         });
         
@@ -632,7 +632,7 @@ router.post('/clients/:id/notes', (req, res) => {
 // Update note
 router.put('/notes/:id', (req, res) => {
     const { content } = req.body;
-    db.run('UPDATE client_notes SET content = ? WHERE id = ?', [content, req.params.id], function (err) {
+    db.run('UPDATE client_notes SET content = $1 WHERE id = $2', [content, req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Note updated' });
     });
@@ -640,7 +640,7 @@ router.put('/notes/:id', (req, res) => {
 
 // Delete note
 router.delete('/notes/:id', (req, res) => {
-    db.run('DELETE FROM client_notes WHERE id = ?', [req.params.id], function (err) {
+    db.run('DELETE FROM client_notes WHERE id = $1', [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Note deleted' });
     });
@@ -712,7 +712,7 @@ router.get('/projects/:id/invoices', (req, res) => {
 router.post('/projects', (req, res) => {
     const { client_id, name, status, budget, deadline, notes, payment_status } = req.body;
     const sql = `INSERT INTO projects (client_id, name, status, budget, deadline, notes, payment_status) 
-               VALUES (?, ?, ?, ?, ?, ?, ?)`;
+               VALUES ($1, $2, $3, $4, $5, $6, $7)`;
 
     db.run(sql, [client_id, name, status || 'active', budget, deadline, notes, payment_status || 'unpaid'], function (err) {
         if (err) {
@@ -726,10 +726,10 @@ router.post('/projects', (req, res) => {
 // Update project
 router.put('/projects/:id', (req, res) => {
     const { name, status, budget, deadline, notes, payment_status } = req.body;
-    db.get('SELECT client_id, status FROM projects WHERE id = ?', [req.params.id], (err, row) => {
+    db.get('SELECT client_id, status FROM projects WHERE id = $1', [req.params.id], (err, row) => {
         if (err || !row) return res.status(500).json({ error: err ? err.message : 'Project not found' });
         
-        const sql = `UPDATE projects SET name=?, status=?, budget=?, deadline=?, notes=?, payment_status=? WHERE id=?`;
+        const sql = `UPDATE projects SET name=$1, status=$2, budget=$3, deadline=$4, notes=$5, payment_status=$6 WHERE id=$7`;
         db.run(sql, [name, status, budget, deadline, notes, payment_status, req.params.id], function (updateErr) {
             if (updateErr) return res.status(500).json({ error: updateErr.message });
             
@@ -746,7 +746,7 @@ router.put('/projects/:id', (req, res) => {
 
 // Delete project
 router.delete('/projects/:id', (req, res) => {
-    db.run('DELETE FROM projects WHERE id = ?', [req.params.id], function (err) {
+    db.run('DELETE FROM projects WHERE id = $1', [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Project deleted' });
     });
@@ -758,7 +758,7 @@ router.delete('/projects/:id', (req, res) => {
 router.post('/projects/:id/folder', async (req, res) => {
     try {
         const project = await new Promise((resolve, reject) =>
-            db.get('SELECT p.*, c.google_drive_folder_id FROM projects p JOIN clients c ON p.client_id = c.id WHERE p.id = ?',
+            db.get('SELECT p.*, c.google_drive_folder_id FROM projects p JOIN clients c ON p.client_id = c.id WHERE p.id = $1',
                 [req.params.id], (err, row) => err ? reject(err) : resolve(row))
         );
         if (!project) return res.status(404).json({ error: 'Project not found' });
@@ -772,7 +772,7 @@ router.post('/projects/:id/folder', async (req, res) => {
         const result = await getOrCreateProjectFolder(project.google_drive_folder_id, project.name);
         if (!result) return res.status(500).json({ error: 'Failed to create project folder' });
 
-        db.run('UPDATE projects SET project_folder_id = ? WHERE id = ?', [result.projectFolderId, req.params.id]);
+        db.run('UPDATE projects SET project_folder_id = $1 WHERE id = $2', [result.projectFolderId, req.params.id]);
         res.json({ folderId: result.projectFolderId });
     } catch (err) {
         console.error('Project folder error:', err);
@@ -782,7 +782,7 @@ router.post('/projects/:id/folder', async (req, res) => {
 
 // Get attachments for a project
 router.get('/projects/:id/attachments', (req, res) => {
-    db.all('SELECT * FROM project_attachments WHERE project_id = ? ORDER BY created_at DESC',
+    db.all('SELECT * FROM project_attachments WHERE project_id = $1 ORDER BY created_at DESC',
         [req.params.id], (err, rows) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json(rows);
@@ -824,7 +824,7 @@ router.post('/projects/:id/attachments', upload.single('file'), async (req, res)
         const f = uploaded.data;
         // Save to DB
         db.run(
-            'INSERT INTO project_attachments (project_id, file_id, file_name, mime_type, thumbnail_link, web_view_link) VALUES (?,?,?,?,?,?)',
+            'INSERT INTO project_attachments (project_id, file_id, file_name, mime_type, thumbnail_link, web_view_link) VALUES ($1,$2,$3,$4,$5,$6)',
             [req.params.id, f.id, f.name, f.mimeType, f.thumbnailLink || null, f.webViewLink],
             function (err) {
                 if (err) return res.status(500).json({ error: err.message });
@@ -840,7 +840,7 @@ router.post('/projects/:id/attachments', upload.single('file'), async (req, res)
 
 // Delete attachment
 router.delete('/attachments/:id', (req, res) => {
-    db.get('SELECT file_id FROM project_attachments WHERE id = ?', [req.params.id], async (err, row) => {
+    db.get('SELECT file_id FROM project_attachments WHERE id = $1', [req.params.id], async (err, row) => {
         if (err) return res.status(500).json({ error: err.message });
         // Optionally delete from Drive too
         if (row) {
@@ -849,7 +849,7 @@ router.delete('/attachments/:id', (req, res) => {
                 if (drive) await drive.files.delete({ fileId: row.file_id }).catch(() => { });
             } catch (_) { }
         }
-        db.run('DELETE FROM project_attachments WHERE id = ?', [req.params.id], function (err2) {
+        db.run('DELETE FROM project_attachments WHERE id = $1', [req.params.id], function (err2) {
             if (err2) return res.status(500).json({ error: err2.message });
             res.json({ message: 'Attachment deleted' });
         });
@@ -910,10 +910,10 @@ Rules:
 Data:\n`;
 
         for (const c of clients) {
-            const invoices = await dbAll("SELECT status, due_date, total_amount, issue_date FROM invoices WHERE client_id = ?", [c.id]);
-            const tasks = await dbAll("SELECT title, status, due_date, priority FROM tasks WHERE client_id = ?", [c.id]);
-            const notes = await dbAll("SELECT content, created_at FROM client_notes WHERE client_id = ? ORDER BY created_at DESC LIMIT 6", [c.id]);
-            const proj = await dbAll("SELECT name, status, deadline FROM projects WHERE client_id = ?", [c.id]);
+            const invoices = await dbAll("SELECT status, due_date, total_amount, issue_date FROM invoices WHERE client_id = $1", [c.id]);
+            const tasks = await dbAll("SELECT title, status, due_date, priority FROM tasks WHERE client_id = $1", [c.id]);
+            const notes = await dbAll("SELECT content, created_at FROM client_notes WHERE client_id = $1 ORDER BY created_at DESC LIMIT 6", [c.id]);
+            const proj = await dbAll("SELECT name, status, deadline FROM projects WHERE client_id = $1", [c.id]);
             
             promptData += `\n--- CLIENT FOCUS: clientId: ${c.id}, Name: ${c.first_name || ''} ${c.last_name || ''} (${c.company || 'No Company'}), Status: ${c.status}\n`;
             promptData += `Invoices: ${JSON.stringify(invoices)}\n`;
@@ -937,7 +937,7 @@ Data:\n`;
 
 // GET cached AI health report
 router.get('/clients/:id/health-report', (req, res) => {
-    db.get('SELECT ai_health_report FROM clients WHERE id = ?', [req.params.id], (err, row) => {
+    db.get('SELECT ai_health_report FROM clients WHERE id = $1', [req.params.id], (err, row) => {
         if (err || !row || !row.ai_health_report) return res.json(null);
         try {
             res.json(JSON.parse(row.ai_health_report));
@@ -959,7 +959,7 @@ router.post('/clients/:id/health-report', async (req, res) => {
 
 // Get client communications
 router.get('/clients/:id/communications', (req, res) => {
-    db.all('SELECT * FROM client_communications WHERE client_id = ? ORDER BY created_at DESC', [req.params.id], (err, rows) => {
+    db.all('SELECT * FROM client_communications WHERE client_id = $1 ORDER BY created_at DESC', [req.params.id], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
@@ -968,10 +968,10 @@ router.get('/clients/:id/communications', (req, res) => {
 // Create manual client communication
 router.post('/clients/:id/communications', (req, res) => {
     const { type, method, description, task_id } = req.body;
-    const sql = `INSERT INTO client_communications (client_id, type, method, description, task_id) VALUES (?, ?, ?, ?, ?)`;
+    const sql = `INSERT INTO client_communications (client_id, type, method, description, task_id) VALUES ($1, $2, $3, $4, $5)`;
     db.run(sql, [req.params.id, type, method, description, task_id || null], function (err) {
         if (err) return res.status(500).json({ error: err.message });
-        db.get('SELECT * FROM client_communications WHERE id = ?', [this.lastID], (e, row) => {
+        db.get('SELECT * FROM client_communications WHERE id = $1', [this.lastID], (e, row) => {
             res.json(row);
         });
     });

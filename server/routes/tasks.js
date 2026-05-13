@@ -10,7 +10,7 @@ function sendNotification(staffId, taskTitle, action) {
     if (!staffId) return;
 
     // In a real app, we would look up the staff member's email/phone and send via SendGrid/Twilio
-    db.get('SELECT * FROM staff WHERE id = ?', [staffId], (err, staff) => {
+    db.get('SELECT * FROM staff WHERE id = $1', [staffId], (err, staff) => {
         if (err || !staff) return;
 
         console.log(`[NOTIFICATION] Preparing to send to ${staff.name} (${staff.phone})...`);
@@ -46,7 +46,7 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
     const { title, description, status, priority, due_date, client_id, assigned_to } = req.body;
     const sql = `INSERT INTO tasks (title, description, status, priority, due_date, client_id, assigned_to) 
-               VALUES (?, ?, ?, ?, ?, ?, ?)`;
+               VALUES ($1, $2, $3, $4, $5, $6, $7)`;
 
     db.run(sql, [title, description, status, priority, due_date, client_id || null, assigned_to || null], async function (err) {
         if (err) return res.status(500).json({ error: err.message });
@@ -91,7 +91,7 @@ router.post('/', (req, res) => {
                     console.log(`[Google Calendar] Created event for task #${newTaskId}: ${googleEventId}`);
 
                     // Update local task with Google ID immediately
-                    db.run('UPDATE tasks SET google_event_id = ? WHERE id = ?', [googleEventId, newTaskId]);
+                    db.run('UPDATE tasks SET google_event_id = $1 WHERE id = $2', [googleEventId, newTaskId]);
                 }
             } catch (googleErr) {
                 console.error('Error creating Google Calendar event:', googleErr);
@@ -113,7 +113,7 @@ router.post('/', (req, res) => {
 // Update task
 router.put('/:id', (req, res) => {
     // Fetch the existing task to support partial updates
-    db.get('SELECT * FROM tasks WHERE id = ?', [req.params.id], (err, task) => {
+    db.get('SELECT * FROM tasks WHERE id = $1', [req.params.id], (err, task) => {
         if (err || !task) {
             return res.status(404).json({ error: 'Task not found' });
         }
@@ -127,9 +127,9 @@ router.put('/:id', (req, res) => {
         const assigned_to = req.body.assigned_to !== undefined ? (req.body.assigned_to || null) : task.assigned_to;
 
         const sql = `UPDATE tasks 
-                   SET title = ?, description = ?, status = ?, priority = ?, due_date = ?, client_id = ?, assigned_to = ?,
+                   SET title = $1, description = $2, status = $3, priority = $4, due_date = $5, client_id = $6, assigned_to = $7,
                        updated_at = CURRENT_TIMESTAMP 
-                   WHERE id = ?`;
+                   WHERE id = $8`;
 
         db.run(sql, [title, description, status, priority, due_date, client_id, assigned_to, req.params.id], function (err) {
             if (err) {
@@ -152,7 +152,7 @@ router.delete('/:id', (req, res) => {
     const taskId = req.params.id;
 
     // 1. Check for linked Google ID
-    db.get('SELECT google_event_id FROM tasks WHERE id = ?', [taskId], async (err, task) => {
+    db.get('SELECT google_event_id FROM tasks WHERE id = $1', [taskId], async (err, task) => {
         if (err) return res.status(500).json({ error: err.message });
         if (!task) return res.status(404).json({ error: 'Task not found' });
 
@@ -219,7 +219,7 @@ router.delete('/:id', (req, res) => {
         }
 
         // 3. Delete from Local DB
-        db.run('DELETE FROM tasks WHERE id = ?', [taskId], function (err) {
+        db.run('DELETE FROM tasks WHERE id = $1', [taskId], function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'Task deleted', changes: this.changes });
         });

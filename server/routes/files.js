@@ -70,7 +70,7 @@ router.post('/portal/api/:token/upload', upload.single('file'), async (req, res)
     // 1. Verify token and get client
     const client = await new Promise((resolve, reject) => {
       db.get(
-        "SELECT id, name, email FROM clients WHERE portal_token = ? AND portal_access = 1",
+        "SELECT id, name, email FROM clients WHERE portal_token = $1 AND portal_access = 1",
         [token],
         (err, row) => {
           if (err) reject(err);
@@ -99,7 +99,7 @@ router.post('/portal/api/:token/upload', upload.single('file'), async (req, res)
       db.run(
         `INSERT INTO client_files 
          (client_id, file_name, file_size, mime_type, drive_file_id, drive_view_link, drive_download_link, uploaded_by_type, uploaded_by_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'client', ?)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'client', $8)`,
         [client.id, originalname, size, mimetype, driveResult.fileId, driveResult.viewLink, driveResult.downloadLink, client.id],
         function (err) {
           if (err) reject(err);
@@ -140,7 +140,7 @@ router.get('/portal/api/:token/files', async (req, res) => {
     // 1. Verify token and get client
     const client = await new Promise((resolve, reject) => {
       db.get(
-        "SELECT id FROM clients WHERE portal_token = ? AND portal_access = 1",
+        "SELECT id FROM clients WHERE portal_token = $1 AND portal_access = 1",
         [token],
         (err, row) => {
           if (err) reject(err);
@@ -155,7 +155,7 @@ router.get('/portal/api/:token/files', async (req, res) => {
       db.all(
         `SELECT id, file_name, file_size, mime_type, drive_view_link, drive_download_link, uploaded_by_type, created_at
          FROM client_files
-         WHERE client_id = ?
+         WHERE client_id = $1
          ORDER BY created_at DESC`,
         [client.id],
         (err, rows) => {
@@ -201,7 +201,7 @@ router.delete('/portal/api/:token/files/:id', async (req, res) => {
       db.get(
         `SELECT id, drive_file_id, uploaded_by_type, uploaded_by_id
          FROM client_files
-         WHERE id = ? AND client_id = ?`,
+         WHERE id = $1 AND client_id = $2`,
         [id, client.id],
         (err, row) => {
           if (err) reject(err);
@@ -221,7 +221,7 @@ router.delete('/portal/api/:token/files/:id', async (req, res) => {
 
     // 5. Delete from database
     await new Promise((resolve, reject) => {
-      db.run("DELETE FROM client_files WHERE id = ?", [id], (err) => {
+      db.run("DELETE FROM client_files WHERE id = $1", [id], (err) => {
         if (err) reject(err);
         else resolve();
       });
@@ -258,7 +258,7 @@ router.post('/api/clients/:clientId/files/upload', upload.single('file'), async 
     // 1. Get client info
     const client = await new Promise((resolve, reject) => {
       db.get(
-        "SELECT id, name FROM clients WHERE id = ?",
+        "SELECT id, name FROM clients WHERE id = $1",
         [clientId],
         (err, row) => {
           if (err) reject(err);
@@ -287,7 +287,7 @@ router.post('/api/clients/:clientId/files/upload', upload.single('file'), async 
       db.run(
         `INSERT INTO client_files 
          (client_id, file_name, file_size, mime_type, drive_file_id, drive_view_link, drive_download_link, uploaded_by_type, uploaded_by_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'staff', ?)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'staff', $8)`,
         [client.id, originalname, size, mimetype, driveResult.fileId, driveResult.viewLink, driveResult.downloadLink, staffId],
         function (err) {
           if (err) reject(err);
@@ -366,7 +366,7 @@ router.delete('/api/clients/:clientId/files/:id', async (req, res) => {
     // 1. Get file record
     const file = await new Promise((resolve, reject) => {
       db.get(
-        `SELECT id, drive_file_id FROM client_files WHERE id = ? AND client_id = ?`,
+        `SELECT id, drive_file_id FROM client_files WHERE id = $1 AND client_id = $2`,
         [id, clientId],
         (err, row) => {
           if (err) reject(err);

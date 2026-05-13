@@ -24,7 +24,7 @@ router.post('/', (req, res) => {
     if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password are required' });
 
     const hashed = hashPassword(password);
-    const sql = 'INSERT INTO staff (name, email, phone, role, password, status) VALUES (?, ?, ?, ?, ?, ?)';
+    const sql = 'INSERT INTO staff (name, email, phone, role, password, status) VALUES ($1, $2, $3, $4, $5, $6)';
     db.run(sql, [name, email, phone || '', role || 'staff', hashed, 'active'], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ id: this.lastID, name, email, role });
@@ -35,7 +35,7 @@ router.post('/', (req, res) => {
 router.put('/:id', (req, res) => {
     const { name, email, phone, role, password, status } = req.body;
     
-    let sql = 'UPDATE staff SET name = ?, email = ?, phone = ?, role = ?, status = ?';
+    let sql = 'UPDATE staff SET name = $1, email = $2, phone = $3, role = $4, status = $5';
     const params = [name, email, phone, role, status];
 
     if (password) {
@@ -54,7 +54,7 @@ router.put('/:id', (req, res) => {
 
 // Delete staff member
 router.delete('/:id', (req, res) => {
-    db.run('DELETE FROM staff WHERE id = ?', [req.params.id], function(err) {
+    db.run('DELETE FROM staff WHERE id = $1', [req.params.id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Staff member removed' });
     });

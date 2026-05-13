@@ -15,7 +15,7 @@ router.get('/log', requireAdmin, (req, res) => {
     const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
     db.all(
         `SELECT id, ts, provider, status, to_addr, from_addr, subject, resend_id, error, related_kind, related_id
-         FROM mail_log ORDER BY id DESC LIMIT ?`,
+         FROM mail_log ORDER BY id DESC LIMIT $1`,
         [limit],
         (err, rows) => {
             if (err) return res.status(500).json({ error: err.message });
@@ -104,7 +104,7 @@ router.post('/webhook/resend', express.json({ type: '*/*' }), (req, res) => {
     else if (type.includes('clicked')) status = 'clicked';
     else status = type;
     db.run(
-        `UPDATE mail_log SET status = ? WHERE resend_id = ?`,
+        `UPDATE mail_log SET status = $1 WHERE resend_id = $2`,
         [status, resendId],
         (err) => {
             if (err) console.error('[mail webhook] update:', err.message);

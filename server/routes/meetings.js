@@ -21,7 +21,7 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
     const { title, description, start_time, end_time, attendees } = req.body;
     const sql = `INSERT INTO meetings (title, description, start_time, end_time, attendees) 
-               VALUES (?, ?, ?, ?, ?)`;
+               VALUES ($1, $2, $3, $4, $5)`;
 
     db.run(sql, [title, description, start_time, end_time, attendees], function (err) {
         if (err) {
@@ -135,7 +135,7 @@ router.post('/google-meet', async (req, res) => {
 
         // Save to database
         const sql = `INSERT INTO meetings (title, description, start_time, end_time, meet_link, attendees, google_event_id) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`;
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)`;
 
         db.run(sql, [title, description, start_time, end_time, meetLink, attendees, createdEvent.id], function (err) {
             if (err) {
@@ -172,7 +172,7 @@ const { sendSMS } = require('../utils/emailService');
 function sendEventNotification(staffId, title, time) {
     if (!staffId) return;
 
-    db.get('SELECT * FROM staff WHERE id = ?', [staffId], (err, staff) => {
+    db.get('SELECT * FROM staff WHERE id = $1', [staffId], (err, staff) => {
         if (err || !staff) return;
 
         console.log(`[NOTIFICATION] Preparing to send to ${staff.name} (${staff.phone})...`);
@@ -323,7 +323,7 @@ router.put('/google-event/:id', async (req, res) => {
         // Actually SQLite stores strings. keeping ISO is fine or existing format.
         // Existing format in DB seems to be 'YYYY-MM-DDTHH:mm'.
 
-        db.run('UPDATE meetings SET start_time = ?, end_time = ? WHERE google_event_id = ?',
+        db.run('UPDATE meetings SET start_time = $1, end_time = $2 WHERE google_event_id = $3',
             [start, end, eventId]);
 
         res.json({ success: true });
@@ -335,7 +335,7 @@ router.put('/google-event/:id', async (req, res) => {
 
 // Delete meeting
 router.delete('/:id', (req, res) => {
-    db.run('DELETE FROM meetings WHERE id = ?', [req.params.id], function (err) {
+    db.run('DELETE FROM meetings WHERE id = $1', [req.params.id], function (err) {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
@@ -346,7 +346,7 @@ router.delete('/:id', (req, res) => {
 
 // Get Meeting Artifacts (Participants, Recordings)
 router.get('/:id/artifacts', (req, res) => {
-    db.get('SELECT meet_space_name, attendees FROM meetings WHERE id = ?', [req.params.id], async (err, meeting) => {
+    db.get('SELECT meet_space_name, attendees FROM meetings WHERE id = $1', [req.params.id], async (err, meeting) => {
         if (err) return res.status(500).json({ error: err.message });
         if (!meeting || !meeting.meet_space_name) {
             return res.json({ participants: [], recordings: [], transcripts: [], note: 'No Meet Space associated' });
@@ -383,7 +383,7 @@ router.get('/:id/artifacts', (req, res) => {
                 // 2. Match Clients (Sequential for DB SQLite safety)
                 for (const email of emails) {
                     await new Promise(resolve => {
-                        db.get('SELECT id, name, google_drive_folder_id FROM clients WHERE email = ?', [email], (err, client) => {
+                        db.get('SELECT id, name, google_drive_folder_id FROM clients WHERE email = $1', [email], (err, client) => {
                             if (client && client.google_drive_folder_id) matchedClients.push(client);
                             resolve();
                         });

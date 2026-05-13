@@ -59,7 +59,7 @@ router.get('/google/callback', async (req, res) => {
 
         // Check if client exists with this Google ID or email
         db.get(
-            `SELECT * FROM clients WHERE google_id = ? OR email = ?`,
+            `SELECT * FROM clients WHERE google_id = $1 OR email = $2`,
             [googleId, email],
             (err, client) => {
                 if (err) {
@@ -81,7 +81,7 @@ router.get('/google/callback', async (req, res) => {
                 if (!client.google_id) {
                     console.log('[client-auth] Updating google_id for client:', client.id);
                     db.run(
-                        `UPDATE clients SET google_id = ?, auth_provider = 'google' WHERE id = ?`,
+                        `UPDATE clients SET google_id = $1, auth_provider = 'google' WHERE id = $2`,
                         [googleId, client.id],
                         (updateErr) => {
                             if (updateErr) console.error('[client-auth] Failed to update google_id:', updateErr);
@@ -130,7 +130,7 @@ router.post('/magic-link/send', async (req, res) => {
     try {
         // Find client by email
         db.get(
-            `SELECT * FROM clients WHERE email = ? AND portal_access = 1`,
+            `SELECT * FROM clients WHERE email = $1 AND portal_access = 1`,
             [email],
             async (err, client) => {
                 if (err) {
@@ -248,7 +248,7 @@ router.post('/signup', (req, res) => {
 
     // Check if client already exists
     db.get(
-        `SELECT id FROM clients WHERE email = ?`,
+        `SELECT id FROM clients WHERE email = $1`,
         [email],
         (err, existing) => {
             if (err) {
@@ -262,7 +262,7 @@ router.post('/signup', (req, res) => {
             const insertPortalRequest = (cId) => {
                 db.run(
                     `INSERT INTO portal_requests (client_id, subject, message, status, priority, source)
-                     VALUES (?, 'New Account Signup', ?, 'new', 'normal', 'portal')`,
+                     VALUES ($1, 'New Account Signup', $2, 'new', 'normal', 'portal')`,
                     [cId, message || `New signup from ${first_name} ${last_name}`],
                     function(insertErr) {
                         if (insertErr) {
@@ -290,7 +290,7 @@ router.post('/signup', (req, res) => {
                 
                 db.run(
                     `INSERT INTO clients (first_name, last_name, email, phone, company, status, portal_access, portal_token, created_at)
-                     VALUES (?, ?, ?, ?, ?, 'active', 1, ?, CURRENT_TIMESTAMP)`,
+                     VALUES ($1, $2, $3, $4, $5, 'active', 1, $6, CURRENT_TIMESTAMP)`,
                     [first_name, last_name, email, phone || null, company || null, portalToken],
                     function(clientInsertErr) {
                         if (clientInsertErr) {

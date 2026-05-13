@@ -9,7 +9,7 @@ router.get('/', (req, res) => {
     let params = [];
 
     if (task_id) {
-        sql = 'SELECT * FROM time_logs WHERE task_id = ? ORDER BY start_time DESC';
+        sql = 'SELECT * FROM time_logs WHERE task_id = $1 ORDER BY start_time DESC';
         params = [task_id];
     }
 
@@ -29,7 +29,7 @@ router.post('/start', (req, res) => {
     // Check if there's already running timer? (Optional logic, for now allow parallel or client handles it)
     // Ideally, stop any running timer first for this user (single user system simplifiction)
 
-    const sql = `INSERT INTO time_logs (task_id, description, start_time) VALUES (?, ?, CURRENT_TIMESTAMP)`;
+    const sql = `INSERT INTO time_logs (task_id, description, start_time) VALUES ($1, $2, CURRENT_TIMESTAMP)`;
 
     db.run(sql, [task_id, description], function (err) {
         if (err) {
@@ -37,7 +37,7 @@ router.post('/start', (req, res) => {
             return;
         }
         // Return the new log entry
-        db.get('SELECT * FROM time_logs WHERE id = ?', [this.lastID], (err, row) => {
+        db.get('SELECT * FROM time_logs WHERE id = $1', [this.lastID], (err, row) => {
             if (err) return res.json({ id: this.lastID }); // Fallback
             res.json(row);
         });
@@ -50,7 +50,7 @@ router.post('/stop', (req, res) => {
     const endTime = new Date().toISOString();
 
     // Calculate duration
-    db.get('SELECT start_time FROM time_logs WHERE id = ?', [id], (err, row) => {
+    db.get('SELECT start_time FROM time_logs WHERE id = $1', [id], (err, row) => {
         if (err || !row) {
             res.status(404).json({ error: 'Timer not found' });
             return;

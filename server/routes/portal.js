@@ -57,7 +57,7 @@ router.get('/api/:token', async (req, res) => {
         const client = await dbGet(
             `SELECT id, name, first_name, last_name, company, email,
                     google_drive_folder_id, created_at
-             FROM clients WHERE portal_token = ?`,
+             FROM clients WHERE portal_token = $1`,
             [token]
         );
         if (!client) return res.status(404).json({ error: "Invalid token" });
@@ -104,7 +104,7 @@ router.get('/api/:token', async (req, res) => {
 // ─── Browse subfolder ────────────────────────────────────
 router.get('/api/:token/folder/:folderId', async (req, res) => {
     try {
-        const client = await dbGet("SELECT id, google_drive_folder_id FROM clients WHERE portal_token = ?", [req.params.token]);
+        const client = await dbGet("SELECT id, google_drive_folder_id FROM clients WHERE portal_token = $1", [req.params.token]);
         if (!client) return res.status(404).json({ error: "Invalid token" });
 
         const drive = await getDriveClient();
@@ -153,7 +153,7 @@ router.post('/api/:token/request', async (req, res) => {
 
         // Layer 1: validate token → client
         const client = await dbGet(
-            "SELECT id, name, first_name, company FROM clients WHERE portal_token = ?",
+            "SELECT id, name, first_name, company FROM clients WHERE portal_token = $1",
             [token]
         );
         if (!client) {
@@ -165,14 +165,14 @@ router.post('/api/:token/request', async (req, res) => {
         // Layer 1: insert into portal_requests (source of truth)
         const requestId = await dbRun(
             `INSERT INTO portal_requests (client_id, subject, message, status, priority, source, token_used)
-             VALUES (?, ?, ?, 'new', 'normal', 'portal', ?)`,
+             VALUES ($1, $2, $3, 'new', 'normal', 'portal', $4)`,
             [client.id, safeSubject, message.trim(), token]
         );
         console.log(`[PORTAL-REQ] Saved to portal_requests id=${requestId}`);
 
         // Layer 2: mirror to client_communications (CRM activity log)
         await dbRun(
-            "INSERT INTO client_communications (client_id, type, method, description) VALUES (?, 'note', 'Portal Request', ?)",
+            "INSERT INTO client_communications (client_id, type, method, description) VALUES ($1, 'note', 'Portal Request', $2)",
             [client.id, `[PORTAL REQUEST #${requestId}] ${safeSubject}: ${message.trim()}`]
         );
 
@@ -202,7 +202,7 @@ router.post('/api/:token/request', async (req, res) => {
             }
             // Log final notification outcome against the request row
             db.run(
-                "UPDATE portal_requests SET notify_email_status=?, notify_sms_status=? WHERE id=?",
+                "UPDATE portal_requests SET notify_email_status=$1, notify_sms_status=$2 WHERE id=$3",
                 [emailStatus, smsStatus, requestId]
             );
         });
@@ -216,11 +216,11 @@ router.post('/api/:token/request', async (req, res) => {
 // ─── Client Request History ───────────────────────────────
 router.get('/api/:token/requests', async (req, res) => {
     try {
-        const client = await dbGet("SELECT id FROM clients WHERE portal_token = ?", [req.params.token]);
+        const client = await dbGet("SELECT id FROM clients WHERE portal_token = $1", [req.params.token]);
         if (!client) return res.status(404).json({ error: "Invalid token" });
         const requests = await dbAll(
             `SELECT id, subject, message, status, priority, created_at
-             FROM portal_requests WHERE client_id = ? ORDER BY created_at DESC LIMIT 20`,
+             FROM portal_requests WHERE client_id = $1 ORDER BY created_at DESC LIMIT 20`,
             [client.id]
         );
         res.json(requests);

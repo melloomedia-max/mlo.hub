@@ -5,7 +5,7 @@ const db = require('../database');
 // Helper: Sync a project's payment_status based on its linked invoices
 function syncProjectPaymentStatus(projectId) {
     if (!projectId) return;
-    const sql = `SELECT GROUP_CONCAT(DISTINCT status) as statuses FROM invoices WHERE project_id = ?`;
+    const sql = `SELECT GROUP_CONCAT(DISTINCT status) as statuses FROM invoices WHERE project_id = $1`;
     db.get(sql, [projectId], (err, row) => {
         if (err || !row || !row.statuses) return;
         const statuses = row.statuses.split(',');
@@ -19,7 +19,7 @@ function syncProjectPaymentStatus(projectId) {
         } else if (statuses.includes('finalized')) {
             paymentStatus = 'invoice-sent';
         }
-        db.run(`UPDATE projects SET payment_status = ? WHERE id = ?`, [paymentStatus, projectId], (err) => {
+        db.run(`UPDATE projects SET payment_status = $1 WHERE id = $2`, [paymentStatus, projectId], (err) => {
             if (err) console.error('Error syncing project payment_status:', err);
         });
     });
@@ -40,7 +40,7 @@ router.get('/generate/pdf/:id', (req, res) => {
         LEFT JOIN projects ON invoices.project_id = projects.id
         WHERE invoices.id = ?
     `;
-    const itemsSql = `SELECT * FROM invoice_items WHERE invoice_id = ?`;
+    const itemsSql = `SELECT * FROM invoice_items WHERE invoice_id = $1`;
 
     db.get(invoiceSql, [invoiceId], (err, invoice) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -149,7 +149,7 @@ router.post('/', async (req, res) => {
     const taxVal = taxable * ((tax_rate || 0) / 100);
     const total_amount = taxable + taxVal;
 
-    const sql = `INSERT INTO invoices (client_id, project_id, issue_date, due_date, status, total_amount, notes, discount_amount, discount_type, tax_rate, currency, payment_instructions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const sql = `INSERT INTO invoices (client_id, project_id, issue_date, due_date, status, total_amount, notes, discount_amount, discount_type, tax_rate, currency, payment_instructions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`;
 
     db.run(sql, [client_id, project_id || null, issue_date, due_date, status || 'draft', total_amount, notes, discount_amount || 0, discount_type || 'fixed', tax_rate || 0, currency || 'USD', payment_instructions || ''], async function (err) {
         if (err) return res.status(500).json({ error: err.message });
@@ -173,7 +173,7 @@ router.post('/', async (req, res) => {
         }
 
         // Generate PDF and Upload
-        db.get('SELECT google_drive_folder_id, name, company FROM clients WHERE id = ?', [client_id], async (err, client) => {
+        db.get('SELECT google_drive_folder_id, name, company FROM clients WHERE id = $1', [client_id], async (err, client) => {
             if (err || !client || !client.google_drive_folder_id) {
                 return res.status(201).json({ id: invoiceId, message: 'Invoice created (no Drive upload)' });
             }
@@ -197,7 +197,7 @@ router.post('/', async (req, res) => {
                     fields: 'id, webViewLink'
                 });
 
-                db.run('UPDATE invoices SET google_drive_file_id = ? WHERE id = ?', [driveFile.data.id, invoiceId]);
+                db.run('UPDATE invoices SET google_drive_file_id = $1 WHERE id = $2', [driveFile.data.id, invoiceId]);
 
                 res.status(201).json({
                     id: invoiceId,
@@ -353,13 +353,13 @@ router.put('/:id', (req, res) => {
         const taxVal = taxable * ((tax_rate || 0) / 100);
         const total_amount = taxable + taxVal;
 
-        const sql = `UPDATE invoices SET client_id=?, project_id=?, issue_date=?, due_date=?, status=?, total_amount=?, notes=?, discount_amount=?, discount_type=?, tax_rate=?, currency=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`;
+        const sql = `UPDATE invoices SET client_id=$1, project_id=$2, issue_date=$3, due_date=$4, status=$5, total_amount=$6, notes=$7, discount_amount=$8, discount_type=$9, tax_rate=$10, currency=$11, updated_at=CURRENT_TIMESTAMP WHERE id=$12`;
 
         db.run(sql, [client_id, project_id || null, issue_date, due_date, status, total_amount, notes, discount_amount || 0, discount_type || 'fixed', tax_rate || 0, currency || 'USD', id], function (err) {
             if (err) return res.status(500).json({ error: err.message });
 
             // 2. Replace Items (Delete all and re-insert)
-            db.run(`DELETE FROM invoice_items WHERE invoice_id = ?`, [id], function (err) {
+            db.run(`DELETE FROM invoice_items WHERE invoice_id = $1`, [id], function (err) {
                 if (err) console.error('Error clearing items', err);
 
                 if (items.length > 0) {
@@ -383,19 +383,19 @@ router.put('/:id', (req, res) => {
 
     } else {
         // Partial Update (status change like markAsPaid)
-        const sql = `UPDATE invoices SET status = COALESCE(?, status), notes = COALESCE(?, notes) WHERE id = ?`;
+        const sql = `UPDATE invoices SET status = COALESCE($1, status), notes = COALESCE($2, notes) WHERE id = $3`;
         db.run(sql, [status, notes, id], function (err) {
             if (err) return res.status(500).json({ error: err.message });
             // Auto-sync project payment_status if invoice has a project
             if (status) {
-                db.get(`SELECT project_id FROM invoices WHERE id = ?`, [id], (err, inv) => {
+                db.get(`SELECT project_id FROM invoices WHERE id = $1`, [id], (err, inv) => {
                     if (!err && inv && inv.project_id) syncProjectPaymentStatus(inv.project_id);
                 });
                 if (status === 'paid') {
                     sendReceiptEmail(id); // Send receipt email when status is set to 'paid'
                     // Campaign Trigger
                     const { enrollClientInCampaignByTrigger } = require('../utils/campaignRunner');
-                    db.get(`SELECT client_id FROM invoices WHERE id = ?`, [id], (err, inv) => {
+                    db.get(`SELECT client_id FROM invoices WHERE id = $1`, [id], (err, inv) => {
                         if (!err && inv) enrollClientInCampaignByTrigger(inv.client_id, 'invoice_paid').catch(e => console.error(e));
                     });
                 }
@@ -407,7 +407,7 @@ router.put('/:id', (req, res) => {
 
 // DELETE invoice
 router.delete('/:id', (req, res) => {
-    db.run('DELETE FROM invoices WHERE id = ?', [req.params.id], function (err) {
+    db.run('DELETE FROM invoices WHERE id = $1', [req.params.id], function (err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Invoice deleted' });
     });
@@ -583,12 +583,12 @@ router.post('/:id/send', async (req, res) => {
                 console.log(`[Email] Invoice #${id} sent to ${invoice.client_email}`);
 
                 // 5. Mark as sent + sync project
-                db.run(`UPDATE invoices SET status = 'sent' WHERE id = ?`, [id], (err) => {
+                db.run(`UPDATE invoices SET status = 'sent' WHERE id = $1`, [id], (err) => {
                     if (err) console.error('Failed to update status:', err);
                     // Auto-sync project payment_status
                     if (invoice.project_id) syncProjectPaymentStatus(invoice.project_id);
                     
-                    db.run("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, ?, ?, ?)", 
+                    db.run("INSERT INTO client_communications (client_id, type, method, description) VALUES ($1, $2, $3, $4)", 
                         [invoice.client_id, 'invoice', 'email', `Sent Invoice #${id} for ${currencySymbol}${(invoice.total_amount || 0).toFixed(2)}`]);
                         
                     // Campaign Trigger
@@ -765,7 +765,7 @@ router.post('/:id/payment', (req, res) => {
     }
 
     // 1. Get current invoice
-    db.get('SELECT * FROM invoices WHERE id = ?', [invoiceId], (err, invoice) => {
+    db.get('SELECT * FROM invoices WHERE id = $1', [invoiceId], (err, invoice) => {
         if (err) return res.status(500).json({ error: err.message });
         if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
 
@@ -783,7 +783,7 @@ router.post('/:id/payment', (req, res) => {
 
         // 2. Record the payment
         db.run(
-            'INSERT INTO invoice_payments (invoice_id, amount, method, note) VALUES (?, ?, ?, ?)',
+            'INSERT INTO invoice_payments (invoice_id, amount, method, note) VALUES ($1, $2, $3, $4)',
             [invoiceId, amount, method || '', note || ''],
             function (err) {
                 if (err) return res.status(500).json({ error: err.message });
@@ -792,7 +792,7 @@ router.post('/:id/payment', (req, res) => {
 
                 // 3. Update invoice totals and status
                 db.run(
-                    'UPDATE invoices SET amount_paid = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                    'UPDATE invoices SET amount_paid = $1, status = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
                     [newPaid, newStatus, invoiceId],
                     (err) => {
                         if (err) return res.status(500).json({ error: err.message });
@@ -824,7 +824,7 @@ router.post('/:id/payment', (req, res) => {
 // GET payment history for an invoice
 router.get('/:id/payments', (req, res) => {
     db.all(
-        'SELECT * FROM invoice_payments WHERE invoice_id = ? ORDER BY created_at DESC',
+        'SELECT * FROM invoice_payments WHERE invoice_id = $1 ORDER BY created_at DESC',
         [req.params.id],
         (err, rows) => {
             if (err) return res.status(500).json({ error: err.message });
@@ -942,7 +942,7 @@ router.post('/:id/send-remaining', async (req, res) => {
 
 router.put('/:id/status', (req, res) => {
     const { status } = req.body;
-    db.run("UPDATE invoices SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [status, req.params.id], function(err) {
+    db.run("UPDATE invoices SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2", [status, req.params.id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, message: `Status updated to ${status}` });
     });

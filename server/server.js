@@ -45,7 +45,7 @@ setTimeout(() => {
         const hashed = hashPassword(adminPass);
         
         db.run(
-            "INSERT INTO staff (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO staff (name, email, password, role, status) VALUES ($1, $2, $3, $4, $5)",
             ['Admin', adminEmail, hashed, 'admin', 'active'],
             (insErr) => {
                 if (insErr) {
@@ -175,7 +175,7 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
 
     if (req.isPortal) {
         // Portal Login (Clients)
-        db.get('SELECT * FROM clients WHERE email = ?', [email], (err, user) => {
+        db.get('SELECT * FROM clients WHERE email = $1', [email], (err, user) => {
             if (err) return res.redirect('/login?error=db');
             if (user && user.password && verifyPassword(password, user.password)) {
                 req.session.isAuthenticated = true;
@@ -198,7 +198,7 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
     } else {
         // Hub Login (Staff)
         console.log(`[STAFF-LOGIN] Attempt for email: ${email}`);
-        db.get('SELECT * FROM staff WHERE email = ?', [email], (err, user) => {
+        db.get('SELECT * FROM staff WHERE email = $1', [email], (err, user) => {
             if (err) {
                 console.log(`[STAFF-LOGIN] DB Error: ${err.message}`);
                 return res.redirect('/login?error=db');

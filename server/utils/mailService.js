@@ -58,7 +58,7 @@ function logSend({ provider, status, to, from, subject, resendId, error, related
   try {
     db.run(
       `INSERT INTO mail_log (ts, provider, status, to_addr, from_addr, subject, resend_id, error, related_kind, related_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [new Date().toISOString(), provider, status, to, from, subject, resendId || null, error || null, relatedKind || null, relatedId || null],
       (err) => { if (err) console.error('[mail] log insert:', err.message); }
     );

@@ -74,11 +74,11 @@ router.post('/', async (req, res) => {
         }
         
         const sql = `INSERT INTO subscriptions (client_id, name, amount, interval, billing_day, next_billing_date, notes)
-                     VALUES (?, ?, ?, ?, ?, ?, ?)`;
+                     VALUES ($1, $2, $3, $4, $5, $6, $7)`;
         const id = await dbRun(sql, [client_id, name, amount, interval || 'monthly', billing_day || 1, nextBilling.toISOString().split('T')[0], notes]);
         
         // Log to Activity Feed
-        await dbRun("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, 'system', 'system', ?)", 
+        await dbRun("INSERT INTO client_communications (client_id, type, method, description) VALUES ($1, 'system', 'system', $2)", 
             [client_id, `New subscription created: ${name} ($${amount}/${interval || 'monthly'})`]);
 
         res.json({ id, success: true });
@@ -90,9 +90,9 @@ router.post('/', async (req, res) => {
 // DELETE subscription
 router.delete('/:id', async (req, res) => {
     try {
-        const sub = await dbGet("SELECT client_id, name FROM subscriptions WHERE id = ?", [req.params.id]);
+        const sub = await dbGet("SELECT client_id, name FROM subscriptions WHERE id = $1", [req.params.id]);
         if (sub) {
-            await dbRun("DELETE FROM subscriptions WHERE id = ?", [req.params.id]);
+            await dbRun("DELETE FROM subscriptions WHERE id = $1", [req.params.id]);
             await dbRun("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, 'system', 'system', ?)", 
                 [sub.client_id, `Subscription cancelled: ${sub.name}`]);
             
@@ -129,17 +129,17 @@ router.post('/:id/bill-now', async (req, res) => {
         const dueDateStr = dueDate.toISOString().split('T')[0];
 
         const invoiceId = await dbRun(
-            "INSERT INTO invoices (client_id, issue_date, due_date, status, total_amount, notes) VALUES (?, ?, ?, 'sent', ?, ?)",
+            "INSERT INTO invoices (client_id, issue_date, due_date, status, total_amount, notes) VALUES ($1, $2, $3, 'sent', $4, $5)",
             [sub.client_id, issueDate, dueDateStr, sub.amount, `Manual recurring billing for ${sub.name}`]
         );
 
         await dbRun(
-            "INSERT INTO invoice_items (invoice_id, description, quantity, rate, amount) VALUES (?, ?, 1, ?, ?)",
+            "INSERT INTO invoice_items (invoice_id, description, quantity, rate, amount) VALUES ($1, $2, 1, $3, $4)",
             [invoiceId, `${sub.name} Subscription`, sub.amount, sub.amount]
         );
 
         await dbRun(
-            "INSERT INTO subscription_invoices (subscription_id, invoice_id, billing_period_start) VALUES (?, ?, ?)",
+            "INSERT INTO subscription_invoices (subscription_id, invoice_id, billing_period_start) VALUES ($1, $2, $3)",
             [sub.id, invoiceId, issueDate]
         );
 
@@ -150,11 +150,11 @@ router.post('/:id/bill-now', async (req, res) => {
         else nextDate.setMonth(nextDate.getMonth() + 1);
 
         await dbRun(
-            "UPDATE subscriptions SET last_billing_date = ?, next_billing_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            "UPDATE subscriptions SET last_billing_date = $1, next_billing_date = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3",
             [issueDate, nextDate.toISOString().split('T')[0], sub.id]
         );
 
-        await dbRun("INSERT INTO client_communications (client_id, type, method, description) VALUES (?, 'invoice', 'system', ?)", 
+        await dbRun("INSERT INTO client_communications (client_id, type, method, description) VALUES ($1, 'invoice', 'system', $2)", 
             [sub.client_id, `Manual subscription invoice #${invoiceId} initiated for ${sub.name}`]);
 
         // Send Email

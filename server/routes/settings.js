@@ -47,8 +47,8 @@ router.post('/regenerate-tokens', async (req, res) => {
 // Regenerate single client token
 router.post('/regenerate-token/:clientId', async (req, res) => {
     try {
-        await dbRun("UPDATE clients SET portal_token = hex(randomblob(24)) WHERE id = ?", [req.params.clientId]);
-        const client = await dbGet("SELECT portal_token FROM clients WHERE id = ?", [req.params.clientId]);
+        await dbRun("UPDATE clients SET portal_token = hex(randomblob(24)) WHERE id = $1", [req.params.clientId]);
+        const client = await dbGet("SELECT portal_token FROM clients WHERE id = $1", [req.params.clientId]);
         res.json({ success: true, token: client.portal_token });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
