@@ -586,3 +586,6 @@ app.get('/api/clients', requireAuth, (req, res) => {
         res.json(rows);
     });
 });
+
+// --- ONE-TIME DATA RESTORE ENDPOINT ---
+require('./restore-endpoint')(app, db, requireAdmin);
