@@ -1,7 +1,20 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
-const dbPath = path.join(__dirname, '../agency.db');
+// Use DB_PATH from env or fall back to local agency.db
+const dbPath = process.env.DB_PATH || path.join(__dirname, '../agency.db');
+
+// Ensure directory exists if DB_PATH is set to a volume mount
+if (process.env.DB_PATH) {
+  const dbDir = path.dirname(dbPath);
+  if (!fs.existsSync(dbDir)) {
+    console.log(`[DB] Creating database directory: ${dbDir}`);
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+}
+
+console.log(`[DB] Using database at: ${dbPath}`);
 const db = new sqlite3.Database(dbPath);
 
 // Initialize database tables
