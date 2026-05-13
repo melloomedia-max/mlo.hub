@@ -282,13 +282,16 @@ router.post('/signup', (req, res) => {
                 );
             };
 
-            // If client doesn't exist, create a new lead
+            // If client doesn't exist, create a new lead with portal access
             if (!clientId) {
-                console.log(`[signup] Creating new lead for ${email}`);
+                console.log(`[signup] Creating new client with portal access for ${email}`);
+                const crypto = require('crypto');
+                const portalToken = crypto.randomBytes(16).toString('hex');
+                
                 db.run(
-                    `INSERT INTO clients (first_name, last_name, email, phone, company, status, created_at)
-                     VALUES (?, ?, ?, ?, ?, 'lead', CURRENT_TIMESTAMP)`,
-                    [first_name, last_name, email, phone || null, company || null],
+                    `INSERT INTO clients (first_name, last_name, email, phone, company, status, portal_access, portal_token, created_at)
+                     VALUES (?, ?, ?, ?, ?, 'active', 1, ?, CURRENT_TIMESTAMP)`,
+                    [first_name, last_name, email, phone || null, company || null, portalToken],
                     function(clientInsertErr) {
                         if (clientInsertErr) {
                             console.error('[signup] Failed to create client:', clientInsertErr);
@@ -296,7 +299,7 @@ router.post('/signup', (req, res) => {
                         }
 
                         clientId = this.lastID;
-                        console.log(`[signup] New client created (ID: ${clientId})`);
+                        console.log(`[signup] New client created (ID: ${clientId}) with portal token`);
                         insertPortalRequest(clientId);
                     }
                 );
