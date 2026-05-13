@@ -24,6 +24,10 @@ module.exports = function(app, db, requireAdmin) {
 
             const results = {};
             
+            // Disable foreign key checks and use deferred constraints
+            console.log('[RESTORE] Setting deferred constraints...');
+            await db.query('SET CONSTRAINTS ALL DEFERRED');
+            
             // Tables to restore in dependency order (parents before children)
             const tablesToRestore = [
                 'clients',

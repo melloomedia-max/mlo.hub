@@ -570,6 +570,30 @@ async function initializeDatabase() {
     await db.query("CREATE INDEX IF NOT EXISTS idx_client_files_client_id ON client_files(client_id)");
     await db.query("CREATE INDEX IF NOT EXISTS idx_client_files_created_at ON client_files(created_at DESC)");
 
+    console.log("[DB] Adding missing columns for data restore compatibility...");
+    // Add columns that exist in recovered data but not in base schema
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS social_instagram TEXT");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS social_linkedin TEXT");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS social_twitter TEXT");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS social_facebook TEXT");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS activity_doc_id TEXT");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS ai_health_report TEXT");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS hosting_active INTEGER DEFAULT 0");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS hosting_plan TEXT");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS hosting_since TEXT");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS next_billing_date TEXT");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS total_paid REAL DEFAULT 0");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS stage TEXT DEFAULT 'lead'");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS converted_from_lead_id INTEGER");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS lifetime_value REAL DEFAULT 0");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS acquisition_source TEXT");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS assigned_account_manager TEXT");
+    await db.query("ALTER TABLE projects ADD COLUMN IF NOT EXISTS payment_status TEXT");
+    await db.query("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS amount_paid REAL DEFAULT 0");
+    await db.query("ALTER TABLE time_logs ADD COLUMN IF NOT EXISTS billed INTEGER DEFAULT 0");
+    await db.query("ALTER TABLE client_communications ADD COLUMN IF NOT EXISTS task_id INTEGER");
+
     console.log("[DB] Database initialization complete.");
   } catch (err) {
     console.error("[DB] Initialization error:", err);
