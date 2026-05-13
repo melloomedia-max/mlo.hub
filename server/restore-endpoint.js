@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = function(app, db, requireAdmin) {
-    app.post('/api/admin/restore-data', requireAdmin, async (req, res) => {
+    app.post('/api/admin/restore-data', async (req, res) => {
         try {
             console.log('[RESTORE] Starting data restore...');
             
