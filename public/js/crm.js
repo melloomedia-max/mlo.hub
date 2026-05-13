@@ -246,7 +246,7 @@ async function openClientProfile(clientId) {
             statusEl.textContent = client.status;
         }
 
-        const names = client.name.split(' ');
+        const names = (client.name || "").split(' ');
         const initials = names.length > 1 ? names[0][0] + names[names.length - 1][0] : names[0][0];
         const detailAvatar = document.getElementById('detail-avatar');
         const editAvatar = document.getElementById('edit-avatar-preview');
@@ -303,7 +303,7 @@ async function openClientProfile(clientId) {
         let lName = client.last_name || '';
 
         if (!fName && !lName && client.name) {
-            const parts = client.name.split(' ');
+            const parts = (client.name || "").split(' ');
             fName = parts[0];
             lName = parts.slice(1).join(' ') || '';
         }

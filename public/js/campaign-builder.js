@@ -119,7 +119,7 @@ function renderFlow() {
         div.id = node.id;
         
         const icon = NODE_TYPES[node.type].icon;
-        const sub = node.data.actionType ? `(${node.data.actionType.toUpperCase()})` : '';
+        const sub = node.data.actionType ? `(${node.data.actionType ? node.data.actionType.toUpperCase() : ""})` : '';
         
         div.innerHTML = `
             <div class="node-header">
@@ -146,7 +146,7 @@ function renderFlow() {
 
 function getNodeSummary(node) {
     if (node.type === 'wait') return `Wait ${node.data.days || 0}d ${node.data.hours || 0}h`;
-    if (node.type === 'trigger') return node.data.triggerType.replace('_', ' ');
+    if (node.type === 'trigger') return (node.data.triggerType || "").replace('_', ' ');
     if (node.type === 'action') return node.data.actionType;
     return '';
 }

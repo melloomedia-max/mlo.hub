@@ -35,7 +35,7 @@ function displayArchiveHistory(history) {
                 <td style="padding: 15px; font-size: 14px;">${new Date(archive.created_at).toLocaleDateString()}</td>
                 <td style="padding: 15px; font-size: 14px;">
                     <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; background: ${archive.archive_type === 'campaign_sends' ? 'rgba(99,102,241,0.1)' : 'rgba(16,185,129,0.1)'}; color: ${archive.archive_type === 'campaign_sends' ? '#818cf8' : '#34d399'};">
-                        ${archive.archive_type.replace('_', ' ')}
+                        ${(archive.archive_type || "").replace('_', ' ')}
                     </span>
                 </td>
                 <td style="padding: 15px; font-size: 14px; font-weight: 500;">${archive.records_archived.toLocaleString()}</td>

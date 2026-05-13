@@ -84,7 +84,7 @@ async function loadDashboard() {
         const deadlineList = document.getElementById('deadline-list');
         if (deadlineList) {
             deadlineList.innerHTML = upcomingTasks.map(t => `
-          <li oncontextmenu="ContextMenu.attach(event, 'task', ${t.id}, '${t.title.replace(/'/g, "\\'")}')" data-context="task" style="cursor:pointer;">
+          <li oncontextmenu="ContextMenu.attach(event, 'task', ${t.id}, '${(t.title || "").replace(/'/g, "\\'")}')" data-context="task" style="cursor:pointer;">
             <span>${t.title}</span>
             <span class="due-date" style="color: ${getDueDateColor(t.due_date)}">
               ${new Date(t.due_date).toLocaleDateString()}
@@ -215,7 +215,7 @@ async function generateAIInsights() {
                     
                     return `
                         <div ondblclick="handleAIAction('${actionType}', ${client.clientId}, '${actionPayload}')" 
-                             oncontextmenu="ContextMenu.attach(event, 'client', ${client.clientId}, '${client.clientName.replace(/'/g, "\\'")}')"
+                             oncontextmenu="ContextMenu.attach(event, 'client', ${client.clientId}, '${(client.clientName || "").replace(/'/g, "\\'")}')"
                              data-context="client"
                              style="cursor: pointer; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 14px; position: relative; backdrop-filter: var(--blur); transition: all 0.2s;"
                              onmouseenter="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--glass-shadow)';"

@@ -107,7 +107,7 @@ function displayTasks(tasks) {
       <div class="task-header">
         ${clientBadge}
         <h3>${task.title}</h3>
-        <button class="play-btn" onclick="event.stopPropagation(); startTimer(${task.id}, '${task.title.replace(/'/g, "\\'")}')" title="Start Timer">
+        <button class="play-btn" onclick="event.stopPropagation(); startTimer(${task.id}, '${(task.title || "").replace(/'/g, "\\'")}')" title="Start Timer">
             ▶
         </button>
       </div>

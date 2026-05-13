@@ -252,7 +252,7 @@ function displayMeetings(meetings) {
 
     container.innerHTML = meetings.map(meeting => `
     <div class="meeting-card" 
-         oncontextmenu="ContextMenu.attach(event, 'meeting', ${meeting.id}, '${meeting.title.replace(/'/g, "\\'")}')"
+         oncontextmenu="ContextMenu.attach(event, 'meeting', ${meeting.id}, '${(meeting.title || "").replace(/'/g, "\\'")}')"
          data-context="meeting">
       <div class="card-header" style="background:${meeting.meet_link ? 'rgba(99,102,241,0.15)' : 'transparent'}; padding: ${meeting.meet_link ? '10px' : '0'}; border-radius:10px; margin-bottom:10px; border: ${meeting.meet_link ? '1px solid rgba(99,102,241,0.25)' : 'none'};">
           <h3 style="margin:0; color: rgba(255,255,255,0.95); font-size:15px; font-weight:700;">${meeting.title}</h3>

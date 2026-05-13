@@ -33,7 +33,7 @@ function renderCampaigns() {
 
         return `
         <div class="glass-card campaign-card" 
-             oncontextmenu="ContextMenu.attach(event, 'campaign', ${campaign.id}, '${campaign.name.replace(/'/g, "\\'")}')"
+             oncontextmenu="ContextMenu.attach(event, 'campaign', ${campaign.id}, '${(campaign.name || "").replace(/'/g, "\\'")}')"
              data-context="campaign"
              style="display: flex; flex-direction: column; gap: 15px; padding: 24px; cursor: default;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -46,8 +46,8 @@ function renderCampaigns() {
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                    <button onclick="editCampaign(${campaign.id})" class="icon-btn" aria-label="Edit campaign ${campaign.name.replace(/"/g, '&quot;')}" title="Edit" style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✏️</button>
-                    <button onclick="deleteCampaign(${campaign.id})" class="icon-btn delete-btn" aria-label="Delete campaign ${campaign.name.replace(/"/g, '&quot;')}" title="Delete" style="width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">🗑️</button>
+                    <button onclick="editCampaign(${campaign.id})" class="icon-btn" aria-label="Edit campaign ${(campaign.name || "").replace(/"/g, '&quot;')}" title="Edit" style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✏️</button>
+                    <button onclick="deleteCampaign(${campaign.id})" class="icon-btn delete-btn" aria-label="Delete campaign ${(campaign.name || "").replace(/"/g, '&quot;')}" title="Delete" style="width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">🗑️</button>
                 </div>
             </div>
             
@@ -67,7 +67,7 @@ function renderCampaigns() {
             </div>
 
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px; margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 11px; color: var(--text-tertiary);">Trigger: <strong style="color: var(--text-secondary);">${campaign.trigger.replace('_', ' ').toUpperCase()}</strong></span>
+                <span style="font-size: 11px; color: var(--text-tertiary);">Trigger: <strong style="color: var(--text-secondary);">${(campaign.trigger || "").replace('_', ' ').toUpperCase()}</strong></span>
                 <button onclick="viewCampaignStats(${campaign.id})" class="secondary-btn" style="padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 6px;">
                     Analytics ↗
                 </button>
