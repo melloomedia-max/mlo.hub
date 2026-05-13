@@ -151,6 +151,7 @@ router.patch('/portal-requests/:id', (req, res) => {
 
 // Get all clients (with business names)
 router.get('/clients', (req, res) => {
+    console.log('[CRM] /clients hit');
     const sql = `
         SELECT c.*,
             GROUP_CONCAT(DISTINCT cb.name) as business_names,
@@ -162,6 +163,7 @@ router.get('/clients', (req, res) => {
     `;
     db.all(sql, [], (err, rows) => {
         if (err) {
+            console.error('[CRM] /clients error:', err);
             res.status(500).json({ error: err.message });
             return;
         }

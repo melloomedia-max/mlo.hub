@@ -490,6 +490,7 @@ try {
 
 // --- UNIFIED DASHBOARD API ---
 app.get('/api/dashboard', requireAuth, async (req, res) => {
+    console.log('[DASHBOARD] hit');
     try {
         const stats = {
             totalRevenue: 0,
@@ -541,6 +542,7 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
 
         res.json(stats);
     } catch (err) {
+        console.error('[DASHBOARD] Error:', err);
         res.status(500).json({ error: err.message });
     }
 });
