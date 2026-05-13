@@ -8,7 +8,7 @@ const { hashPassword } = require('../utils/auth');
 router.get('/', (req, res) => {
     const sql = 'SELECT id, name, email, phone, role, status FROM staff ORDER BY name ASC';
     db.all(sql, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) { console.error("[STAFF] Error:", err); return res.status(500).json({ error: err.message }); }
         res.json(rows);
     });
 });
@@ -26,7 +26,7 @@ router.post('/', (req, res) => {
     const hashed = hashPassword(password);
     const sql = 'INSERT INTO staff (name, email, phone, role, password, status) VALUES ($1, $2, $3, $4, $5, $6)';
     db.run(sql, [name, email, phone || '', role || 'staff', hashed, 'active'], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) { console.error("[STAFF] Error:", err); return res.status(500).json({ error: err.message }); }
         res.json({ id: this.lastID, name, email, role });
     });
 });
@@ -47,7 +47,7 @@ router.put('/:id', (req, res) => {
     params.push(req.params.id);
 
     db.run(sql, params, function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) { console.error("[STAFF] Error:", err); return res.status(500).json({ error: err.message }); }
         res.json({ message: 'Staff member updated' });
     });
 });
@@ -55,7 +55,7 @@ router.put('/:id', (req, res) => {
 // Delete staff member
 router.delete('/:id', (req, res) => {
     db.run('DELETE FROM staff WHERE id = $1', [req.params.id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) { console.error("[STAFF] Error:", err); return res.status(500).json({ error: err.message }); }
         res.json({ message: 'Staff member removed' });
     });
 });

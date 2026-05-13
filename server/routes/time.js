@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
     }
 
     db.all(sql, params, (err, rows) => {
-        if (err) {
+        if (err) { console.error("[TIME] Error:", err);
             res.status(500).json({ error: err.message });
             return;
         }
@@ -32,13 +32,13 @@ router.post('/start', (req, res) => {
     const sql = `INSERT INTO time_logs (task_id, description, start_time) VALUES ($1, $2, CURRENT_TIMESTAMP)`;
 
     db.run(sql, [task_id, description], function (err) {
-        if (err) {
+        if (err) { console.error("[TIME] Error:", err);
             res.status(500).json({ error: err.message });
             return;
         }
         // Return the new log entry
         db.get('SELECT * FROM time_logs WHERE id = $1', [this.lastID], (err, row) => {
-            if (err) return res.json({ id: this.lastID }); // Fallback
+            if (err) { console.error("[TIME] Error:", err); return res.json({ id: this.lastID }); // Fallback
             res.json(row);
         });
     });
@@ -73,7 +73,7 @@ router.post('/stop', (req, res) => {
       `;
 
         db.run(sql, [id], function (err) {
-            if (err) {
+            if (err) { console.error("[TIME] Error:", err);
                 res.status(500).json({ error: err.message });
                 return;
             }
@@ -85,7 +85,7 @@ router.post('/stop', (req, res) => {
 // Check for running timer
 router.get('/running', (req, res) => {
     db.get("SELECT * FROM time_logs WHERE end_time IS NULL ORDER BY start_time DESC LIMIT 1", [], (err, row) => {
-        if (err) {
+        if (err) { console.error("[TIME] Error:", err);
             res.status(500).json({ error: err.message });
             return;
         }
