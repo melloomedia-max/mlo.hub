@@ -38,7 +38,10 @@ router.post('/start', (req, res) => {
         }
         // Return the new log entry
         db.get('SELECT * FROM time_logs WHERE id = $1', [this.lastID], (err, row) => {
-            if (err) { console.error("[TIME] Error:", err); return res.json({ id: this.lastID }); // Fallback
+            if (err) { 
+                console.error("[TIME] Error:", err); 
+                return res.json({ id: this.lastID }); 
+            }
             res.json(row);
         });
     });
