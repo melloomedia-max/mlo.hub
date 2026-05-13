@@ -182,11 +182,14 @@ router.get('/clients/:id', (req, res) => {
             (SELECT SUM(total_amount - amount_paid) FROM invoices WHERE invoices.client_id = c.id AND invoices.status IN ('sent', 'finalized', 'overdue')) as total_balance
         FROM clients c
         LEFT JOIN client_businesses cb ON cb.client_id = c.id
-        WHERE c.id = ?
+        WHERE c.id = $1
         GROUP BY c.id
     `;
     db.get(sql, [req.params.id], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) {
+            console.error('[CRM] clients/:id error:', err);
+            return res.status(500).json({ error: err.message });
+        }
         if (!row) return res.status(404).json({ error: 'Client not found' });
         res.json(row);
     });
