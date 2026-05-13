@@ -50,7 +50,7 @@ router.get('/forecast', async (req, res) => {
 
         // 2. Monthly trend
         const monthlyTrend = await dbAll(`
-            SELECT strftime('%Y-%m', created_at) as month, SUM(amount) as revenue 
+            SELECT TO_CHAR(created_at, 'YYYY-MM') as month, SUM(amount) as revenue 
             FROM invoice_payments 
             GROUP BY month 
             ORDER BY month DESC 

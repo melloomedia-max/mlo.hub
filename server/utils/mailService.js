@@ -39,7 +39,7 @@ function getGmailTransport() {
 // One-time table init
 function ensureMailLogTable() {
   db.run(`CREATE TABLE IF NOT EXISTS mail_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     ts TEXT NOT NULL,
     provider TEXT NOT NULL,
     status TEXT NOT NULL,

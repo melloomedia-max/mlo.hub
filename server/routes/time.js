@@ -68,8 +68,8 @@ router.post('/stop', (req, res) => {
         const sql = `
         UPDATE time_logs 
         SET end_time = CURRENT_TIMESTAMP,
-            duration = (strftime('%s','now') - strftime('%s', start_time))
-        WHERE id = ?
+            duration = EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - start_time))::INTEGER
+        WHERE id = $1
       `;
 
         db.run(sql, [id], function (err) {
