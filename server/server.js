@@ -59,7 +59,7 @@ setTimeout(() => {
 }, 1000);
 
 
-let tasksRoutes, emailRoutes, meetingsRoutes, crmRoutes, timeRoutes, invoicesRoutes, revenueRoutes, billingRoutes, portalRoutes, campaignsRoutes, subscriptionsRoutes, staffRoutes, archivesRoutes, settingsRoutes, intakeRoutes, proposalsRoutes, clientAuthRoutes, filesRoutes;
+let tasksRoutes, emailRoutes, meetingsRoutes, crmRoutes, timeRoutes, invoicesRoutes, revenueRoutes, billingRoutes, portalRoutes, campaignsRoutes, subscriptionsRoutes, staffRoutes, archivesRoutes, settingsRoutes, intakeRoutes, proposalsRoutes, clientAuthRoutes, filesRoutes, mercuryRoutes;
 let verifyPassword, hashPassword, requireAuth, requireAdmin, startArchiveScheduler;
 
 try { tasksRoutes = require('./routes/tasks'); console.log('[BOOT] ✓ tasks'); } catch(e) { console.error('[BOOT] ✗ tasks:', e.message); }
@@ -80,6 +80,7 @@ try { intakeRoutes = require('./routes/intake'); console.log('[BOOT] ✓ intake'
 try { proposalsRoutes = require('./routes/proposals'); console.log('[BOOT] ✓ proposals'); } catch(e) { console.error('[BOOT] ✗ proposals:', e.message); }
 try { clientAuthRoutes = require('./routes/client-auth'); console.log('[BOOT] ✓ client-auth'); } catch(e) { console.error('[BOOT] ✗ client-auth:', e.message); }
 try { filesRoutes = require('./routes/files'); console.log('[BOOT] ✓ files'); } catch(e) { console.error('[BOOT] ✗ files:', e.message); }
+try { mercuryRoutes = require('./routes/mercury'); console.log('[BOOT] ✓ mercury'); } catch(e) { console.error('[BOOT] ✗ mercury:', e.message); }
 try { ({ verifyPassword, hashPassword, requireAuth, requireAdmin } = require('./utils/auth')); console.log('[BOOT] ✓ auth utils'); } catch(e) { console.error('[BOOT] ✗ auth utils:', e.message); }
 try { ({ startArchiveScheduler } = require('./jobs/archiveScheduler')); console.log('[BOOT] ✓ archiveScheduler'); } catch(e) { console.error('[BOOT] ✗ archiveScheduler:', e.message); }
 
@@ -367,6 +368,7 @@ app.use('/api/email', emailRoutes);
 app.use('/api/intake', intakeRoutes);
 app.use('/intake', intakeRoutes);  // Also serve /intake/start for public access
 app.use('/api/proposals', proposalsRoutes);
+app.use('/api/mercury', mercuryRoutes);
 app.use('/auth', clientAuthRoutes);
 app.use('/', filesRoutes);  // Handles both /api/clients/:id/files and /portal/api/:token/upload
 
