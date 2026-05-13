@@ -246,7 +246,7 @@ router.post('/signup', (req, res) => {
         return res.status(400).json({ error: 'First name, last name, and email are required' });
     }
 
-    // Check if email already exists
+    // Check if client already exists
     db.get(
         `SELECT id FROM clients WHERE email = ?`,
         [email],
@@ -256,31 +256,55 @@ router.post('/signup', (req, res) => {
                 return res.status(500).json({ error: 'Database error' });
             }
 
-            if (existing) {
-                return res.status(400).json({ error: 'An account with this email already exists. Try signing in instead.' });
-            }
+            let clientId = existing ? existing.id : null;
 
-            // Insert into client_signups table for admin approval
-            db.run(
-                `INSERT INTO client_signups (first_name, last_name, email, phone, company, message) 
-                 VALUES (?, ?, ?, ?, ?, ?)`,
-                [first_name, last_name, email, phone || null, company || null, message || null],
-                function(insertErr) {
-                    if (insertErr) {
-                        console.error('[signup] Insert error:', insertErr);
-                        return res.status(500).json({ error: 'Failed to create signup request' });
+            // Helper to insert portal_request after client is ready
+            const insertPortalRequest = (cId) => {
+                db.run(
+                    `INSERT INTO portal_requests (client_id, subject, message, status, priority, source)
+                     VALUES (?, 'New Account Signup', ?, 'new', 'normal', 'portal')`,
+                    [cId, message || `New signup from ${first_name} ${last_name}`],
+                    function(insertErr) {
+                        if (insertErr) {
+                            console.error('[signup] Failed to insert portal_request:', insertErr);
+                            return res.status(500).json({ error: 'Failed to create signup request' });
+                        }
+
+                        console.log(`[signup] Portal request created (ID: ${this.lastID}) for client ${cId}`);
+
+                        // TODO: Send notification to admin about new signup
+
+                        res.json({ 
+                            success: true, 
+                            message: 'Thank you! Your request has been submitted. We\'ll be in touch soon.' 
+                        });
                     }
+                );
+            };
 
-                    console.log(`[signup] New signup request from ${email} (ID: ${this.lastID})`);
+            // If client doesn't exist, create a new lead
+            if (!clientId) {
+                console.log(`[signup] Creating new lead for ${email}`);
+                db.run(
+                    `INSERT INTO clients (first_name, last_name, email, phone, company, status, created_at)
+                     VALUES (?, ?, ?, ?, ?, 'lead', CURRENT_TIMESTAMP)`,
+                    [first_name, last_name, email, phone || null, company || null],
+                    function(clientInsertErr) {
+                        if (clientInsertErr) {
+                            console.error('[signup] Failed to create client:', clientInsertErr);
+                            return res.status(500).json({ error: 'Failed to create account' });
+                        }
 
-                    // TODO: Send notification to admin about new signup
-
-                    res.json({ 
-                        success: true, 
-                        message: 'Thank you! Your request has been submitted. We\'ll be in touch soon.' 
-                    });
-                }
-            );
+                        clientId = this.lastID;
+                        console.log(`[signup] New client created (ID: ${clientId})`);
+                        insertPortalRequest(clientId);
+                    }
+                );
+            } else {
+                // Client exists - just insert portal request
+                console.log(`[signup] Client already exists (ID: ${clientId}), creating portal request`);
+                insertPortalRequest(clientId);
+            }
         }
     );
 });
