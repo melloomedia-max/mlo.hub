@@ -28,8 +28,8 @@ router.get('/unbilled', async (req, res) => {
             JOIN tasks t ON tl.task_id = t.id 
             JOIN clients c ON t.client_id = c.id
             WHERE tl.billed = 0 
-            GROUP BY c.id 
-            HAVING total_mins > 0
+            GROUP BY c.id, c.name 
+            HAVING SUM(tl.duration) > 0
         `);
         // Note: total_mins is actually seconds (duration is in seconds). Let's convert in JSON or here
         // The query from instructions said total_mins, but schema says duration is seconds.
