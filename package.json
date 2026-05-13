@@ -5,8 +5,7 @@
     "main": "server/server.js",
     "scripts": {
         "start": "node server/server.js",
-        "server": "nodemon server/server.js",
-        "postinstall": "npm rebuild sqlite3 --build-from-source"
+        "server": "nodemon server/server.js"
     },
     "engines": {
         "node": "20.x"
@@ -24,8 +23,7 @@
         "nodemailer": "^8.0.0",
         "pdfkit": "^0.17.2",
         "pg": "^8.20.0",
-        "resend": "^4.8.0",
-        "sqlite3": "^5.1.6"
+        "resend": "^4.8.0"
     },
     "devDependencies": {
         "nodemon": "^3.0.1",
