@@ -90,23 +90,11 @@ const PORT = process.env.PORT || 3000;
 
 app.set('trust proxy', 1);
 
-console.log(`[BOOT] APP_PASSWORD is set: ${!!process.env.APP_PASSWORD}`);
-console.log(`[BOOT] ADMIN_PASSWORD is set: ${!!process.env.ADMIN_PASSWORD}`);
-console.log(`[BOOT] SESSION_SECRET is set: ${!!process.env.SESSION_SECRET}`);
-
-if (!process.env.APP_PASSWORD) {
+if (!process.env.SESSION_SECRET) {
     console.warn("\n=======================================================");
-    console.warn("⚠️  WARNING: APP_PASSWORD is NOT set!");
-    console.warn("   This is required for admin login and signup flows.");
-    console.warn("   Set APP_PASSWORD in your Railway environment.");
-    console.warn("=======================================================\n");
-}
-
-if ((!process.env.APP_PASSWORD && !process.env.ADMIN_PASSWORD) || !process.env.SESSION_SECRET) {
-    console.warn("\n=======================================================");
-    console.warn("⚠️  WARNING: ADMIN_PASSWORD/APP_PASSWORD or SESSION_SECRET is missing!");
-    console.warn("   Your Agency Hub login is unsecured or unstable.");
-    console.warn("   Set ADMIN_EMAIL, ADMIN_PASSWORD, and SESSION_SECRET in Railway.");
+    console.warn("⚠️  WARNING: SESSION_SECRET is missing!");
+    console.warn("   Your Agency Hub login is unsecured.");
+    console.warn("   Set SESSION_SECRET in Railway.");
     console.warn("=======================================================\n");
 }
 
