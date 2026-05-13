@@ -41,6 +41,7 @@ router.get('/unbilled', async (req, res) => {
             logIds: r.log_ids.split(',').map(Number)
         })));
     } catch (error) {
+        console.error('[BILLING] unbilled error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -55,7 +56,7 @@ router.post('/preview-invoice', async (req, res) => {
             SELECT tl.id, tl.description, tl.duration, tl.created_at, t.title as task_title
             FROM time_logs tl
             JOIN tasks t ON tl.task_id = t.id
-            WHERE t.client_id = ? AND tl.billed = 0
+            WHERE t.client_id = $1 AND tl.billed = 0
         `, [clientId]);
 
         if (logs.length === 0) return res.status(404).json({ error: "No unbilled time for client." });

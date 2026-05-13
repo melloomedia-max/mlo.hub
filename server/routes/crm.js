@@ -84,7 +84,7 @@ router.get('/portal-requests', (req, res) => {
     const params = [];
     let where = '';
     if (status && status !== 'all') {
-        where = 'WHERE pr.status = ?';
+        where = 'WHERE pr.status = $1';
         params.push(status);
     }
     const sql = `
@@ -98,7 +98,10 @@ router.get('/portal-requests', (req, res) => {
         LIMIT 100
     `;
     db.all(sql, params, (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) {
+            console.error('[CRM] portal-requests error:', err);
+            return res.status(500).json({ error: err.message });
+        }
         res.json(rows);
     });
 });

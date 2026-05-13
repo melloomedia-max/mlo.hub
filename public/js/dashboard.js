@@ -103,8 +103,8 @@ async function loadDashboard() {
         const activityList = document.getElementById('activity-feed');
         if (activityList) {
             activityList.innerHTML = combinedActivity.map(item => `
-            <li oncontextmenu="ContextMenu.attach(event, '${item.type.toLowerCase()}', ${item.id}, '${item.title.replace(/'/g, "\\'")}')" data-context="${item.type.toLowerCase()}" style="cursor:pointer;">
-                <span>New ${item.type}: <strong>${item.title}</strong></span>
+            <li oncontextmenu="ContextMenu.attach(event, '${(item.type || "").toLowerCase()}', ${item.id}, '${(item.title || "").replace(/'/g, "\\'")}')" data-context="${(item.type || "").toLowerCase()}" style="cursor:pointer;">
+                <span>New ${item.type || "Item"}: <strong>${item.title || "Untitled"}</strong></span>
                 <small>${new Date(item.date).toLocaleDateString()}</small>
             </li>
         `).join('') || '<li>No recent activity</li>';

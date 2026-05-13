@@ -173,7 +173,7 @@ window.initKeyboardShortcuts = function() {
         const searchInput = document.getElementById('client-search');
 
         // ─── SEARCH SHORTCUTS ───────────────────────────
-        if (cmdOrCtrl && e.key.toLowerCase() === 'k') {
+        if (cmdOrCtrl && (e.key || "").toLowerCase() === 'k') {
             e.preventDefault();
             // Always navigate to CRM first (the only section with a search input).
             // Previously this only worked when #client-search was already visible,
@@ -206,14 +206,14 @@ window.initKeyboardShortcuts = function() {
 
         // ─── QUICK ACTIONS ──────────────────────────────
         // Cmd/Ctrl + N -> New Client
-        if (cmdOrCtrl && e.key.toLowerCase() === 'n') {
+        if (cmdOrCtrl && (e.key || "").toLowerCase() === 'n') {
             e.preventDefault();
             const newClientBtn = document.getElementById('new-client-btn');
             if (newClientBtn) newClientBtn.click();
         }
 
         // ─── G + KEY NAVIGATION ─────────────────────────
-        if (e.key.toLowerCase() === 'g' && !cmdOrCtrl) {
+        if ((e.key || "").toLowerCase() === 'g' && !cmdOrCtrl) {
             // Only trigger if not already waiting for G follow-up
             if (!gPressed) {
                 gPressed = true;
@@ -227,7 +227,7 @@ window.initKeyboardShortcuts = function() {
         }
 
         if (gPressed) {
-            const key = e.key.toLowerCase();
+            const key = (e.key || "").toLowerCase();
             const sections = {
                 'd': 'dashboard',
                 'c': 'crm',
