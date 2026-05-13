@@ -219,8 +219,19 @@ app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
             console.log(`[STAFF-LOGIN] User found: ${!!user}, status: ${user?.status}, has password: ${!!user?.password}`);
             
             if (user) {
-                const match = verifyPassword(password, user.password);
-                console.log(`[STAFF-LOGIN] Password match: ${match}`);
+                // Try database password first (priority)
+                let match = false;
+                if (user.password) {
+                    match = verifyPassword(password, user.password);
+                    console.log(`[STAFF-LOGIN] DB password match: ${match}`);
+                }
+                
+                // Fallback to APP_PASSWORD if no DB password or mismatch
+                if (!match && adminPass) {
+                    match = (password === adminPass);
+                    console.log(`[STAFF-LOGIN] APP_PASSWORD match: ${match}`);
+                }
+                
                 if (user.status === 'active' && match) {
                     req.session.isAuthenticated = true;
                     req.session.user = { id: user.id, name: user.name, role: user.role, email: user.email };
