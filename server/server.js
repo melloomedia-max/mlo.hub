@@ -547,6 +547,35 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
     }
 });
 
+// --- ONE-TIME SEED ENDPOINT (REMOVE AFTER USE) ---
+app.post('/api/admin/seed-clients', requireAdmin, async (req, res) => {
+    const clients = [
+        { first_name: 'Manuel', last_name: 'Mechanic', company: 'Pepes Car Shoes' },
+        { first_name: 'Ethan', last_name: 'Torres', company: 'Melloo Media' },
+        { first_name: 'Fabricia', last_name: 'P', company: 'Personal Client' },
+        { first_name: 'Elizabeth', last_name: 'Queen', company: 'Queen Bee' },
+        { first_name: 'Maria', last_name: 'User', company: 'MM events & supplies' },
+        { first_name: 'Luis Miguel', last_name: 'Flores', company: 'Apex Burger' },
+        { first_name: 'Samara', last_name: 'Sterward', company: 'Teachers Mark' }
+    ];
+    
+    const results = [];
+    for (const client of clients) {
+        try {
+            const result = await db.query(
+                `INSERT INTO clients (first_name, last_name, company, status, created_at, updated_at)
+                 VALUES ($1, $2, $3, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                 RETURNING id`,
+                [client.first_name, client.last_name, client.company]
+            );
+            results.push({ success: true, client: client, id: result.rows[0].id });
+        } catch (err) {
+            results.push({ success: false, client: client, error: err.message });
+        }
+    }
+    res.json({ results });
+});
+
 // --- ADDED ALIAS FOR CONVENIENCE ---
 app.get('/api/clients', requireAuth, (req, res) => {
     const sql = 'SELECT * FROM clients ORDER BY created_at DESC';
