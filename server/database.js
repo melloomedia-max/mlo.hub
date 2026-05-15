@@ -594,6 +594,33 @@ async function initializeDatabase() {
     await db.query("ALTER TABLE time_logs ADD COLUMN IF NOT EXISTS billed INTEGER DEFAULT 0");
     await db.query("ALTER TABLE client_communications ADD COLUMN IF NOT EXISTS task_id INTEGER");
 
+    // Account management columns
+    await db.query("ALTER TABLE staff ADD COLUMN IF NOT EXISTS google_id TEXT");
+    await db.query("ALTER TABLE staff ADD COLUMN IF NOT EXISTS permissions JSONB DEFAULT '{}'");
+    await db.query("ALTER TABLE staff ADD COLUMN IF NOT EXISTS invited_by INTEGER");
+    await db.query("ALTER TABLE staff ADD COLUMN IF NOT EXISTS last_login TIMESTAMP");
+    await db.query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS portal_permissions JSONB DEFAULT '{}'");
+
+    // Create staff_invites table if not exists
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS staff_invites (
+        id SERIAL PRIMARY KEY,
+        email TEXT NOT NULL,
+        token TEXT UNIQUE NOT NULL,
+        role TEXT DEFAULT 'staff',
+        permissions JSONB DEFAULT '{}',
+        invited_by INTEGER,
+        expires_at TIMESTAMP NOT NULL,
+        used INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create indexes for account management
+    await db.query("CREATE INDEX IF NOT EXISTS idx_staff_google_id ON staff(google_id)");
+    await db.query("CREATE INDEX IF NOT EXISTS idx_staff_invites_token ON staff_invites(token)");
+    await db.query("CREATE INDEX IF NOT EXISTS idx_staff_invites_expires ON staff_invites(expires_at)");
+
     console.log("[DB] Database initialization complete.");
   } catch (err) {
     console.error("[DB] Initialization error:", err);
