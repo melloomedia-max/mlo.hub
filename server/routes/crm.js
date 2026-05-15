@@ -1138,4 +1138,184 @@ router.patch('/drive/file/:fileId', async (req, res) => {
     }
 });
 
+// ═══════════════════════════════════════════════════════════
+// CLIENT ACCOUNT MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+
+// Get all clients with portal access status
+router.get('/client-accounts', async (req, res) => {
+    try {
+        const clients = await new Promise((resolve, reject) => {
+            db.all(
+                `SELECT id, name, first_name, last_name, email, portal_access, portal_token, portal_permissions, auth_provider 
+                 FROM clients 
+                 ORDER BY name ASC`,
+                [],
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows);
+                }
+            );
+        });
+        res.json(clients);
+    } catch (err) {
+        console.error('[CLIENT-ACCOUNTS] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update client portal access
+router.put('/client-accounts/:id/portal-access', async (req, res) => {
+    try {
+        const { enabled } = req.body;
+        const clientId = req.params.id;
+
+        // If enabling portal access, ensure token exists
+        if (enabled) {
+            const client = await new Promise((resolve, reject) => {
+                db.get('SELECT portal_token FROM clients WHERE id = $1', [clientId], (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
+                });
+            });
+
+            if (!client.portal_token || client.portal_token === 'N/A') {
+                // Generate new token
+                await new Promise((resolve, reject) => {
+                    db.run(
+                        "UPDATE clients SET portal_access = 1, portal_token = encode(gen_random_bytes(24), 'hex') WHERE id = $1",
+                        [clientId],
+                        (err) => {
+                            if (err) reject(err);
+                            else resolve();
+                        }
+                    );
+                });
+            } else {
+                // Just enable access
+                await new Promise((resolve, reject) => {
+                    db.run('UPDATE clients SET portal_access = 1 WHERE id = $1', [clientId], (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
+                });
+            }
+        } else {
+            // Disable portal access
+            await new Promise((resolve, reject) => {
+                db.run('UPDATE clients SET portal_access = 0 WHERE id = $1', [clientId], (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
+        }
+
+        res.json({ success: true, message: 'Portal access updated' });
+    } catch (err) {
+        console.error('[CLIENT-PORTAL-ACCESS] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Regenerate client portal token
+router.post('/client-accounts/:id/regenerate-token', async (req, res) => {
+    try {
+        const clientId = req.params.id;
+        
+        await new Promise((resolve, reject) => {
+            db.run(
+                "UPDATE clients SET portal_token = encode(gen_random_bytes(24), 'hex') WHERE id = $1",
+                [clientId],
+                (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                }
+            );
+        });
+
+        const client = await new Promise((resolve, reject) => {
+            db.get('SELECT portal_token FROM clients WHERE id = $1', [clientId], (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
+
+        res.json({ success: true, token: client.portal_token });
+    } catch (err) {
+        console.error('[REGENERATE-TOKEN] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update client portal permissions
+router.put('/client-accounts/:id/permissions', async (req, res) => {
+    try {
+        const { permissions } = req.body;
+        const clientId = req.params.id;
+
+        await new Promise((resolve, reject) => {
+            db.run(
+                'UPDATE clients SET portal_permissions = $1 WHERE id = $2',
+                [JSON.stringify(permissions), clientId],
+                (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                }
+            );
+        });
+
+        res.json({ success: true, message: 'Permissions updated' });
+    } catch (err) {
+        console.error('[CLIENT-PERMISSIONS] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Send portal login link to client
+router.post('/client-accounts/:id/send-link', async (req, res) => {
+    try {
+        const clientId = req.params.id;
+        
+        const client = await new Promise((resolve, reject) => {
+            db.get(
+                'SELECT email, name, first_name, portal_token, portal_access FROM clients WHERE id = $1',
+                [clientId],
+                (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
+                }
+            );
+        });
+
+        if (!client) {
+            return res.status(404).json({ error: 'Client not found' });
+        }
+
+        if (!client.portal_access || !client.portal_token || client.portal_token === 'N/A') {
+            return res.status(400).json({ error: 'Client does not have portal access enabled' });
+        }
+
+        // Send portal link email
+        const { sendMail } = require('../utils/mailService');
+        const portalLink = `https://portal.melloo.media/login?token=${client.portal_token}`;
+        
+        await sendMail({
+            to: client.email,
+            subject: 'Your Melloo Media Client Portal Access',
+            html: `
+                <h2>Welcome to your Melloo Media Client Portal!</h2>
+                <p>Hi ${client.first_name || client.name},</p>
+                <p>You can now access your client portal to view projects, invoices, and communicate with our team.</p>
+                <p><a href="${portalLink}" style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Access Portal</a></p>
+                <p style="color: #666; font-size: 14px;">Or copy this link: ${portalLink}</p>
+            `
+        });
+
+        res.json({ success: true, message: 'Portal link sent successfully' });
+    } catch (err) {
+        console.error('[SEND-PORTAL-LINK] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;

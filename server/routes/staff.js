@@ -4,13 +4,25 @@ const db = require('../database');
 const path = require('path');
 const { hashPassword } = require('../utils/auth');
 
-// Get all staff members
-router.get('/', (req, res) => {
-    const sql = 'SELECT id, name, email, phone, role, status FROM staff ORDER BY name ASC';
-    db.all(sql, [], (err, rows) => {
-        if (err) { console.error("[STAFF] Error:", err); return res.status(500).json({ error: err.message }); }
-        res.json(rows);
-    });
+// Get all staff members with permissions
+router.get('/', async (req, res) => {
+    try {
+        const staff = await db.allAsync(
+            `SELECT id, name, email, phone, role, status, permissions, google_id, last_login, created_at 
+             FROM staff 
+             ORDER BY 
+                CASE role 
+                    WHEN 'admin' THEN 1 
+                    WHEN 'manager' THEN 2 
+                    ELSE 3 
+                END, 
+                name ASC`
+        );
+        res.json(staff);
+    } catch (err) {
+        console.error('[STAFF] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Create staff member
@@ -32,24 +44,54 @@ router.post('/', (req, res) => {
 });
 
 // Update staff member
-router.put('/:id', (req, res) => {
-    const { name, email, phone, role, password, status } = req.body;
-    
-    let sql = 'UPDATE staff SET name = $1, email = $2, phone = $3, role = $4, status = $5';
-    const params = [name, email, phone, role, status];
+router.put('/:id', async (req, res) => {
+    try {
+        const { name, email, phone, role, password, status, permissions } = req.body;
+        
+        const updates = [];
+        const params = [];
+        let paramIndex = 1;
 
-    if (password) {
-        sql += ', password = ?';
-        params.push(hashPassword(password));
+        if (name !== undefined) {
+            updates.push(`name = $${paramIndex++}`);
+            params.push(name);
+        }
+        if (email !== undefined) {
+            updates.push(`email = $${paramIndex++}`);
+            params.push(email);
+        }
+        if (phone !== undefined) {
+            updates.push(`phone = $${paramIndex++}`);
+            params.push(phone);
+        }
+        if (role !== undefined) {
+            updates.push(`role = $${paramIndex++}`);
+            params.push(role);
+        }
+        if (status !== undefined) {
+            updates.push(`status = $${paramIndex++}`);
+            params.push(status);
+        }
+        if (permissions !== undefined) {
+            updates.push(`permissions = $${paramIndex++}`);
+            params.push(JSON.stringify(permissions));
+        }
+        if (password) {
+            updates.push(`password = $${paramIndex++}`);
+            params.push(hashPassword(password));
+        }
+
+        updates.push(`updated_at = CURRENT_TIMESTAMP`);
+        params.push(req.params.id);
+
+        const sql = `UPDATE staff SET ${updates.join(', ')} WHERE id = $${paramIndex}`;
+        await db.runAsync(sql, params);
+        
+        res.json({ success: true, message: 'Staff member updated' });
+    } catch (err) {
+        console.error('[STAFF] Error:', err);
+        res.status(500).json({ error: err.message });
     }
-
-    sql += ' WHERE id = ?';
-    params.push(req.params.id);
-
-    db.run(sql, params, function(err) {
-        if (err) { console.error("[STAFF] Error:", err); return res.status(500).json({ error: err.message }); }
-        res.json({ message: 'Staff member updated' });
-    });
 });
 
 // Delete staff member

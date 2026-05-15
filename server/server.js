@@ -59,7 +59,7 @@ setTimeout(() => {
 }, 1000);
 
 
-let tasksRoutes, emailRoutes, meetingsRoutes, crmRoutes, timeRoutes, invoicesRoutes, revenueRoutes, billingRoutes, portalRoutes, campaignsRoutes, subscriptionsRoutes, staffRoutes, archivesRoutes, settingsRoutes, intakeRoutes, proposalsRoutes, clientAuthRoutes, filesRoutes, mercuryRoutes;
+let tasksRoutes, emailRoutes, meetingsRoutes, crmRoutes, timeRoutes, invoicesRoutes, revenueRoutes, billingRoutes, portalRoutes, campaignsRoutes, subscriptionsRoutes, staffRoutes, staffAuthRoutes, archivesRoutes, settingsRoutes, intakeRoutes, proposalsRoutes, clientAuthRoutes, filesRoutes, mercuryRoutes;
 let verifyPassword, hashPassword, requireAuth, requireAdmin, startArchiveScheduler;
 
 try { tasksRoutes = require('./routes/tasks'); console.log('[BOOT] ✓ tasks'); } catch(e) { console.error('[BOOT] ✗ tasks:', e.message); }
@@ -74,6 +74,7 @@ try { portalRoutes = require('./routes/portal'); console.log('[BOOT] ✓ portal'
 try { campaignsRoutes = require('./routes/campaigns'); console.log('[BOOT] ✓ campaigns'); } catch(e) { console.error('[BOOT] ✗ campaigns:', e.message); }
 try { subscriptionsRoutes = require('./routes/subscriptions'); console.log('[BOOT] ✓ subscriptions'); } catch(e) { console.error('[BOOT] ✗ subscriptions:', e.message); }
 try { staffRoutes = require('./routes/staff'); console.log('[BOOT] ✓ staff'); } catch(e) { console.error('[BOOT] ✗ staff:', e.message); }
+try { staffAuthRoutes = require('./routes/staff-auth'); console.log('[BOOT] ✓ staff-auth'); } catch(e) { console.error('[BOOT] ✗ staff-auth:', e.message); }
 try { archivesRoutes = require('./routes/archives'); console.log('[BOOT] ✓ archives'); } catch(e) { console.error('[BOOT] ✗ archives:', e.message); }
 try { settingsRoutes = require('./routes/settings'); console.log('[BOOT] ✓ settings'); } catch(e) { console.error('[BOOT] ✗ settings:', e.message); }
 try { intakeRoutes = require('./routes/intake'); console.log('[BOOT] ✓ intake'); } catch(e) { console.error('[BOOT] ✗ intake:', e.message); }
@@ -117,6 +118,11 @@ app.use(session({
         maxAge: 1000 * 60 * 60 * 6 // 6 hours
     }
 }));
+
+console.log("[BOOT] Initializing Passport...");
+const passport = require('passport');
+app.use(passport.initialize());
+app.use(passport.session());
 console.log("[BOOT] Registering authentication routes...");
 
 // Domain Detection Middleware
@@ -362,6 +368,7 @@ app.use('/portal', portalRoutes);
 app.use('/api/campaigns', campaignsRoutes);
 app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/staff/auth', staffAuthRoutes);
 app.use('/api/archives', archivesRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/email', emailRoutes);
