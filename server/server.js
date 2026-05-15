@@ -295,6 +295,32 @@ app.get('/api/auth/status', (req, res) => {
     }
 });
 
+// Public Health Endpoint (no auth required)
+app.get('/health', async (req, res) => {
+    try {
+        // Test database connection
+        await db.query('SELECT 1');
+        
+        res.json({
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            service: 'mlo.hub',
+            version: '1.0.0',
+            database: 'connected',
+            uptime: Math.floor(process.uptime()),
+            environment: process.env.NODE_ENV || 'production'
+        });
+    } catch (error) {
+        res.status(503).json({
+            status: 'unhealthy',
+            timestamp: new Date().toISOString(),
+            service: 'mlo.hub',
+            error: 'Database connection failed',
+            uptime: Math.floor(process.uptime())
+        });
+    }
+});
+
 // Intercept specific routes
 app.use((req, res, next) => {
     const route = req.path;
