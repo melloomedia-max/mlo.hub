@@ -1,5 +1,5 @@
 // Staff Account Management
-// Handles staff CRUD, permissions, invitations, and OAuth linking
+// Handles staff CRUD, permissions, and OAuth linking
 
 let currentStaff = [];
 const defaultPermissions = {
@@ -27,7 +27,7 @@ function renderStaffTable() {
     if (!tbody) return;
 
     if (currentStaff.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-tertiary);">No staff members yet. Invite your first team member!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-tertiary);">No staff members yet. Add your first team member!</td></tr>';
         return;
     }
 
@@ -67,43 +67,55 @@ function renderStaffTable() {
     `).join('');
 }
 
-function openInviteStaffModal() {
-    const modal = document.getElementById('invite-staff-modal');
-    document.getElementById('invite-email').value = '';
-    document.getElementById('invite-role').value = 'staff';
-    resetPermissionCheckboxes();
+function openCreateStaffModal() {
+    const modal = document.getElementById('create-staff-modal');
+    document.getElementById('create-staff-name').value = '';
+    document.getElementById('create-staff-email').value = '';
+    document.getElementById('create-staff-password').value = '';
+    document.getElementById('create-staff-phone').value = '';
+    document.getElementById('create-staff-role').value = 'staff';
+    resetCreatePermissionCheckboxes();
     modal.style.display = 'flex';
 }
 
-function closeInviteStaffModal() {
-    document.getElementById('invite-staff-modal').style.display = 'none';
+function closeCreateStaffModal() {
+    document.getElementById('create-staff-modal').style.display = 'none';
 }
 
-async function sendStaffInvite(e) {
+async function createStaffAccount(e) {
     e.preventDefault();
     
-    const email = document.getElementById('invite-email').value;
-    const role = document.getElementById('invite-role').value;
-    const permissions = getPermissionsFromForm();
+    const name = document.getElementById('create-staff-name').value;
+    const email = document.getElementById('create-staff-email').value;
+    const password = document.getElementById('create-staff-password').value;
+    const phone = document.getElementById('create-staff-phone').value;
+    const role = document.getElementById('create-staff-role').value;
+    const permissions = getCreatePermissionsFromForm();
+
+    if (!name || !email || !password) {
+        showToast('Name, email, and password are required', 'error');
+        return;
+    }
 
     try {
-        const response = await fetch('/staff/auth/invite', {
+        const response = await fetch('/api/staff', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, role, permissions })
+            body: JSON.stringify({ name, email, password, phone, role, permissions })
         });
 
         const result = await response.json();
 
         if (response.ok) {
-            showToast('Invitation sent successfully!', 'success');
-            closeInviteStaffModal();
+            showToast('Staff account created successfully!', 'success');
+            closeCreateStaffModal();
+            loadStaffAccounts();
         } else {
-            showToast(result.error || 'Failed to send invitation', 'error');
+            showToast(result.error || 'Failed to create staff account', 'error');
         }
     } catch (error) {
-        console.error('Error sending invitation:', error);
-        showToast('Failed to send invitation', 'error');
+        console.error('Error creating staff:', error);
+        showToast('Failed to create staff account', 'error');
     }
 }
 
@@ -123,8 +135,10 @@ function editStaffAccount(staffId) {
     document.getElementById('edit-staff-id').value = staff.id;
     document.getElementById('edit-staff-name').value = staff.name;
     document.getElementById('edit-staff-email').value = staff.email;
+    document.getElementById('edit-staff-phone').value = staff.phone || '';
     document.getElementById('edit-staff-role').value = staff.role;
     document.getElementById('edit-staff-status').value = staff.status;
+    document.getElementById('edit-staff-password').value = ''; // Always blank for security
     
     // Load permissions
     const permissions = staff.permissions || {};
@@ -142,13 +156,14 @@ async function saveStaffEdits(e) {
     const staffId = document.getElementById('edit-staff-id').value;
     const name = document.getElementById('edit-staff-name').value;
     const email = document.getElementById('edit-staff-email').value;
+    const phone = document.getElementById('edit-staff-phone').value;
     const role = document.getElementById('edit-staff-role').value;
     const status = document.getElementById('edit-staff-status').value;
     const password = document.getElementById('edit-staff-password').value;
     const permissions = getEditPermissionsFromForm();
 
-    const payload = { name, email, role, status, permissions };
-    if (password) payload.password = password;
+    const payload = { name, email, phone, role, status, permissions };
+    if (password) payload.password = password; // Only include if admin entered a new password
 
     try {
         const response = await fetch(`/api/staff/${staffId}`, {
@@ -192,14 +207,14 @@ async function deleteStaffAccount(staffId, staffName) {
     }
 }
 
-function getPermissionsFromForm() {
+function getCreatePermissionsFromForm() {
     return {
-        can_view_clients: document.getElementById('perm-can_view_clients').checked,
-        can_edit_clients: document.getElementById('perm-can_edit_clients').checked,
-        can_view_invoices: document.getElementById('perm-can_view_invoices').checked,
-        can_create_invoices: document.getElementById('perm-can_create_invoices').checked,
-        can_view_reports: document.getElementById('perm-can_view_reports').checked,
-        can_manage_campaigns: document.getElementById('perm-can_manage_campaigns').checked
+        can_view_clients: document.getElementById('create-perm-can_view_clients').checked,
+        can_edit_clients: document.getElementById('create-perm-can_edit_clients').checked,
+        can_view_invoices: document.getElementById('create-perm-can_view_invoices').checked,
+        can_create_invoices: document.getElementById('create-perm-can_create_invoices').checked,
+        can_view_reports: document.getElementById('create-perm-can_view_reports').checked,
+        can_manage_campaigns: document.getElementById('create-perm-can_manage_campaigns').checked
     };
 }
 
@@ -214,9 +229,9 @@ function getEditPermissionsFromForm() {
     };
 }
 
-function resetPermissionCheckboxes() {
+function resetCreatePermissionCheckboxes() {
     for (const [key, value] of Object.entries(defaultPermissions)) {
-        const checkbox = document.getElementById(`perm-${key}`);
+        const checkbox = document.getElementById(`create-perm-${key}`);
         if (checkbox) checkbox.checked = value;
     }
 }
