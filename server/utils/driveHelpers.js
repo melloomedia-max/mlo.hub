@@ -1,19 +1,33 @@
 const { google } = require('googleapis');
 
 async function getDriveClient() {
-    if (!process.env.GOOGLE_REFRESH_TOKEN) return null;
+    // Check for required environment variables
+    const missingVars = [];
+    if (!process.env.GOOGLE_CLIENT_ID) missingVars.push('GOOGLE_CLIENT_ID');
+    if (!process.env.GOOGLE_CLIENT_SECRET) missingVars.push('GOOGLE_CLIENT_SECRET');
+    if (!process.env.GOOGLE_REFRESH_TOKEN) missingVars.push('GOOGLE_REFRESH_TOKEN');
+    
+    if (missingVars.length > 0) {
+        console.error(`[DRIVE] Missing required environment variables: ${missingVars.join(', ')}`);
+        return null;
+    }
 
-    const oauth2Client = new google.auth.OAuth2(
-        process.env.GOOGLE_CLIENT_ID,
-        process.env.GOOGLE_CLIENT_SECRET,
-        process.env.GOOGLE_REDIRECT_URI
-    );
+    try {
+        const oauth2Client = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            process.env.GOOGLE_REDIRECT_URI
+        );
 
-    oauth2Client.setCredentials({
-        refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-    });
+        oauth2Client.setCredentials({
+            refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+        });
 
-    return google.drive({ version: 'v3', auth: oauth2Client });
+        return google.drive({ version: 'v3', auth: oauth2Client });
+    } catch (err) {
+        console.error('[DRIVE] Failed to initialize Drive client:', err.message);
+        return null;
+    }
 }
 
 async function createInvoicesSubfolder(parentFolderId) {

@@ -13,7 +13,9 @@ const upload = multer({ dest: 'uploads/' });
 // Helper to create client folder
 async function createClientFolder(firstName, lastName) {
     const drive = await getDriveClient();
-    if (!drive) return null;
+    if (!drive) {
+        throw new Error('Google Drive authentication required. Please check GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN environment variables.');
+    }
 
     const mainFolderMetadata = {
         'name': `CRM: ${firstName} ${lastName}`,
@@ -34,7 +36,7 @@ async function createClientFolder(firstName, lastName) {
         return mainFolderId;
     } catch (err) {
         console.error('Error creating Drive folder:', err);
-        return null;
+        throw new Error(`Failed to create Google Drive folder: ${err.message}`);
     }
 }
 
@@ -445,6 +447,21 @@ router.put('/clients/:id', (req, res) => {
     });
 });
 
+// Check Drive configuration (for debugging)
+router.get('/drive/status', async (req, res) => {
+    const requiredVars = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN'];
+    const status = {};
+    
+    requiredVars.forEach(varName => {
+        status[varName] = process.env[varName] ? '✓ Set' : '✗ Missing';
+    });
+    
+    const drive = await getDriveClient();
+    status.driveClientReady = drive ? '✓ Ready' : '✗ Failed';
+    
+    res.json(status);
+});
+
 // Get Drive files for a client
 router.get('/clients/:id/drive/files', async (req, res) => {
     try {
@@ -477,47 +494,82 @@ router.get('/clients/:id/drive/files', async (req, res) => {
 // Create folder (and Activity Doc) for existing client
 router.post('/clients/:id/drive/folder', async (req, res) => {
     try {
-        db.get('SELECT first_name, last_name, google_drive_folder_id, activity_doc_id FROM clients WHERE id = $1', [req.params.id], async (err, client) => {
-            if (err) return res.status(500).json({ error: err.message });
-            if (!client) return res.status(404).json({ error: 'Client not found' });
+        // Get client info
+        const client = await new Promise((resolve, reject) => {
+            db.get('SELECT first_name, last_name, google_drive_folder_id, activity_doc_id FROM clients WHERE id = $1', [req.params.id], (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
 
-            let folderId = client.google_drive_folder_id;
-            let docId = client.activity_doc_id;
-            let changesMade = false;
+        if (!client) {
+            return res.status(404).json({ error: 'Client not found' });
+        }
 
-            // 1. Ensure Folder Exists
-            if (!folderId) {
+        let folderId = client.google_drive_folder_id;
+        let docId = client.activity_doc_id;
+
+        // 1. Ensure Root Folder Exists
+        if (!folderId) {
+            try {
                 folderId = await createClientFolder(client.first_name, client.last_name);
-                if (folderId) {
-                    changesMade = true;
-                    // Save immediately in case next step fails
-                    db.run('UPDATE clients SET google_drive_folder_id = $1 WHERE id = $2', [folderId, req.params.id]);
-                } else {
-                    return res.status(500).json({ error: 'Failed to create Drive folder' });
-                }
+                
+                // Save folder ID to database
+                await new Promise((resolve, reject) => {
+                    db.run('UPDATE clients SET google_drive_folder_id = $1 WHERE id = $2', [folderId, req.params.id], (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
+                });
+                
+                console.log(`[DRIVE] Created root folder for client ${req.params.id}: ${folderId}`);
+            } catch (createErr) {
+                console.error('[DRIVE] Failed to create client folder:', createErr.message);
+                return res.status(500).json({ 
+                    error: createErr.message,
+                    details: 'Check that GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN are set in Railway environment variables'
+                });
             }
+        }
 
-            // 2. Ensure Activity Doc Exists
-            if (folderId && !docId) {
+        // 2. Ensure Activity Doc Exists
+        if (folderId && !docId) {
+            try {
                 const doc = await createActivityDoc(folderId, `${client.first_name} ${client.last_name}`);
                 if (doc) {
                     docId = doc.id;
-                    changesMade = true;
-                    db.run('UPDATE clients SET activity_doc_id = $1 WHERE id = $2', [docId, req.params.id]);
+                    await new Promise((resolve, reject) => {
+                        db.run('UPDATE clients SET activity_doc_id = $1 WHERE id = $2', [docId, req.params.id], (err) => {
+                            if (err) reject(err);
+                            else resolve();
+                        });
+                    });
+                    console.log(`[DRIVE] Created activity doc for client ${req.params.id}: ${docId}`);
                 }
+            } catch (docErr) {
+                console.error('[DRIVE] Failed to create activity doc:', docErr.message);
+                // Don't fail the whole request if just the doc fails
             }
+        }
 
-            // Wait a moment for DB updates if needed, though they are async fire-and-forget above mostly
-            // Ideally we wait properly but keeping it simple for now
-
-            // 3. Ensure Meeting Recordings Folder Exists
-            if (folderId) {
+        // 3. Ensure Meeting Recordings Folder Exists
+        if (folderId) {
+            try {
                 await getMeetingRecordingsSubfolderId(folderId);
+            } catch (meetingErr) {
+                console.error('[DRIVE] Failed to create meeting recordings folder:', meetingErr.message);
+                // Don't fail the whole request if just this subfolder fails
             }
+        }
 
-            res.json({ folderId, activityDocId: docId });
+        res.json({ 
+            success: true,
+            folderId, 
+            activityDocId: docId,
+            message: 'Client Drive folder structure ready'
         });
     } catch (err) {
+        console.error('[DRIVE] Folder creation error:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -1011,19 +1063,50 @@ router.post('/clients/:id/drive/subfolder', async (req, res) => {
         if (!name || !name.trim()) return res.status(400).json({ error: 'Folder name is required' });
 
         const drive = await getDriveClient();
-        if (!drive) return res.status(401).json({ error: 'Google Drive not connected' });
+        if (!drive) {
+            return res.status(401).json({ 
+                error: 'Google Drive authentication failed',
+                details: 'Check that GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN are set in environment variables'
+            });
+        }
 
         const client = await new Promise((resolve, reject) => {
-            db.get('SELECT google_drive_folder_id FROM clients WHERE id = ?', [req.params.id], (err, row) => {
+            db.get('SELECT first_name, last_name, google_drive_folder_id FROM clients WHERE id = ?', [req.params.id], (err, row) => {
                 if (err) reject(err); else resolve(row);
             });
         });
 
-        if (!client || !client.google_drive_folder_id) {
-            return res.status(404).json({ error: 'Client has no Drive folder' });
+        if (!client) {
+            return res.status(404).json({ error: 'Client not found' });
         }
 
-        const targetParent = parentFolderId || client.google_drive_folder_id;
+        let rootFolderId = client.google_drive_folder_id;
+
+        // If client has no root folder, create one first
+        if (!rootFolderId) {
+            try {
+                console.log(`[DRIVE] Client ${req.params.id} has no root folder. Creating one first...`);
+                rootFolderId = await createClientFolder(client.first_name, client.last_name);
+                
+                // Save to database
+                await new Promise((resolve, reject) => {
+                    db.run('UPDATE clients SET google_drive_folder_id = $1 WHERE id = $2', [rootFolderId, req.params.id], (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
+                });
+                
+                console.log(`[DRIVE] Created root folder for client ${req.params.id}: ${rootFolderId}`);
+            } catch (rootErr) {
+                console.error('[DRIVE] Failed to create root folder:', rootErr.message);
+                return res.status(500).json({ 
+                    error: rootErr.message,
+                    details: 'Failed to create client root folder before creating subfolder'
+                });
+            }
+        }
+
+        const targetParent = parentFolderId || rootFolderId;
 
         const folder = await drive.files.create({
             resource: {
@@ -1034,9 +1117,10 @@ router.post('/clients/:id/drive/subfolder', async (req, res) => {
             fields: 'id, name, webViewLink'
         });
 
+        console.log(`[DRIVE] Created subfolder "${name}" for client ${req.params.id}`);
         res.json(folder.data);
     } catch (err) {
-        console.error('Subfolder creation error:', err);
+        console.error('[DRIVE] Subfolder creation error:', err);
         res.status(500).json({ error: err.message });
     }
 });
