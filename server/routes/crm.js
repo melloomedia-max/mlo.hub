@@ -46,6 +46,11 @@ router.get('/clients/search', (req, res) => {
     const like = `%${q}%`;
     const sql = `
         SELECT DISTINCT c.*,
+            COALESCE(
+                NULLIF(TRIM(CONCAT(c.first_name, ' ', c.last_name)), ''),
+                c.name,
+                'Unnamed Client'
+            ) AS display_name,
             STRING_AGG(DISTINCT cb.name::text, ',') as business_names
         FROM clients c
         LEFT JOIN client_businesses cb ON cb.client_id = c.id
@@ -157,6 +162,11 @@ router.get('/clients', (req, res) => {
     console.log('[CRM] /clients hit');
     const sql = `
         SELECT c.*,
+            COALESCE(
+                NULLIF(TRIM(CONCAT(c.first_name, ' ', c.last_name)), ''),
+                c.name,
+                'Unnamed Client'
+            ) AS display_name,
             STRING_AGG(DISTINCT cb.name::text, ',') as business_names,
             (SELECT SUM(total_amount - amount_paid) FROM invoices WHERE invoices.client_id = c.id AND invoices.status IN ('sent', 'finalized', 'overdue')) as total_balance
         FROM clients c
@@ -178,6 +188,11 @@ router.get('/clients', (req, res) => {
 router.get('/clients/:id', (req, res) => {
     const sql = `
         SELECT c.*,
+            COALESCE(
+                NULLIF(TRIM(CONCAT(c.first_name, ' ', c.last_name)), ''),
+                c.name,
+                'Unnamed Client'
+            ) AS display_name,
             STRING_AGG(DISTINCT cb.name::text, ',') as business_names,
             (SELECT SUM(total_amount - amount_paid) FROM invoices WHERE invoices.client_id = c.id AND invoices.status IN ('sent', 'finalized', 'overdue')) as total_balance
         FROM clients c
