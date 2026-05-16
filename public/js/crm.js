@@ -15,16 +15,86 @@ window.openClientProfile = openClientProfile;
 window.showClientForm = showClientForm;
 window.hideClientForm = hideClientForm;
 window.toggleEditMode = toggleEditMode;
+window.getClientName = getClientName;
+window.getClientInitials = getClientInitials;
+
+// ────────────────────────────────────────────────────────────────────────────────
+// Client Name Helpers
+// ────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Get a client's display name with proper fallbacks.
+ * Handles: display_name (from backend), name, first_name + last_name.
+ * @param {object} client - Client object from API
+ * @returns {string} Display name, never empty
+ */
+function getClientName(client) {
+    if (!client) return 'Unnamed Client';
+
+    // Prefer display_name from backend (computed field)
+    if (client.display_name && client.display_name.trim()) {
+        return client.display_name.trim();
+    }
+
+    // Fallback to name field
+    if (client.name && client.name.trim()) {
+        return client.name.trim();
+    }
+
+    // Fallback to first_name + last_name
+    const first = (client.first_name || '').trim();
+    const last = (client.last_name || '').trim();
+    if (first || last) {
+        return (first + ' ' + last).trim();
+    }
+
+    // Final fallback
+    return 'Unnamed Client';
+}
+
+/**
+ * Get initials from a client object.
+ * Tries first_name/last_name first, then falls back to parsing display name.
+ * @param {object} client - Client object from API
+ * @returns {string} Initials (1-2 chars), or '?' if unable to determine
+ */
+function getClientInitials(client) {
+    if (!client) return '?';
+
+    const name = getClientName(client);
+    if (name === 'Unnamed Client') return '?';
+
+    // Try to get initials from first_name and last_name first (most accurate)
+    const first = (client.first_name || '').trim();
+    const last = (client.last_name || '').trim();
+    if (first && last) {
+        return (first[0] + last[0]).toUpperCase();
+    }
+    if (first) {
+        return first[0].toUpperCase();
+    }
+
+    // Fall back to parsing the display name
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    if (parts.length === 1 && parts[0]) {
+        return parts[0].slice(0, 2).toUpperCase();
+    }
+
+    return '?';
+}
 
 async function loadClients(statusFilter = null) {
     try {
         const response = await fetch(`${API_BASE}/crm/clients`);
         let clients = await response.json();
-        
+
         if (statusFilter && statusFilter !== 'all') {
             clients = clients.filter(c => c.status === statusFilter);
         }
-        
+
         displayClients(clients);
     } catch (error) {
         console.error('Error loading clients:', error);
@@ -48,17 +118,16 @@ function displayClients(clients) {
 
     // Helper function to render a client card
     const renderClientCard = (client) => {
-        const names = (client.name || '').split(' ');
-        const initials = names.length > 1 ? names[0][0] + names[names.length - 1][0] : (names[0] ? names[0][0] : '?');
-        const displayName = client.name || 'Unknown';
+        const initials = getClientInitials(client);
+        const displayName = getClientName(client);
 
         const bizNames = client.business_names ? client.business_names.split(',') : [];
         const mainBiz = bizNames[0] || client.company || 'Personal Client';
 
         return `
-        <div class="client-card-square" 
-             onclick="openClientProfile(${client.id})" 
-             oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${(client.name || '').replace(/'/g, "\\'")}')"
+        <div class="client-card-square"
+             onclick="openClientProfile(${client.id})"
+             oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${displayName.replace(/'/g, "\\'")}')"
              data-context="client">
             <div class="card-status-dot status-dot-${client.status || 'unknown'}"></div>
             <div class="card-avatar">${initials}</div>
@@ -88,8 +157,8 @@ function displayClients(clients) {
         const renderedCount = (html.match(/class="client-card-square"/g) || []).length;
 
         // Mismatch check
-        const mismatchNotice = (clients.length > 0 && renderedCount !== clients.length) 
-            ? `<div class="render-error-notice">⚠️ Only ${renderedCount} of ${clients.length} clients rendered. Please refresh or contact support.</div>` 
+        const mismatchNotice = (clients.length > 0 && renderedCount !== clients.length)
+            ? `<div class="render-error-notice">⚠️ Only ${renderedCount} of ${clients.length} clients rendered. Please refresh or contact support.</div>`
             : '';
 
         if (mismatchNotice) console.warn(`[CRM] Render mismatch in section "${title}": expected ${clients.length}, got ${renderedCount}`);
@@ -199,9 +268,9 @@ async function openClientProfile(clientId) {
         // Populate View Mode
         const nameEl = document.getElementById('detail-name');
         const companyEl = document.getElementById('detail-company');
-        if (nameEl) nameEl.textContent = client.name;
+        if (nameEl) nameEl.textContent = getClientName(client);
         if (companyEl) companyEl.textContent = client.company || 'No Company';
-        // Email — link to Gmail compose
+        // Email - link to Gmail compose
         const emailEl = document.getElementById('detail-email');
         if (emailEl) {
             const emailVal = client.email || '';
@@ -212,7 +281,7 @@ async function openClientProfile(clientId) {
             emailEl.style.pointerEvents = emailVal ? '' : 'none';
         }
 
-        // Phone — click toggles Call / SMS action buttons
+        // Phone - click toggles Call / SMS action buttons
         const phoneEl = document.getElementById('detail-phone');
         const phoneActions = document.getElementById('phone-actions');
         if (phoneEl) {
@@ -246,8 +315,7 @@ async function openClientProfile(clientId) {
             statusEl.textContent = client.status;
         }
 
-        const names = (client.name || "").split(' ');
-        const initials = names.length > 1 ? names[0][0] + names[names.length - 1][0] : names[0][0];
+        const initials = getClientInitials(client);
         const detailAvatar = document.getElementById('detail-avatar');
         const editAvatar = document.getElementById('edit-avatar-preview');
         if (detailAvatar) detailAvatar.textContent = initials;
@@ -267,18 +335,18 @@ async function openClientProfile(clientId) {
                     <lottie-player src="img/loading-circles.json" background="transparent" speed="1" style="width: 100px; height: 100px;" loop autoplay></lottie-player>
                 </div>
             `;
-            
+
             // Visibility logic for portal buttons
             const pBtn = document.getElementById('mh-portal-link-btn');
             const eBtn = document.getElementById('mh-portal-email-btn');
             const sBtn = document.getElementById('mh-portal-sms-btn');
-            
+
             mhClientPortalToken = client.portal_token;
 
             // Copy button only if token exists
             const hasPortalToken = !!mhClientPortalToken && mhClientPortalToken !== 'N/A';
             if (pBtn) pBtn.style.display = hasPortalToken ? 'inline-flex' : 'none';
-            
+
             // Email/SMS buttons can stay visible (they trigger generation on backend)
             if (eBtn) eBtn.style.display = 'inline-flex';
             if (sBtn) sBtn.style.display = 'inline-flex';
@@ -286,7 +354,7 @@ async function openClientProfile(clientId) {
             driveLink.style.display = 'none';
             createFolderBtn.style.display = 'block';
             mediaGrid.innerHTML = '<p class="empty-state">No Drive folder linked.</p>';
-            
+
             // Hide all portal buttons if no drive (usually means lead/uninitialized)
             const pBtn = document.getElementById('mh-portal-link-btn');
             const eBtn = document.getElementById('mh-portal-email-btn');
@@ -371,7 +439,7 @@ async function openClientProfile(clientId) {
         if (editLinked) editLinked.value = client.social_linkedin || '';
         if (editTwitter) editTwitter.value = client.social_twitter || '';
         if (editFB) editFB.value = client.social_facebook || '';
-        
+
         // Reset Password Field
         const editPortalPass = document.getElementById('edit-portal-password');
         if (editPortalPass) editPortalPass.value = '';
@@ -747,7 +815,7 @@ async function mhRenameItem(fileId, currentName) {
 
 async function sendPortalLink(method) {
     if (!currentProfileId) return;
-    
+
     const btn = method === 'email' ? document.getElementById('mh-portal-email-btn') : document.getElementById('mh-portal-sms-btn');
     const originalText = btn ? btn.innerHTML : '';
     if (btn) {
@@ -762,7 +830,7 @@ async function sendPortalLink(method) {
             body: JSON.stringify({ method })
         });
         const data = await res.json();
-        
+
         if (data.success) {
             showToast(`Portal link sent via ${method}! ✓`);
             // Refresh activity feed to show the new system note
@@ -788,9 +856,9 @@ function getPortalUrl(token) {
 
 async function copyPortalLink() {
     const url = getPortalUrl(mhClientPortalToken);
-    if (!url) { 
-        showToast('Portal not set up for this client', 'error'); 
-        return; 
+    if (!url) {
+        showToast('Portal not set up for this client', 'error');
+        return;
     }
 
     try {
@@ -860,7 +928,7 @@ async function saveClientProfile(event) {
     const editLinked = document.getElementById('edit-linkedin');
     const editTwitter = document.getElementById('edit-twitter');
     const editPass = document.getElementById('edit-portal-password');
-    
+
     const client = {
         first_name: editFirstName ? editFirstName.value : '',
         last_name: editLastName ? editLastName.value : '',
@@ -1280,7 +1348,7 @@ function renderProjects(projects) {
         const metaPills = pills.join('');
 
         return `
-        <div class="proj-card" id="proj-card-${p.id}" 
+        <div class="proj-card" id="proj-card-${p.id}"
              ondblclick="openProjectModal(${p.id})"
              oncontextmenu="ContextMenu.attach(event, 'project', ${p.id}, '${(p.name || '').replace(/'/g, "\\'")}')"
              data-context="project">
@@ -1908,8 +1976,8 @@ function renderSearchResults(clients, query) {
 
     if (results) {
         results.innerHTML = clients.map(client => {
-            const names = (client.name || '').split(' ');
-            const initials = names.length > 1 ? names[0][0] + names[names.length - 1][0] : (names[0] ? names[0][0] : '?');
+            const displayName = getClientName(client);
+            const initials = getClientInitials(client);
             const dotColor = statusColors[client.status] || '#94a3b8';
 
             // Build meta line: company + business tags
@@ -1922,13 +1990,13 @@ function renderSearchResults(clients, query) {
 
             return `
             <div class="search-result-item" 
-                 onclick="openClientProfile(${client.id}); document.getElementById('client-search-results').classList.remove('active'); document.getElementById('client-search').value = '';"
-                 oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${(client.name || '').replace(/'/g, "\\'")}')"
+                 onclick="openClientProfile(${client.id}); document.getElementById('client-search-results').classList.remove('active'); document.getElementById('client-search').value = '';" 
+                 oncontextmenu="ContextMenu.attach(event, 'client', ${client.id}, '${displayName.replace(/'/g, "\\'")}')" 
                  data-context="client">
                 <div class="search-result-avatar">${initials}</div>
                 <div class="search-result-info">
                     <div class="search-result-name">
-                        ${client.name}
+                        ${displayName}
                         <span class="status-dot" style="background:${dotColor}; box-shadow: 0 0 6px ${dotColor};"></span>
                     </div>
                     <div class="search-result-meta">${meta.join(' · ')}${bizTags ? ' ' + bizTags : ''}</div>
@@ -1972,7 +2040,7 @@ function getIndustryIcon(industry) {
 }
 
 /**
- * Render a single business card HTML — shared by all panels
+ * Render a single business card HTML - shared by all panels
  */
 function renderBizCard(biz, removeAction) {
     const icon = getIndustryIcon(biz.industry);
